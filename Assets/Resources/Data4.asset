@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dcc082f6396a934f9ad201021f0df10, type: 3}
+  m_Name: Data4
+  m_EditorClassIdentifier: 
+  m_voxelId: 4
+  m_displayName: Default VoxelID
+  m_color: {r: 0.6226415, g: 0.6226415, b: 0.6226415, a: 1}
+  m_hardness: 1
+  m_maxDurability: 1
+  m_isDestructible: 1

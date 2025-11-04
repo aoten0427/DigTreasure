@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Aoi/Scene/TestScene.unity
+    guid: 41e7240841ff8fa4d85553368094064c
+  - enabled: 1
+    path: Assets/Riku/PhotonFusionTest/Scenes/PhotonTest.unity
+    guid: 0d7395a75d44d6547b335ef4cfe096f9
+  - enabled: 1
+    path: Assets/Riku/PhotonFusionTest/Scenes/PhotonTest_Room.unity
+    guid: 05fd28ad896b46d47af51a47711f1f2a
+  - enabled: 0
+    path: Assets/Riku/PhotonFusionTest/Scenes/TestGameScene.unity
+    guid: 79ede7a26d16dfc4d806ef692e958265
+  - enabled: 1
+    path: Assets/Riku/Proto/Scenes/ProtoGameScene.unity
+    guid: 09d50f51480af2b4fb076f0b906eb7dd
+  - enabled: 1
+    path: Assets/Amber/Result/TestResult.unity
+    guid: aedc011aeb29c8c4c9ce7625fc4391ca
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  m_UseUCBPForAssetBundles: 0

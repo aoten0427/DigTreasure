@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3570ffd42ff138438292dd2c0e66a66, type: 3}
+  m_Name: CaveGenerationSettings
+  m_EditorClassIdentifier: 
+  minCaveCount: 20
+  maxCaveCount: 30
+  minCaveDistance: 10
+  minDepth: -10
+  maxDepth: -50
+  minCaveRadius: 2
+  maxCaveRadius: 3
+  minWalkSteps: 1
+  maxWalkSteps: 5
+  minDirectionChange: 30
+  maxDirectionChange: 90
+  horizontalScaleMultiplier: 2.5
+  verticalMovementFactor: 0.3
+  horizontalBias: 0.7
+  useNoise: 1
+  noiseScale: 0.1
+  noiseThreshold: 0.5
+  voxelLayers:
+  - minHeight: -3.4028235e+38
+    maxHeight: -50
+    voxelId: 4
+    layerName: Bedrock
+  - minHeight: -50
+    maxHeight: -20
+    voxelId: 3
+    layerName: Deep Stone
+  - minHeight: -20
+    maxHeight: -3
+    voxelId: 2
+    layerName: Medium Stone
+  - minHeight: -3
+    maxHeight: 3.4028235e+38
+    voxelId: 1
+    layerName: Surface Stone
+  layerTransitionHeight: 2
+  layerTransitionNoiseScale: 0.15
+  boundaryThickness: 2
+  boundaryVoxelId: 5
+  surfaceLevel: 0
+  cliffHeightInChunks: 3
