@@ -178,6 +178,7 @@ public class PlayerCombat : NetworkBehaviour
             Vector3 spawnPos = UnityEngine.Random.insideUnitSphere * UnityEngine.Random.Range(_treasureDropRadiusRange.x, _treasureDropRadiusRange.y) + transform.position;
             spawnPos.y = spawnHeight;
             _treasureSpawner.SpawnTreasure(spawnPos, treasureLost[i].point, _treasureList.allTreasure.IndexOf(treasureLost[i]));
+            _inventory.RemoveTreasure(treasureLost[i], 1);
         }
     }
     //攻撃したかどうかをリターン
