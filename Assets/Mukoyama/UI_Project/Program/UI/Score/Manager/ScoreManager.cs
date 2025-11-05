@@ -1,9 +1,6 @@
 using DG.Tweening;
-using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
 
 namespace Mukouyama
 {
@@ -12,17 +9,17 @@ namespace Mukouyama
         // 数字の画像
         [SerializeField] private Sprite[] scoreSprits = new Sprite[11];
 
-        //// プレイヤー各桁の位置の画像
-        //[SerializeField] private Image[,] m_Player_Score_Image = new Image[4, 4];
+        // プレイヤーの人数
+        private int m_PlayerNum = 4;
 
+        // 配列４個生成されているけどプレイヤーの人数に合わせてキャンバスを消すのでこのままにしておく
+        // 各プレイヤーのスコア表示
         [SerializeField]
         public ChildArray[] m_Player_Score_Array = new ChildArray[4];
-        //シリアライズされた子要素クラス
+        // シリアライズされた子要素クラス
+        // プレイヤー各桁の位置の画像
         [System.Serializable]
-        public class ChildArray
-        {
-            public Image[] m_Player_Score_Image = new Image[4];
-        }
+        public class ChildArray { public Image[] m_Player_Score_Image = new Image[4]; }
         /*********************************
         * 
         * プログラム開始時処理
@@ -30,18 +27,18 @@ namespace Mukouyama
         **********************************/
         private void Start()
         {
-            InitializeScore();
+            // プレイヤー人数を取得(PlayersDataからプレイヤーの人数を取得できるように)
+            SetPlayerNum(PlayersData.instance.m_PlayerInfoArray.Length);
+
+            // スコア表示を初期化
+            InitializeScore(m_PlayerNum);
         }
 
-        // 表示される数値をリセット
-        private void InitializeScore()
+        /**/// スコア表示をリセット
+        private void InitializeScore(int PlayerNum)
         {
-            for (int i = 0; i < 4; i++)
-            {
-                UpdatePlayerScoreImage(i + 1, 0);
-            }
+            for (int i = 0; i < PlayerNum; i++) { UpdatePlayerScoreImage(i + 1, 0); }
         }
-
 
         /*********************************
         * 
@@ -49,11 +46,10 @@ namespace Mukouyama
         *
         **********************************/
 
-        /**/
-        // スコアを変更する(デバッグ用)
+        /**/// スコアを変更する(デバッグ用)
         public void AddPlayerScore(int PlayerID, int AddScore)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < m_PlayerNum; i++)
             {
                 if (PlayerID == PlayersData.instance.m_PlayerInfoArray[i].Player_ID)
                 {
@@ -63,7 +59,7 @@ namespace Mukouyama
             }
         }
 
-        // スコアを徐々に変動させる
+        /**/// スコアを徐々に変動させる
         private void UpdateVariableScore(PlayersData.PlayerInfo Player)
         {
             if (!Player.Player_IsTweeningScore)
@@ -76,21 +72,20 @@ namespace Mukouyama
 
                 // 値が徐々に上昇するように
                 DOVirtual.Int(
-                    // Tween開始時の値
+                    // tween開始時の値
                     from: Player.Player_BeforeScore,
                     // 終了時の値
                     to: Player.Player_AfterScore,
-                    // Tween時間
+                    // tween時間
                     duration: 1.0f,
-                    // 変動値
+                    // 変動値、変動中の処理
                     tweenValue =>
                     {
                         Player.Player_VariableScore = tweenValue;
-                        //UpdatePlayerScore(Player.Player_ID, tweenValue);
                         UpdatePlayerScoreImage(Player.Player_ID, tweenValue);
                     }
                 )
-                // 完了時
+                // tween完了時
                 .OnComplete(() =>
                 {
                     Player.Player_IsTweeningScore = false;
@@ -101,50 +96,52 @@ namespace Mukouyama
 
         /*********************************
         * 
+        * 情報設定処理
+        *
+        **********************************/
+        /**/// プレイヤーの人数を設定する
+        public void SetPlayerNum(int PlayerNum) { m_PlayerNum = PlayerNum; }
+
+        /*********************************
+        * 
         * スコア表示処理
         *
         **********************************/
 
-        // スコアをもとにプレイヤーの各桁の位置の画像を変更する
+        /**/// スコアをもとにプレイヤーの各桁の位置の画像を変更する
         private void UpdatePlayerScoreImage(int PlayerID, int PlayerVariableScore)
         {
             // スコア範囲を制限
-            if (PlayerVariableScore > 9999)
-                PlayerVariableScore = 9999;
-            if (PlayerVariableScore < 0)
-                PlayerVariableScore = 0;
+            if (PlayerVariableScore > 9999) PlayerVariableScore = 9999;
+            if (PlayerVariableScore < 0) PlayerVariableScore = 0;
 
-            // スコアを文字列化（例："1234"）
+            // スコアを文字列化
             string scoreStr = PlayerVariableScore.ToString();
 
             // 対象プレイヤーのスコア画像配列を取得
             var playerImages = m_Player_Score_Array[PlayerID - 1].m_Player_Score_Image;
 
-            // スコア文字列の開始位置を計算（右詰め表示）
-            // 例：3桁なら右側3つのインデックスに詰める
+            // スコア文字列の開始位置を計算
             int startIndex = 4 - scoreStr.Length;
 
             // 右詰め配置処理
             for (int i = 0; i < 4; i++)
             {
-                int arrayIndex = 3 - i; // 配列[0]=1桁目 → [3]=4桁目 に合わせる
+                int arrayIndex = 3 - i;
 
                 if (i >= startIndex)
                 {
                     // 右詰めした位置に数字を入れる
-                    int strIndex = i - startIndex; // scoreStr の対応位置
+                    int strIndex = i - startIndex;
                     int num = scoreStr[strIndex] - '0';
                     playerImages[arrayIndex].sprite = GetSpriteNumber(num);
                 }
-                else
-                {
-                    // 右詰め前の余白部分は非表示スプライト
-                    playerImages[arrayIndex].sprite = scoreSprits[10];
-                }
+                // 右詰め前の余白部分は透明スプライト
+                else playerImages[arrayIndex].sprite = scoreSprits[10];
             }
         }
 
-        // 受け取った数字に対応する画像を渡す
+        /**/// 受け取った数字に対応する画像を渡す
         private Sprite GetSpriteNumber(int num)
         {
             switch (num)
@@ -173,5 +170,5 @@ namespace Mukouyama
                     return scoreSprits[10];
             }
         }
-    } 
+    }
 }

@@ -1,6 +1,6 @@
-using UnityEngine;
 namespace Mukouyama
 {
+    using UnityEngine;
     public class PlayerMove : MonoBehaviour
     {
         [SerializeField] GameObject UI_Manager;
@@ -13,7 +13,7 @@ namespace Mukouyama
         void Update()
         {
             // I—¹ˆ—
-            EndGame();
+            //EndGame();
 
             // “¾“_‰ÁZ
             AddScores();
@@ -67,5 +67,5 @@ namespace Mukouyama
             if (Input.GetKey(KeyCode.LeftArrow)) transform.Translate(-0.1f, 0, 0);
             else if (Input.GetKey(KeyCode.RightArrow)) transform.Translate(0.1f, 0, 0);
         }
-    } 
+    }
 }

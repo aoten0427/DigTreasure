@@ -6,10 +6,12 @@ namespace Mukouyama
     public class UI_Move_TEST : MonoBehaviour
     {
         /**/// 各プレイヤーのUI
-        [SerializeField] private Canvas m_P1_Canvas;
-        [SerializeField] private Canvas m_P2_Canvas;
-        [SerializeField] private Canvas m_P3_Canvas;
-        [SerializeField] private Canvas m_P4_Canvas;
+        [SerializeField] private Canvas[] m_Player_Canvas = new Canvas[4];
+        /**/// 順位表示
+        [SerializeField] private GameObject[] m_Player_Places = new GameObject[4];
+
+        // プレイヤーの人数
+        private int m_PlayerNum = 4;
 
         /**/// 各プレイヤーのUIの挙動ステート
         public enum UI_MOVE_TYPE
@@ -40,12 +42,7 @@ namespace Mukouyama
             }
         }
         /**/// UI情報配列の雛形
-        public UI_Info[] m_UI_InfoArray = new UI_Info[]{
-        new(1, 1,null, UI_MOVE_TYPE.STANDBY),
-        new(2, 2,null, UI_MOVE_TYPE.STANDBY),
-        new(3, 3,null, UI_MOVE_TYPE.STANDBY),
-        new(4, 4,null, UI_MOVE_TYPE.STANDBY)
-    };
+        public UI_Info[] m_UI_InfoArray = new UI_Info[4];
 
         /**/// プレイヤーUIが順位によってソートされているか確認するフラグ
         private bool m_RankSortedFlag = true;
@@ -112,8 +109,11 @@ namespace Mukouyama
         **********************************/
         private void Start()
         {
+            // プレイヤー人数を取得(PlayersDataからプレイヤーの人数を取得できるように)
+            SetPlayerNum(PlayersData.instance.m_PlayerInfoArray.Length);
+
             // UI情報の初期化
-            Initialize_UI_InfoArray();
+            Initialize_UI_InfoArray(m_PlayerNum);
         }
 
         /*********************************
@@ -123,19 +123,30 @@ namespace Mukouyama
         **********************************/
 
         /**/// 各UIの情報を初期化する     
-        public void Initialize_UI_InfoArray()
+        public void Initialize_UI_InfoArray(int PlayerNum)
         {
-            m_UI_InfoArray = new UI_Info[]{
-            new(1, 1, m_P1_Canvas.GetComponent<RectTransform>(), UI_MOVE_TYPE.STANDBY),
-            new(2, 2, m_P2_Canvas.GetComponent<RectTransform>(), UI_MOVE_TYPE.STANDBY),
-            new(3, 3, m_P3_Canvas.GetComponent<RectTransform>(), UI_MOVE_TYPE.STANDBY),
-            new(4, 4, m_P4_Canvas.GetComponent<RectTransform>(), UI_MOVE_TYPE.STANDBY)
-        };
+            // 配列を初期化する
+            m_UI_InfoArray = new UI_Info[PlayerNum];
+
+            // プレイヤーの人数に応じて配列を作成
+            for (int i = 0; i < 4; i++)
+            {
+                // 配列を生成
+                if (i < PlayerNum) m_UI_InfoArray[i] = new UI_Info(i + 1, i + 1, m_Player_Canvas[i].GetComponent<RectTransform>(), UI_MOVE_TYPE.STANDBY);
+                // 配列を生成させず、UIの表示を消す
+                else
+                {
+                    m_Player_Canvas[i].enabled = false;
+                    m_Player_Places[i].SetActive(false);
+                }
+            }
         }
-        public UI_Info[] GetPlayerInfoArray()
-        {
-            return m_UI_InfoArray;
-        }
+
+        // UIの配列を取得
+        public UI_Info[] GetUI_InfoArray() { return m_UI_InfoArray; }
+
+        // プレイヤーの人数を設定する
+        public void SetPlayerNum(int PlayerNum) { m_PlayerNum = PlayerNum; }
 
         /*********************************
         * 
@@ -177,9 +188,9 @@ namespace Mukouyama
         private bool CheckRankSorted(UI_Info[] UI_Data_Array, PlayersData.PlayerInfo[] PlayersDataArray)
         {
             m_RankSortedFlag = true;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < PlayersDataArray.Length; i++)
             {
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < PlayersDataArray.Length; j++)
                 {
                     if (UI_Data_Array[i].UI_ID != PlayersDataArray[j].Player_ID) continue;
                     if (UI_Data_Array[i].UI_VariablePosition != PlayersDataArray[j].Player_CurrentPlace)
@@ -199,24 +210,24 @@ namespace Mukouyama
         **********************************/
 
         /**/// 各UIのヒエラルキーを更新
-        private void UpdateUI_LayerPlace(PlayersData.PlayerInfo[] PlayerDataArray)
+        private void UpdateUI_LayerPlace(PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < PlayersDataArray.Length; i++)
             {
                 // プレイヤーIDをもとに、プレイヤーのUIの表示順を変更
-                switch (PlayerDataArray[i].Player_ID)
+                switch (PlayersDataArray[i].Player_ID)
                 {
                     case 1:
-                        m_P1_Canvas.sortingOrder = 5 - PlayerDataArray[i].Player_CurrentPlace;
+                        m_Player_Canvas[0].sortingOrder = 5 - PlayersDataArray[i].Player_CurrentPlace;
                         break;
                     case 2:
-                        m_P2_Canvas.sortingOrder = 5 - PlayerDataArray[i].Player_CurrentPlace;
+                        m_Player_Canvas[1].sortingOrder = 5 - PlayersDataArray[i].Player_CurrentPlace;
                         break;
                     case 3:
-                        m_P3_Canvas.sortingOrder = 5 - PlayerDataArray[i].Player_CurrentPlace;
+                        m_Player_Canvas[2].sortingOrder = 5 - PlayersDataArray[i].Player_CurrentPlace;
                         break;
                     case 4:
-                        m_P4_Canvas.sortingOrder = 5 - PlayerDataArray[i].Player_CurrentPlace;
+                        m_Player_Canvas[3].sortingOrder = 5 - PlayersDataArray[i].Player_CurrentPlace;
                         break;
                     default:
                         Debug.Log("error!");
@@ -229,45 +240,29 @@ namespace Mukouyama
         private void MovePlayerRankUI(UI_Info[] UI_DataArray, PlayersData.PlayerInfo[] PlayersDataArray)
         {
             // 各プレイヤーUIの状態をチェックし、動かせる条件に合っていれば動かす
-            for (int i = 0; i < 4; i++) { CheckPlayerRankAndMove(UI_DataArray[i], PlayersDataArray); }
+            for (int i = 0; i < PlayersDataArray.Length; i++) { CheckPlayerRankAndMove(UI_DataArray[i], PlayersDataArray); }
         }
 
         /**/// UIの状態をチェックし、動かせる条件に合っていれば動かす
         private void CheckPlayerRankAndMove(UI_Info UI, PlayersData.PlayerInfo[] PlayersDataArray)
         {
             // UIが移動中なら関数処理終了
-            if (CheckUI_Moving(UI)) return;
+            if (UI.UI_MoveType == UI_MOVE_TYPE.MOVING) return;
 
             // UIを動かす
             MoveUI(UI, PlayersDataArray);
         }
 
-        /**/// UIが移動中かを判定する
-        private bool CheckUI_Moving(UI_Info UI)
-        {
-            // 返り値用フラグ
-            bool checkFlag = false;
-
-            // 移動中かチェックし、移動中ならtrueにする
-            if (UI.UI_MoveType == UI_MOVE_TYPE.MOVING) checkFlag = true;
-
-            // フラグを返す
-            return checkFlag;
-        }
-
         /**/// UIを動かす
         private void MoveUI(UI_Info UI, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            //めも：プレイヤーデータ参照
-            int rankUPorDOWN = 0;
-
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < PlayersDataArray.Length; i++)
             {
                 // IDが一致しているかをチェック
                 if (UI.UI_ID != PlayersDataArray[i].Player_ID) continue;
 
                 // 現在順位とUIの位置の差をチェック
-                rankUPorDOWN = UI.UI_VariablePosition - PlayersDataArray[i].Player_CurrentPlace;
+                int rankUPorDOWN = UI.UI_VariablePosition - PlayersDataArray[i].Player_CurrentPlace;
 
                 // UIが現在順位より下の位置にある時
                 if (rankUPorDOWN > 0)
@@ -347,11 +342,8 @@ namespace Mukouyama
                             break;
                     }
                 }
-                else
-                {
-                    // 順位変動していないので、処理終了
-                    return;
-                }
+                // 順位変動していないので、処理終了
+                else return;
                 break;
             }
         }
@@ -361,14 +353,10 @@ namespace Mukouyama
         {
             // 移動地点を曲がりながら移動
             UI.UI_Position.transform.DOLocalPath(ArrivalPath, m_arrivalTime, PathType.CatmullRom)
-            .OnComplete(() =>
-            {
-                // 完了時に呼ばれる
-                UpdateArrivalUIParam(UI, ArrivalPos);
-            });
-
+            // 完了時に呼ばれる        
+            .OnComplete(() => { UpdateArrivalUIParam(UI, ArrivalPos); });
             // UIのパラメータを更新
-            UpdateMovingUI_Param(UI);
+            UI.UI_MoveType = UI_MOVE_TYPE.MOVING;
         }
 
         // DoTweenで各順位の座標へ動かす
@@ -377,20 +365,9 @@ namespace Mukouyama
         {
             // 下に移動
             UI.UI_Position.transform.DOLocalMove(ArrivalPath, m_arrivalTime)
-            .OnComplete(() =>
-            {
-                // 完了時に呼ばれる
-                UpdateArrivalUIParam(UI, ArrivalPos);
-            });
-
+            // 完了時に呼ばれる
+            .OnComplete(() => { UpdateArrivalUIParam(UI, ArrivalPos); });
             // UIのパラメータを更新
-            UpdateMovingUI_Param(UI);
-        }
-
-        /**/// 移動させるUIの目的地、挙動ステートを更新
-        private void UpdateMovingUI_Param(UI_Info UI)
-        {
-            // 移動中ステートに変更
             UI.UI_MoveType = UI_MOVE_TYPE.MOVING;
         }
 
@@ -410,12 +387,12 @@ namespace Mukouyama
         *
         **********************************/
 
-        /**/// 各UIの現在のパラメータをチェック(デバッグ表示)
+        /*// 各UIの現在のパラメータをチェック(デバッグ表示)
         private void CheckUI_Data()
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < m_PlayerNum; i++)
                 {
                     Debug.Log("\n" +
                         "UIの現在地 :" + m_UI_InfoArray[i].UI_VariablePosition + "\n" +
@@ -424,7 +401,7 @@ namespace Mukouyama
                         );
                 }
             }
-        }
+        }*/
 
         /*// ゲーム強制終了
         private void EndGame()
@@ -435,5 +412,5 @@ namespace Mukouyama
         Application.Quit();//ゲームプレイ終了
     #endif
         }*/
-    } 
+    }
 }

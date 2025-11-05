@@ -4,19 +4,21 @@ using UnityEngine;
 namespace Mukouyama
 {
     /*********************************
-* 
-* プレイヤー情報クラス(仮)
-*
-**********************************/
+    * 
+    * プレイヤー情報クラス(仮)
+    *
+    **********************************/
     public class PlayersData : MonoBehaviour
     {
         // インスタンスの定義
         public static PlayersData instance;
 
+        // 外部から取得するプレイヤーの人数
+        [SerializeField] public int m_PlayerNum = 4;
+
         /**/// プレイヤーの情報クラス
         public class PlayerInfo : IComparable
         {
-
             public int Player_ID;               // プレイヤーID
             public string Player_Name;          // プレイヤー名
             public int Player_BeforeScore;      // プレイヤーの変動前スコア
@@ -45,7 +47,6 @@ namespace Mukouyama
                 this.Player_IsTweeningScore = false;
                 this.Player_CurrentPlace = _Player_CurrentPlace;
             }
-
             // プレイヤーのスコアを比較する：順位のソート用
             public int CompareTo(object obj)
             {
@@ -53,14 +54,10 @@ namespace Mukouyama
                 return i.Player_CurrentScore.CompareTo(this.Player_CurrentScore);
             }
         }
-        /**/// プレイヤー情報配列の雛形
-        public PlayerInfo[] m_PlayerInfoArray = new PlayerInfo[]{
-        new(1,"アアア", 0, 0, 0, 0, 1),
-        new(2,"イイイ", 0, 0, 0, 0, 2),
-        new(3,"ウウウ", 0, 0, 0, 0, 3),
-        new(4,"エエエ", 0, 0, 0, 0, 4)
-    };
+        /**/// プレイヤー情報配列
+        public PlayerInfo[] m_PlayerInfoArray;
 
+        // プレイヤー名クラス配列
         [SerializeField]
         private PlayerName[] m_PlayerNames = new PlayerName[4];
 
@@ -70,7 +67,8 @@ namespace Mukouyama
         *
         **********************************/
 
-        // シングルトン化する
+        /**/// プログラム開始時処理(ゲームオブジェクト生成前)
+            // シングルトン化する
         private void Awake()
         {
             if (instance == null)
@@ -78,19 +76,61 @@ namespace Mukouyama
                 // 自身をインスタンスとする
                 instance = this;
                 // シーンをまたいでも消去されないようにする
-                //DontDestroyOnLoad(gameObject);
+                DontDestroyOnLoad(gameObject);
             }
-            else
-            {
-                // インスタンスが複数存在しないように、既に存在していたら自身を消去する
-                Destroy(gameObject);
-            }
+            // インスタンスが複数存在しないよう、既に存在していたら自身を消去する
+            else Destroy(gameObject);
         }
+
+        /**/// プログラム開始時処理(ゲームオブジェクト生成後)
         private void Start()
         {
             // プレイヤー情報の初期化
-            InitializePleyerInfo();
+            InitializePleyerInfo(m_PlayerNum);
         }
+
+        /*********************************
+        * 
+        * プレイヤー情報設定、変更処理
+        *
+        **********************************/
+
+        /**/// 各プレイヤーの情報を初期化する
+        public void InitializePleyerInfo(int PlayerNum)
+        {
+            // 配列を初期化
+            m_PlayerInfoArray = new PlayerInfo[PlayerNum];
+
+            // 生成した配列にデータを挿入する
+            for (int i = 0; i < PlayerNum; i++)
+            {
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // ↓外部からプレイヤー名を取得
+
+                // ↑外部からプレイヤー名を取得
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                m_PlayerInfoArray[i] = new PlayerInfo(i + 1, "プレイヤー" + (i + 1)/*外部から取得したプレイヤー名に変更*/, 0, 0, 0, 0, i + 1);
+                m_PlayerNames[i].SetUI_PlayerName(i);
+            }
+        }
+
+        /*// プレイヤーの配列を取得
+        public PlayerInfo[] GetPlayerArray()
+        {
+            return m_PlayerInfoArray;
+        }
+
+        public PlayerInfo GetPlayerInfo(int PlayerID)
+        {
+            for (int i = 0; i < m_PlayerInfoArray.Length; i++)
+            {
+                if (PlayerID == m_PlayerInfoArray[i].Player_ID)
+                {
+                    return m_PlayerInfoArray[i];
+                }
+            }
+            return null;
+        }*/
 
         /*********************************
         * 
@@ -103,7 +143,7 @@ namespace Mukouyama
             UpdatePlace(m_PlayerInfoArray);
 
             // 数値確認(デバッグ)
-            CheckPlayerData();
+            //CheckPlayerData();
         }
 
         /**********************************
@@ -118,53 +158,7 @@ namespace Mukouyama
             // listをソート
             Array.Sort(PlayerArray);
             // ソート後の配列をもとにプレイヤーの順位(データ上)を変更
-            for (int i = 0; i < 4; i++) { PlayerArray[i].Player_CurrentPlace = i + 1; }
-        }
-
-        /*********************************
-        * 
-        * プレイヤー情報設定、変更処理
-        *
-        **********************************/
-
-        /**/// 各プレイヤーの情報を初期化する
-        public void InitializePleyerInfo()
-        {
-            m_PlayerInfoArray = new PlayerInfo[]{
-                new(1,"アアア",  0, 0, 0, 0, 1),
-                new(2,"イイイ",  0, 0, 0, 0, 2),
-                new(3,"ウウウ",  0, 0, 0, 0, 3),
-                new(4,"エエエ",  0, 0, 0, 0, 4)
-        };
-            for (int i = 0; i < 4; i++)
-            {
-                m_PlayerNames[i].SetPlayerName(i);
-            }
-        }
-
-
-        public void ChangePlayerName(int id,string name)
-        {
-            m_PlayerInfoArray[id].Player_Name = name;
-            m_PlayerNames[id].name = name;
-            m_PlayerNames[id].SetPlayerName(id);
-        }
-
-        public PlayerInfo[] GetPlayerArray()
-        {
-            return m_PlayerInfoArray;
-        }
-
-        public PlayerInfo GetPlayerInfo(int PlayerID)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                if (PlayerID == m_PlayerInfoArray[i].Player_ID)
-                {
-                    return m_PlayerInfoArray[i];
-                }
-            }
-            return null;
+            for (int i = 0; i < m_PlayerInfoArray.Length; i++) { PlayerArray[i].Player_CurrentPlace = i + 1; }
         }
 
         /*********************************
@@ -172,12 +166,12 @@ namespace Mukouyama
         * デバッグ用関数
         *
         **********************************/
-        /**/// 各プレイヤーの現在のパラメータをチェック(デバッグ表示)
+        /*// 各プレイヤーの現在のパラメータをチェック(デバッグ表示)
         private void CheckPlayerData()
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < m_PlayerInfoArray.Length; i++)
                 {
                     Debug.Log("\n" +
                         "プレイヤーID :" + m_PlayerInfoArray[i].Player_ID + "\n" +
@@ -190,6 +184,6 @@ namespace Mukouyama
                         );
                 }
             }
-        }
-    } 
+        }*/
+    }
 }

@@ -1,18 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
+using Mukouyama;
 using TMPro;
 using UnityEngine;
-
-namespace Mukouyama
+public class PlayerName : MonoBehaviour
 {
-    public class PlayerName : MonoBehaviour
+    [SerializeField] GameObject m_UI_PlayerName;
+    public void SetUI_PlayerName(int index)
     {
-        [SerializeField] GameObject m_PlayerName;
-        // Start is called before the first frame update
-        public void SetPlayerName(int index)
-        {
-            m_PlayerName.GetComponent<TextMeshProUGUI>().text =
+        m_UI_PlayerName.GetComponent<TextMeshProUGUI>().text =
             PlayersData.instance.m_PlayerInfoArray[index].Player_Name;
-        }
-    } 
+    }
 }
