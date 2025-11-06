@@ -10,12 +10,12 @@ namespace VoxelWorld
     public class Voxel
     {
         //識別ID
-        [SerializeField] private int m_voxelId;
-        public int VoxelId => m_voxelId;
+        [SerializeField] private byte m_voxelId;
+        public byte VoxelId => m_voxelId;
 
         //現在の耐久度
-        [SerializeField] private float m_durability;
-        public float Durability => m_durability;
+        [SerializeField] private short m_durability;
+        public short Durability => m_durability;
 
         //空ボクセルか判定
         public bool IsEmpty => m_voxelId == VoxelConstants.EMPTY_VOXEL_ID;
@@ -28,7 +28,7 @@ namespace VoxelWorld
         /// <param name="voxelId">ボクセルID</param>
         public Voxel(int voxelId)
         {
-            m_voxelId = voxelId;
+            m_voxelId = (byte)voxelId;
 
             // VoxelDataから最大耐久度を取得して初期化
             var voxelData = VoxelDataBase.GetVoxelDataStatic(voxelId);
@@ -85,7 +85,7 @@ namespace VoxelWorld
             }
 
             // 耐久度を減少
-            m_durability -= attackPower;
+            m_durability -= (short)attackPower;
 
             Debug.Log($"耐久度: {m_durability}");
 

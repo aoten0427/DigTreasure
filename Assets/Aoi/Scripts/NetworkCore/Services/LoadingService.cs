@@ -25,11 +25,17 @@ namespace NetWork
             CreateLoadScreen();
         }
 
+        public void DataReset()
+        {
+            m_loadManager.SetLoadScreen(LoadType.None);
+        }
+
         /// <summary>
         /// シーンロード開始時の処理
         /// </summary>
         public void OnSceneLoadStart(NetworkRunner runner)
         {
+            m_loadManager = LoadManager.Instance;
             if (m_loadManager != null)
             {
                 m_currentLoadEvent = AddLoadingEvent(1.0f,"基本ローディング");
@@ -74,6 +80,7 @@ namespace NetWork
         /// </summary>
         public void SetLoadScreen(LoadType loadType)
         {
+            m_loadManager = LoadManager.Instance;
             m_loadManager?.SetLoadScreen(loadType);
         }
 
@@ -105,7 +112,7 @@ namespace NetWork
             }
             if (m_loadManager != null) return;
 
-            //m_loadManager = LoadManager.Instance;
+            m_loadManager = LoadManager.Instance;
 
             if(m_loadManager == null)
             {

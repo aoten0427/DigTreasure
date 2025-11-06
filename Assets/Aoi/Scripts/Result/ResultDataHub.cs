@@ -50,6 +50,12 @@ public class ResultDataHub : NetworkBehaviour
         RPC_SetResultData(Runner.LocalPlayer, data);
     }
 
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+       
+        m_gameLauncher.RemoveOnAllUserReady(RPC_SentData);
+    }
+
     /// <summary>
     /// リザルトデータを全体更新
     /// </summary>

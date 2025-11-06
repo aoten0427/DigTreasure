@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 15003, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: New Windows Profile
+  m_Name: Aoi
   m_EditorClassIdentifier: 
   m_AssetVersion: 1
   m_BuildTarget: 19
@@ -21,7 +21,13 @@ MonoBehaviour:
   m_OverrideGlobalSceneList: 1
   m_Scenes:
   - m_enabled: 1
-    m_path: Assets/Aoi/Scene/TestScene.unity
+    m_path: Assets/Aoi/Scene/0_Entrance.unity
+  - m_enabled: 1
+    m_path: Assets/Aoi/Scene/1_Room.unity
+  - m_enabled: 1
+    m_path: Assets/Aoi/Scene/2_Play.unity
+  - m_enabled: 1
+    m_path: Assets/Aoi/Scene/3_Result.unity
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:
     m_Settings:

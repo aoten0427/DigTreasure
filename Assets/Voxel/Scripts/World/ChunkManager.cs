@@ -1,5 +1,8 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
+using UniRx;
+using System;
 
 namespace VoxelWorld
 {
@@ -144,11 +147,11 @@ namespace VoxelWorld
                 {
                     if (Application.isPlaying)
                     {
-                        Object.Destroy(chunkObject);
+                        UnityEngine.Object.Destroy(chunkObject);
                     }
                     else
                     {
-                        Object.DestroyImmediate(chunkObject);
+                        UnityEngine.Object.DestroyImmediate(chunkObject);
                     }
                 }
                 m_chunkGameObjects.Remove(chunkPosition);
@@ -198,13 +201,72 @@ namespace VoxelWorld
             Debug.Log($"[ChunkManager] 範囲 ({actualMin}) - ({actualMax}) に {createdCount} 個のチャンクを作成しました。");
         }
         
+
         /// <summary>
-        /// 指定サイズのチャンクを一括作成
+        /// 指定範囲のチャンクをフレーム分散して作成（コルーチン版）
         /// </summary>
-        /// <param name="worldSizeInChunks">ワールドサイズ（チャンク単位）</param>
-        public void CreateChunksInRange(Vector3Int worldSizeInChunks)
+        /// <param name="minChunk">範囲の最小チャンク座標</param>
+        /// <param name="maxChunk">範囲の最大チャンク座標</param>
+        /// <param name="chunksPerFrame">1フレームあたりに作成するチャンク数</param>
+        /// <returns>IEnumerator</returns>
+        public IEnumerator CreateChunksInRangeCoroutine(Vector3Int minChunk, Vector3Int maxChunk, int chunksPerFrame = 1,
+            ReactiveProperty<float> progressProperty = null,
+            Action onComplete = null)
         {
-            CreateChunksInRange(Vector3Int.zero, worldSizeInChunks - Vector3Int.one);
+            int createdCount = 0;
+            int frameChunkCount = 0;
+
+            // 最小・最大を正規化（minが必ずmaxより小さくなるように）
+            Vector3Int actualMin = new Vector3Int(
+                Mathf.Min(minChunk.x, maxChunk.x),
+                Mathf.Min(minChunk.y, maxChunk.y),
+                Mathf.Min(minChunk.z, maxChunk.z)
+            );
+
+            Vector3Int actualMax = new Vector3Int(
+                Mathf.Max(minChunk.x, maxChunk.x),
+                Mathf.Max(minChunk.y, maxChunk.y),
+                Mathf.Max(minChunk.z, maxChunk.z)
+            );
+
+            Vector3Int size = new Vector3Int(
+                actualMax.x - actualMin.x + 1,
+                actualMax.y - actualMin.y + 1,
+                actualMax.z - actualMin.z + 1
+            );
+
+            int totalChunks = size.x * size.y * size.z;
+
+            Debug.Log($"[ChunkManager] フレーム分散チャンク作成開始: 範囲 ({actualMin}) - ({actualMax}), {chunksPerFrame}チャンク/フレーム");
+
+            for (int x = actualMin.x; x <= actualMax.x; x++)
+            {
+                for (int y = actualMin.y; y <= actualMax.y; y++)
+                {
+                    for (int z = actualMin.z; z <= actualMax.z; z++)
+                    {
+                        Vector3Int chunkPos = new Vector3Int(x, y, z);
+                        if (!m_chunks.ContainsKey(chunkPos))
+                        {
+                            CreateChunk(chunkPos);
+                            createdCount++;
+                            frameChunkCount++;
+
+                            // 指定数のチャンクを作成したら次のフレームへ
+                            if (frameChunkCount >= chunksPerFrame)
+                            {
+                                frameChunkCount = 0;
+                                if (progressProperty != null) progressProperty.Value = (float)createdCount / totalChunks;
+
+                                yield return null;
+                            }
+                        }
+                    }
+                }
+            }
+
+            onComplete?.Invoke();
+            Debug.Log($"[ChunkManager] フレーム分散チャンク作成完了: {createdCount} 個のチャンクを作成しました。");
         }
         
         
@@ -383,11 +445,11 @@ namespace VoxelWorld
                 {
                     if (Application.isPlaying)
                     {
-                        Object.Destroy(kvp.Value);
+                        UnityEngine.Object.Destroy(kvp.Value);
                     }
                     else
                     {
-                        Object.DestroyImmediate(kvp.Value);
+                        UnityEngine.Object.DestroyImmediate(kvp.Value);
                     }
                 }
             }

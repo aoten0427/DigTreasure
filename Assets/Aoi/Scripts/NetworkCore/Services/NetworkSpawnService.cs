@@ -2,6 +2,7 @@ using Fusion;
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace NetWork
 {
@@ -13,6 +14,7 @@ namespace NetWork
         [Header("Spawn Settings")]
         [SerializeField] private bool m_isLog = false;
 
+
         /// <summary>
         /// 全てのNetworkObjectがSpawnされた際のイベント
         /// </summary>
@@ -23,6 +25,7 @@ namespace NetWork
         /// </summary>
         public void SpawnNetworkObjects(NetworkRunner runner, Action onComplete = null)
         {
+
             StartCoroutine(SpawnNetworkObjectsCoroutine(runner, onComplete));
         }
 
@@ -31,6 +34,7 @@ namespace NetWork
         /// </summary>
         private IEnumerator SpawnNetworkObjectsCoroutine(NetworkRunner runner, Action onComplete)
         {
+
             // 初期化待ち
             yield return null;
 
@@ -46,11 +50,14 @@ namespace NetWork
                     if (runner.IsServer || runner.IsSharedModeMasterClient)
                     {
                         runner.Spawn(netObj);
+                        if (m_isLog) Debug.Log($"{netObj.name}を見つけました");
                     }
                 }
             }
 
             if (m_isLog) Debug.Log("[NetworkSpawnService] 全てのNetworkObjectをSpawn: " + Time.time);
+
+
 
 
             // イベント発火
@@ -59,12 +66,9 @@ namespace NetWork
             // 完了コールバック実行
             onComplete?.Invoke();
 
-            Reset();
-        }
-
-        public void Reset()
-        {
             OnNetworkObjectsSpawned = null;
         }
+
     }
+        
 }

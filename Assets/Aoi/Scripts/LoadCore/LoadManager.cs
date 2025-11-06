@@ -15,7 +15,7 @@ public class LoadManager : MonoBehaviour
     {
         get
         {
-            if (s_instance == null) Debug.LogError("[LoadManager]インスタンスがありません");
+            if (s_instance == null) Debug.LogWarning("[LoadManager]インスタンスがありません");
             return s_instance;
         }
         private set { s_instance = value; }

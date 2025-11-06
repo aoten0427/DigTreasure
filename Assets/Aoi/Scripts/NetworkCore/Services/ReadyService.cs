@@ -31,6 +31,12 @@ namespace NetWork
             SpawnReadyManager();
         }
 
+        public void DataReset()
+        {
+            m_runner = null;
+            m_readyManager = null;
+        }
+
         /// <summary>
         /// シーンロード完了時の処理
         /// </summary>
@@ -74,7 +80,14 @@ namespace NetWork
             // ホスト以外はパス
             if (m_runner.IsSharedModeMasterClient)
             {
-                m_readyManager = m_runner.Spawn(m_readyPrefab).GetComponent<ReadyManager>();
+                NetworkObject spawnedObject = m_runner.Spawn(m_readyPrefab, onBeforeSpawned: (runner, obj) =>
+                {
+                    // Flags を設定：AllowStateAuthorityOverride = ON, DestroyWhenStateAuthorityLeaves = OFF
+                    obj.Flags = NetworkObjectFlags.AllowStateAuthorityOverride;
+                    Debug.Log($"[ReadyService] ReadyManager Flags設定: {obj.Flags}");
+                });
+
+                m_readyManager = spawnedObject.GetComponent<ReadyManager>();
                 m_readyManager.SetCompleteAction(() => OnAllUserReady?.Invoke());
                 if (m_isLog) Debug.Log("[ReadyService] ReadyManagerをSpawnしました。");
             }
@@ -85,6 +98,12 @@ namespace NetWork
             if (m_readyManager != null) return;
 
             m_readyManager = FindFirstObjectByType<ReadyManager>();
+
+            if (m_readyManager == null)
+            {
+                if (m_isLog) Debug.LogWarning("[ReadyService] ReadyManagerが見つかりませんでした。");
+                return;
+            }
             m_readyManager.SetCompleteAction(() => OnAllUserReady?.Invoke());
         }
 

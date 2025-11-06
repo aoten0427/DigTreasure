@@ -24,5 +24,14 @@ namespace NetWork
         {
             return 0;
         }
+
+        public void Reset()
+        {
+            m_id = 0;
+            m_name = "";
+            m_treasureCount = 0;
+            m_treasurePoint = 0;
+            m_digPoint = 0;
+        }
     }
 }

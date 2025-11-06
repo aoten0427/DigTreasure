@@ -49,7 +49,7 @@ namespace VoxelWorld
         //基本ボクセルタイプの開始ID
         public const int BASE_VOXEL_ID_START = 1;
         //最大ボクセルタイプ数
-        public const int MAX_VOXEL_TYPES = 256;
+        public const byte MAX_VOXEL_TYPES = 255;
 
         // メッシュ生成関連定数
         //面の方向を表す列挙型
@@ -76,7 +76,7 @@ namespace VoxelWorld
         public const float DEFAULT_TEST_HARDNESS = 1.0f;
 
         //デフォルトの最大耐久度
-        public const float DEFAULT_MAX_DURABILITY = 1f;
+        public const short DEFAULT_MAX_DURABILITY = 1;
 
 
         // 座標変換用ヘルパーメソッド

@@ -49,6 +49,19 @@ public class UserDataService : MonoBehaviour
         SpawnUserDataManager();
     }
 
+    public void DataReset()
+    {
+        m_runner = null;
+        m_userDataManager = null;
+        m_userData.Reset();
+    }
+
+    public void PlayerLeft(PlayerRef user)
+    {
+        //Debug.Log($"{user}の退出を確認");
+        m_userDataManager.RPC_PlayerLeft(user);
+    }
+
     /// <summary>
     /// ユーザーデータマネージャー生成
     /// </summary>
@@ -71,7 +84,14 @@ public class UserDataService : MonoBehaviour
         // ホスト以外はパス
         if (m_runner.IsSharedModeMasterClient)
         {
-            m_userDataManager = m_runner.Spawn(m_userdataManagerPrefab).GetComponent<UserDataManager>();
+            NetworkObject spawnedObject = m_runner.Spawn(m_userdataManagerPrefab, onBeforeSpawned: (runner, obj) =>
+            {
+                // Flags を設定：AllowStateAuthorityOverride = ON, DestroyWhenStateAuthorityLeaves = OFF
+                obj.Flags = NetworkObjectFlags.AllowStateAuthorityOverride;
+                Debug.Log($"[UserDataService] UserDataManager Flags設定: {obj.Flags}");
+            });
+
+            m_userDataManager = spawnedObject.GetComponent<UserDataManager>();
             m_userDataManager.SetDataChangeAction(data => OnDataChangeAction?.Invoke(data));
             m_userDataManager.SetIDGet(id =>
             {
@@ -120,6 +140,7 @@ public class UserDataService : MonoBehaviour
             m_userData.m_id = id;
         });
         m_userDataManager.RPC_ChangeUserData(m_runner.LocalPlayer, m_userData);
+        m_userDataManager.m_isLog = m_isLog;
     }
 
     /// <summary>
@@ -140,7 +161,7 @@ public class UserDataService : MonoBehaviour
         // Managerのnull状態チェック
         if (m_runner != null && m_userDataManager == null)
         {
-            AcquisitionReadyManager();
+           AcquisitionReadyManager();
         }
 
 #if UNITY_EDITOR

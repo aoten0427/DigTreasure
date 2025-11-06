@@ -31,7 +31,7 @@ namespace NetWork
 
             m_gameLauncher = GameLauncher.Instance;
             m_gameLauncher?.AddOnNetworkObjectSpawned(Entry);
-            //m_gameLauncher.OnPlayerLeft += RemovePlayer;
+            m_gameLauncher.OnPlayerLeft += RemovePlayer;
 
             // 初期状態で全てオフ
             foreach (var p in m_players)
@@ -49,9 +49,18 @@ namespace NetWork
                 }
             }
 
-            m_gameLauncher.SetLoadScreen(LoadType.Load1);
+            
 
 
+        }
+
+        public override void Despawned(NetworkRunner runner, bool hasState)
+        {
+            if (m_gameLauncher != null)
+            {
+                m_gameLauncher.RemoveOnNetworkObjectSpawned(Entry);
+                m_gameLauncher.OnPlayerLeft -= RemovePlayer;
+            }
         }
 
         /// <summary>
@@ -62,6 +71,8 @@ namespace NetWork
         private void RemovePlayer(NetworkRunner runner,PlayerRef user)
         {
             if (!Object.HasStateAuthority) return;
+            if (!n_usertoIndex.ContainsKey(user)) return;
+
             if(n_usertoIndex.ContainsKey(user))
             {
                 int index = n_usertoIndex[user];
@@ -73,6 +84,7 @@ namespace NetWork
                 Debug.Log("ユーザーが抜けました");
             }
         }
+
 
         /// <summary>
         /// 生成
@@ -98,11 +110,7 @@ namespace NetWork
             }
 
             //プレイシーン用のロードを設定
-
-
-            
-
-            //Entry(Runner);
+            m_gameLauncher.SetLoadScreen(LoadType.Load1);
         }
 
         /// <summary>
@@ -157,7 +165,7 @@ namespace NetWork
         }
 
         /// <summary>
-        /// IDを取得
+        /// インデックス番号を取得
         /// </summary>
         /// <param name="user"></param>
         /// <param name="index"></param>
@@ -169,7 +177,6 @@ namespace NetWork
                 if (index >= 0 && index < m_players.Length)
                 {
                     m_player = m_players[index];
-                    Debug.Log($"{user} 入室:ID {index}");
                 }
             }
 
@@ -184,7 +191,6 @@ namespace NetWork
 
 
             //名前設定
-            
             for(int i = 0;i < m_playerName.Length;i++)
             {
                 if (m_playerName[i] != null)
@@ -194,11 +200,10 @@ namespace NetWork
                 }
             }
 
+            //名前を取得して設定
             var userdatas = m_gameLauncher.GetAllUserData();
-            var result = n_usertoIndex.Where(kvp => userdatas.ContainsKey(kvp.Key));
-
-
-            foreach(var data in result)
+            var result = n_usertoIndex.Where(kvp => kvp.Key != null && userdatas.ContainsKey(kvp.Key));
+            foreach (var data in result)
             {
                 var userdata = userdatas[data.Key];
                 m_playerName[data.Value].text = userdata.m_name.ToString();
@@ -216,6 +221,13 @@ namespace NetWork
                 //シーンを変更
                 Runner.LoadScene(SceneRef.FromIndex(2), LoadSceneMode.Single);
             }
+        }
+
+        public async void Exit()
+        {
+            await m_gameLauncher.LeaveRoom();
+
+            SceneManager.LoadScene(Config.ENTRANCE_SCENE_NUMBER, LoadSceneMode.Single);
         }
     }
 }

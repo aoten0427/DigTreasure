@@ -133,6 +133,15 @@ public class PlayManager : NetworkBehaviour
 
         var maintask = m_gameLauncher.AddLoadingEvent();
 
+        //ロードタスクを生成
+        List<ReactiveProperty<float>> tasks = new List<ReactiveProperty<float>>();
+        foreach(var initializer in initializers)
+        {
+            tasks.Add(m_gameLauncher.AddLoadingEvent(initializer.LoadWeight, initializer.Name));
+        }
+
+
+
         int totalInitializers = initializers.Count;
         for (int i = 0; i < initializers.Count; i++)
         {
@@ -141,12 +150,10 @@ public class PlayManager : NetworkBehaviour
 
             initializer.SetManager(this);
 
-            var task = m_gameLauncher.AddLoadingEvent(initializer.LoadWeight,initializer.Name);
-
-            await initializer.InitializeAsync(task);
+            await initializer.InitializeAsync(tasks[i]);
 
             //必ずタスクを完了させる
-            task.Value = 1.0f;
+            tasks[i].Value = 1.0f;
 
             if (m_isLog) Debug.Log($"[PlayManager] [{i + 1}/{totalInitializers}] 初期化完了");
         }
