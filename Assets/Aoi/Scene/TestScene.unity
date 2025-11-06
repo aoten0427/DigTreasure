@@ -128,6 +128,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 20207500}
+  - component: {fileID: 20207501}
+  - component: {fileID: 20207502}
+  - component: {fileID: 20207503}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -150,6 +153,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &20207501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20207499}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed35485fe03c71047bf9b0e7f2182304, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings: {fileID: 11400000, guid: a7ef5263d16f56b4e84e17fba5201984, type: 2}
+  worldManager: {fileID: 1681864021}
+  testSeed: 12345
+  fieldCenter: {x: 0, y: -20, z: 0}
+  fieldSize: {x: 100, y: 50, z: 100}
+--- !u!114 &20207502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20207499}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e1114c5d5c695f4fa6cb87f544eff6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings: {fileID: 11400000, guid: c335e13120c16b846a4d0914a872d354, type: 2}
+  worldManager: {fileID: 1681864021}
+  testSeed: 99999
+  fieldCenter: {x: 0, y: -20, z: 0}
+  fieldSize: {x: 100, y: 50, z: 100}
+  useVisibleBlocks: 1
+  visibleBlockId: 2
+--- !u!114 &20207503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20207499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 186a9b54b51638a478bd21f46aff85e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings: {fileID: 11400000, guid: 498c1823180934e42939ce7283a9e1bc, type: 2}
+  worldManager: {fileID: 1681864021}
+  testSeed: 54321
+  fieldCenter: {x: 0, y: -20, z: 0}
+  fieldSize: {x: 100, y: 50, z: 100}
 --- !u!1 &402998229
 GameObject:
   m_ObjectHideFlags: 0
@@ -544,9 +600,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7878dcd09bbd3ac4fa388a78a4e110c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_worldSizeInChunksMin: {x: -15, y: -15, z: -15}
-  m_worldSizeInChunksMax: {x: 15, y: 0, z: 15}
-  m_isInitializeCreateChunk: 0
+  m_worldSizeInChunksMin: {x: -10, y: -5, z: -10}
+  m_worldSizeInChunksMax: {x: 10, y: 0, z: 10}
+  m_isInitializeCreateChunk: 1
   m_voxelMaterial: {fileID: 2100000, guid: 2b1e4587679c7204e944569092a95697, type: 2}
   m_boundaryMeshSettings:
     forwardBoundaryZ: 2147483647

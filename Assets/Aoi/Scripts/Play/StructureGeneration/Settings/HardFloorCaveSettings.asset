@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87e560ef10fd07b4f8bbce4b18bfa8ce, type: 3}
+  m_Name: HardFloorCaveSettings
+  m_EditorClassIdentifier: 
+  minCount: 1
+  maxCount: 1
+  priority: 10
+  placementPriority: 10
+  maxConnectionPoints: 2
+  maxAutoConnectionDistance: 80
+  minHorizontalRadius: 35
+  maxHorizontalRadius: 35
+  minVerticalRadius: 12
+  maxVerticalRadius: 15
+  floorThickness: 2
+  floorVoxelId: 5
+  innerVoxelId: 0
+  shapeRandomness: 0.559
+  centerPosition: {x: 0, y: -35, z: 0}

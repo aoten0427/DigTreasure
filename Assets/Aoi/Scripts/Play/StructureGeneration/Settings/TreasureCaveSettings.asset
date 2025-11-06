@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c65630b8ad38d244889d990af52b02b4, type: 3}
+  m_Name: TreasureCaveSettings
+  m_EditorClassIdentifier: 
+  minCount: 1
+  maxCount: 3
+  priority: 10
+  placementPriority: 10
+  maxConnectionPoints: 2
+  maxAutoConnectionDistance: 80
+  minRadius: 6
+  maxRadius: 10
+  minWallThickness: 2
+  maxWallThickness: 3
+  wallVoxelId: 4
+  innerVoxelId: 0
+  treasureOffsetRange: 2
+  minYPosition: -30
+  maxYPosition: -15
