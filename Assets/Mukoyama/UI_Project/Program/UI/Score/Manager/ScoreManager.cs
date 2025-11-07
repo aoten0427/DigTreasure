@@ -144,31 +144,20 @@ namespace Mukouyama
         /**/// Žó‚¯Žæ‚Á‚½”Žš‚É‘Î‰ž‚·‚é‰æ‘œ‚ð“n‚·
         private Sprite GetSpriteNumber(int num)
         {
-            switch (num)
+            return num switch
             {
-                case 0:
-                    return scoreSprits[0];
-                case 1:
-                    return scoreSprits[1];
-                case 2:
-                    return scoreSprits[2];
-                case 3:
-                    return scoreSprits[3];
-                case 4:
-                    return scoreSprits[4];
-                case 5:
-                    return scoreSprits[5];
-                case 6:
-                    return scoreSprits[6];
-                case 7:
-                    return scoreSprits[7];
-                case 8:
-                    return scoreSprits[8];
-                case 9:
-                    return scoreSprits[9];
-                default:
-                    return scoreSprits[10];
-            }
+                0 => scoreSprits[0],
+                1 => scoreSprits[1],
+                2 => scoreSprits[2],
+                3 => scoreSprits[3],
+                4 => scoreSprits[4],
+                5 => scoreSprits[5],
+                6 => scoreSprits[6],
+                7 => scoreSprits[7],
+                8 => scoreSprits[8],
+                9 => scoreSprits[9],
+                _ => scoreSprits[10],
+            };
         }
     }
 }
