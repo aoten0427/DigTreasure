@@ -10,9 +10,6 @@ namespace Mukouyama
         /**/// 順位表示
         [SerializeField] private GameObject[] m_Player_Places = new GameObject[4];
 
-        // プレイヤーの人数
-        private int m_PlayerNum = 4;
-
         /**/// 各プレイヤーのUIの挙動ステート
         public enum UI_MOVE_TYPE
         {
@@ -43,6 +40,9 @@ namespace Mukouyama
         }
         /**/// UI情報配列の雛形
         public UI_Info[] m_UI_InfoArray = new UI_Info[4];
+
+        /**/// UI情報配列の要素数
+        private int m_UI_Length;
 
         /**/// プレイヤーUIが順位によってソートされているか確認するフラグ
         private bool m_RankSortedFlag = true;
@@ -109,11 +109,8 @@ namespace Mukouyama
         **********************************/
         private void Start()
         {
-            // プレイヤー人数を取得(PlayersDataからプレイヤーの人数を取得できるように)
-            SetPlayerNum(PlayersData.instance.m_PlayerInfoArray.Length);
-
             // UI情報の初期化
-            Initialize_UI_InfoArray(m_PlayerNum);
+            Initialize_UI_InfoArray(PlayersData.instance.m_PlayerInfoArray.Length);
         }
 
         /*********************************
@@ -127,6 +124,7 @@ namespace Mukouyama
         {
             // 配列を初期化する
             m_UI_InfoArray = new UI_Info[PlayerNum];
+            m_UI_Length = m_UI_InfoArray.Length;
 
             // プレイヤーの人数に応じて配列を作成
             for (int i = 0; i < 4; i++)
@@ -145,9 +143,6 @@ namespace Mukouyama
         // UIの配列を取得
         public UI_Info[] GetUI_InfoArray() { return m_UI_InfoArray; }
 
-        // プレイヤーの人数を設定する
-        public void SetPlayerNum(int PlayerNum) { m_PlayerNum = PlayerNum; }
-
         /*********************************
         * 
         * 全体更新処理
@@ -165,7 +160,7 @@ namespace Mukouyama
         *
         **********************************/
 
-        /**/// 各プレイヤーの順位の移動
+        /**/// 各UIの移動
         private void MoveRank(UI_Info[] UI_Data_Array, PlayersData.PlayerInfo[] PlayersDataArray)
         {
             // UIのUIの現在地が順位通りに整列しているかをチェック
@@ -187,12 +182,15 @@ namespace Mukouyama
         /**/// UIの現在地が順位通りに整列しているかをチェック
         private bool CheckRankSorted(UI_Info[] UI_Data_Array, PlayersData.PlayerInfo[] PlayersDataArray)
         {
+            // 順位が整列しているか判定するフラグ
             m_RankSortedFlag = true;
-            for (int i = 0; i < PlayersDataArray.Length; i++)
+            for (int i = 0; i < m_UI_Length; i++)
             {
-                for (int j = 0; j < PlayersDataArray.Length; j++)
+                for (int j = 0; j < m_UI_Length; j++)
                 {
+                    // プレイヤーIDとUIのIDが一致していなかったら次のループへ
                     if (UI_Data_Array[i].UI_ID != PlayersDataArray[j].Player_ID) continue;
+                    // プレイヤーの現在順位とUIの位置が一致していなかったらfalseを返す
                     if (UI_Data_Array[i].UI_VariablePosition != PlayersDataArray[j].Player_CurrentPlace)
                     {
                         m_RankSortedFlag = false;
@@ -200,6 +198,7 @@ namespace Mukouyama
                     }
                 }
             }
+            // 何もなければtrueを返す
             return m_RankSortedFlag;
         }
 
@@ -212,9 +211,9 @@ namespace Mukouyama
         /**/// 各UIのヒエラルキーを更新
         private void UpdateUI_LayerPlace(PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            for (int i = 0; i < PlayersDataArray.Length; i++)
+            for (int i = 0; i < m_UI_Length; i++)
             {
-                // プレイヤーIDをもとに、プレイヤーのUIの表示順を変更
+                // プレイヤーIDをもとに、プレイヤーのUIの表示順を変更。(順位が高いものから前面に表示)
                 switch (PlayersDataArray[i].Player_ID)
                 {
                     case 1:
@@ -236,11 +235,11 @@ namespace Mukouyama
             }
         }
 
-        /**/// 各プレイヤーUIを動かす
+        /**/// 各UIを動かす
         private void MovePlayerRankUI(UI_Info[] UI_DataArray, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            // 各プレイヤーUIの状態をチェックし、動かせる条件に合っていれば動かす
-            for (int i = 0; i < PlayersDataArray.Length; i++) { CheckPlayerRankAndMove(UI_DataArray[i], PlayersDataArray); }
+            // 各UIの状態をチェックし、動かせる条件に合っていれば動かす
+            for (int i = 0; i < m_UI_Length; i++) { CheckPlayerRankAndMove(UI_DataArray[i], PlayersDataArray); }
         }
 
         /**/// UIの状態をチェックし、動かせる条件に合っていれば動かす
@@ -248,7 +247,6 @@ namespace Mukouyama
         {
             // UIが移動中なら関数処理終了
             if (UI.UI_MoveType == UI_MOVE_TYPE.MOVING) return;
-
             // UIを動かす
             MoveUI(UI, PlayersDataArray);
         }
@@ -256,7 +254,7 @@ namespace Mukouyama
         /**/// UIを動かす
         private void MoveUI(UI_Info UI, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            for (int i = 0; i < PlayersDataArray.Length; i++)
+            for (int i = 0; i < m_UI_Length; i++)
             {
                 // IDが一致しているかをチェック
                 if (UI.UI_ID != PlayersDataArray[i].Player_ID) continue;
@@ -376,7 +374,6 @@ namespace Mukouyama
         {
             // 現在位置を目的地の順位に変更
             UI.UI_VariablePosition = ArrivalPos;
-
             // 待機中ステートに変更
             UI.UI_MoveType = UI_MOVE_TYPE.STANDBY;
         }
