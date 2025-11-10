@@ -11,18 +11,19 @@ public class PlayerProto : NetworkBehaviour
 
     //動作可能か
     bool m_isAction = true;
-    
+
     //リジッドボディ
     private Rigidbody rb;
     //コライダー
     private Collider playerCollider;
     //移動可能か
     private bool canMove = true;
-    [SerializeField] private bool testingStun = false; //スタン機能オン・オッフ
 
 
     [SerializeField] private Dig m_dig;
     [SerializeField] private GameObject m_digpoint2;
+    //掘り可能か
+    private bool canDig = true;
 
     [Header("リジッドボディセッティング")]
     [SerializeField] private float moveSpeed = 5f;//移動速度
@@ -30,7 +31,7 @@ public class PlayerProto : NetworkBehaviour
     [SerializeField] private float jumpForce = 5f;//ジャンプ力
     [SerializeField] private float groundCheckDistance = 1.5f;//床の当たり判定
     [SerializeField] private LayerMask groundLayer;//地面レイヤー
-    [SerializeField] private float drag = 5f; 
+    [SerializeField] private float drag = 5f;
 
     private bool isJump = false;//ジャンプフラグ
 
@@ -40,24 +41,26 @@ public class PlayerProto : NetworkBehaviour
     private bool needLockOnRot = false;
     private Quaternion lockOnRot;
 
-    [SerializeField]PlayerCombat m_combat;
-    [SerializeField]SurroundingsDig m_surroundingsDig;
+    [SerializeField] PlayerCombat m_combat;
+    [SerializeField] SurroundingsDig m_surroundingsDig;
 
     private void OnEnable()
     {
-        if (testingStun)
-        {
-            PlayerCombat.OnPlayerStunStart += StartStun;
-            PlayerCombat.OnPlayerStunEnd += EndStun;
-        }
+        PlayerCombat.OnPlayerStunStart += DisableMove;
+        PlayerCombat.OnPlayerStunEnd += EnableMove;
+        PlayerCombat.OnPlayerBarrierStart += DisableMove;
+        PlayerCombat.OnPlayerBarrierStart += DisableDig;
+        PlayerCombat.OnPlayerBarrierEnd += EnableMove;
+        PlayerCombat.OnPlayerBarrierEnd += EnableDig;
     }
     private void OnDisable()
     {
-        if (testingStun)
-        {
-            PlayerCombat.OnPlayerStunStart -= StartStun;
-            PlayerCombat.OnPlayerStunEnd -= EndStun;
-        }
+        PlayerCombat.OnPlayerStunStart -= DisableMove;
+        PlayerCombat.OnPlayerStunEnd -= EnableMove;
+        PlayerCombat.OnPlayerBarrierStart -= DisableMove;
+        PlayerCombat.OnPlayerBarrierStart -= DisableDig;
+        PlayerCombat.OnPlayerBarrierEnd -= EnableMove;
+        PlayerCombat.OnPlayerBarrierEnd -= EnableDig;
     }
     public override void Spawned()
     {
@@ -75,8 +78,8 @@ public class PlayerProto : NetworkBehaviour
         {
             view.MakeCameraTarget();
         }
-        
-        if(m_combat != null)
+
+        if (m_combat != null)
         {
             m_combat.OnPlayerAttack += () =>
             {
@@ -107,11 +110,11 @@ public class PlayerProto : NetworkBehaviour
 
         // TODO: コントローラー対応
         // Jキーで掘る(テスト用にキーボード対応)
-        if (Input.GetKeyDown(KeyCode.J))
+        if (Input.GetKeyDown(KeyCode.J) && canDig)
         {
             Dig(digPoint.transform.position);
         }
-        if(Input.GetKeyDown(KeyCode.Space)&&isGrounded&&!isJump)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isJump)
         {
             isJump = true;
         }
@@ -125,7 +128,7 @@ public class PlayerProto : NetworkBehaviour
 
         //Debug.Log("入力受付");
 
-        
+
 
         var cameraRotation = Quaternion.Euler(0f, Camera.main.transform.rotation.eulerAngles.y, 0f);
 
@@ -172,7 +175,7 @@ public class PlayerProto : NetworkBehaviour
             // ジャンプ
             if (isJump)
             {
-                rb.AddForce(Vector3.up * jumpForce,ForceMode.Impulse);
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
                 isJump = false;
             }
         }
@@ -232,19 +235,27 @@ public class PlayerProto : NetworkBehaviour
     private void Dig(Vector3 point)
     {
         if (m_dig == null) return;
-        m_dig.DigPoint(point,transform.position - point + new Vector3(0,1,0));
+        m_dig.DigPoint(point, transform.position - point + new Vector3(0, 1, 0));
 
         // pointが掘る位置(プレイヤーの前方、高さは足元)になってる
     }
 
-    //スタン
-    private void StartStun()
+    //機能オン・オッフ
+    private void DisableMove()
     {
         canMove = false;
     }
-    private void EndStun()
+    private void EnableMove()
     {
         canMove = true;
+    }
+    private void DisableDig()
+    {
+        canDig = false;
+    }
+    private void EnableDig()
+    {
+        canDig = true;
     }
 
     //ロックオン

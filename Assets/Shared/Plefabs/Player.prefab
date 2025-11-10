@@ -274,6 +274,9 @@ MonoBehaviour:
   _treasureLostPercent: 0.3
   _treasureDropRadiusRange: {x: 4, y: 9}
   _treasurePrefab: {fileID: 6239018595790337556, guid: 62e8e7473b695ee42ab3f7dc135bcf5e, type: 3}
+  _barrierRadius: 6
+  _barrierCD: 4
+  _barrierBtnHoldDuration: 0.3
 --- !u!114 &3535405035700938168
 MonoBehaviour:
   m_ObjectHideFlags: 0

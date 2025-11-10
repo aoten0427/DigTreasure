@@ -11,6 +11,7 @@ public class PlayerCombat : NetworkBehaviour
     [SerializeField] private float _lockOnRange;
     private PlayerCombat _lockTarget = null;
     [SerializeField] private float _lookSpeed;
+    private bool _canLockOn = true;
 
     //ノックバック
     [Header("ノックバック")]
@@ -34,11 +35,24 @@ public class PlayerCombat : NetworkBehaviour
     private NetworkTreasureSpawner _treasureSpawner;
     private TreasureList _treasureList;
 
+    //バリアー
+    [Header("バリアー")]
+    [SerializeField] private float _barrierRadius;
+    [SerializeField] private float _barrierCD;
+    private bool _barrierOnCD = false;
+    [HideInInspector] public bool _barrierActive => _barrierCoroutine != null && _barrierBtnWaiting;
+    [SerializeField] private float _barrierBtnHoldDuration;
+    private bool _barrierBtnWaiting = true;
+    private IEnumerator _barrierCoroutine = null;
+    public static event System.Action OnPlayerBarrierStart;
+    public static event System.Action OnPlayerBarrierEnd;
+
     //他
     private PlayerCombat _attackTarget = null;
     private PlayerProto _playerProto;
     private Rigidbody _rb;
     private bool _isAttacking = false;
+    private bool _canAttack = true;
 
     public event Action OnPlayerAttack;
     public event Action OnPlayerDamage;
@@ -46,6 +60,20 @@ public class PlayerCombat : NetworkBehaviour
     private void Awake()
     {
         _treasureList = Resources.Load<TreasureList>("Treasure/TreasureList");
+    }
+    private void OnEnable()
+    {
+        PlayerCombat.OnPlayerBarrierStart += DisableAttack;
+        PlayerCombat.OnPlayerBarrierStart += DisableLockOn;
+        PlayerCombat.OnPlayerBarrierEnd += EnableAttack;
+        PlayerCombat.OnPlayerBarrierEnd += EnableLockOn;
+    }
+    private void OnDisable()
+    {
+        PlayerCombat.OnPlayerBarrierStart -= DisableAttack;
+        PlayerCombat.OnPlayerBarrierStart -= DisableLockOn;
+        PlayerCombat.OnPlayerBarrierEnd -= EnableAttack;
+        PlayerCombat.OnPlayerBarrierEnd -= EnableLockOn;
     }
     public override void Spawned()
     {
@@ -67,9 +95,26 @@ public class PlayerCombat : NetworkBehaviour
         if (_lockTarget && Vector3.Distance(transform.position, _lockTarget.transform.position) > _lockOnRange)
             _lockTarget = null;
 
-        if (Input.GetKeyUp(KeyCode.L))
+        //バリアー
+        if (Input.GetKey(KeyCode.I))
+        {
+            if (_barrierBtnWaiting && _barrierCoroutine == null)
+            {
+                _barrierCoroutine = BufferBarrierButton();
+                StartCoroutine(_barrierCoroutine);
+            }
+            else if (!_barrierBtnWaiting && _barrierCoroutine != null)
+                StartBarrier();
+        }
+        else if (Input.GetKeyUp(KeyCode.I))
+        {
+            EndBarrier();
+        }
+
+        //攻撃
+        if (Input.GetKeyUp(KeyCode.L) && _canLockOn)
             LockOn();
-        else if (Input.GetKeyUp(KeyCode.U))
+        else if (Input.GetKeyUp(KeyCode.U) && _canAttack)
             Attack();
 
         HandleRotation();
@@ -131,6 +176,11 @@ public class PlayerCombat : NetworkBehaviour
     {
         if (!attacker)
             return;
+        if (_barrierActive)
+        {
+            attacker.RpcBarrierEffect(this);
+            return;
+        }
         OnPlayerDamage?.Invoke();
         LoseTreasure();
         StunPlayer();
@@ -142,6 +192,8 @@ public class PlayerCombat : NetworkBehaviour
         if (_rb != null)
         {
             // 瞬間的な力を加える
+            _rb.linearVelocity = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
             _rb.AddForce(dir * _knockbackForce, ForceMode.Impulse);
         }
     }
@@ -194,7 +246,7 @@ public class PlayerCombat : NetworkBehaviour
         //アニメーション後に _isAttacking オフにする
         _isAttacking = false;
         _attackTarget.RpcTakeDamage(this);
-        
+
         return true;
     }
     private PlayerCombat GetAttackTarget()
@@ -203,5 +255,57 @@ public class PlayerCombat : NetworkBehaviour
         PlayerCombat returnVal = _lockTarget;
         _lockTarget = null;
         return returnVal;
+    }
+    private IEnumerator BufferBarrierButton()
+    {
+        _barrierBtnWaiting = true;
+        yield return new WaitForSeconds(_barrierBtnHoldDuration);
+        _barrierBtnWaiting = false;
+    }
+    private IEnumerator BarrierCD()
+    {
+        yield return new WaitForSeconds(_barrierCD);
+        _barrierCoroutine = null;
+    }
+    private void StartBarrier()
+    {
+        OnPlayerBarrierStart?.Invoke();
+        _barrierBtnWaiting = true;
+    }
+    private void EndBarrier()
+    {
+        OnPlayerBarrierEnd?.Invoke();
+        _barrierCoroutine = BarrierCD();
+        StartCoroutine(_barrierCoroutine);
+    }
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RpcBarrierEffect(PlayerCombat barrierPlayer)
+    {
+        if (!barrierPlayer)
+            return;
+        Knockback((transform.position - barrierPlayer.transform.position).normalized);
+    }
+
+    //機能オン・オッフ
+    private void EnableAttack()
+    {
+        _canAttack = true;
+    }
+    private void DisableAttack()
+    {
+        _canAttack = false;
+    }
+    private void EnableLockOn()
+    {
+        _canLockOn = true;
+    }
+    private void DisableLockOn()
+    {
+        _canLockOn = false;
+    }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, _barrierRadius);
     }
 }
