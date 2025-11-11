@@ -34,6 +34,9 @@ namespace Mukouyama
             InitializeScore(m_PlayerNum);
         }
 
+        /**/// プレイヤーの人数を設定する
+        public void SetPlayerNum(int PlayerNum) { m_PlayerNum = PlayerNum; }
+
         /**/// スコア表示をリセット
         private void InitializeScore(int PlayerNum)
         {
@@ -93,14 +96,6 @@ namespace Mukouyama
                 });
             }
         }
-
-        /*********************************
-        * 
-        * 情報設定処理
-        *
-        **********************************/
-        /**/// プレイヤーの人数を設定する
-        public void SetPlayerNum(int PlayerNum) { m_PlayerNum = PlayerNum; }
 
         /*********************************
         * 
