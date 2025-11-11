@@ -9,7 +9,6 @@ namespace Mukouyama
         [SerializeField] private Canvas[] m_Player_Canvas = new Canvas[4];
         /**/// 順位表示
         [SerializeField] private GameObject[] m_Player_Places = new GameObject[4];
-
         /**/// 各プレイヤーのUIの挙動ステート
         public enum UI_MOVE_TYPE
         {
@@ -140,8 +139,8 @@ namespace Mukouyama
             }
         }
 
-        // UIの配列を取得
-        public UI_Info[] GetUI_InfoArray() { return m_UI_InfoArray; }
+        /*// UIの配列を取得
+        public UI_Info[] GetUI_InfoArray() { return m_UI_InfoArray; }*/
 
         /*********************************
         * 
@@ -164,7 +163,7 @@ namespace Mukouyama
         private void MoveRank(UI_Info[] UI_Data_Array, PlayersData.PlayerInfo[] PlayersDataArray)
         {
             // UIのUIの現在地が順位通りに整列しているかをチェック
-            if (CheckRankSorted(UI_Data_Array, PlayersDataArray) == true) return;
+            if (CheckRankSorted(UI_Data_Array, PlayersDataArray)) return;
 
             // ヒエラルキーの順序を変更
             UpdateUI_LayerPlace(PlayersDataArray);
@@ -184,6 +183,7 @@ namespace Mukouyama
         {
             // 順位が整列しているか判定するフラグ
             m_RankSortedFlag = true;
+            //  UIが順位通りに整列しているかをチェック
             for (int i = 0; i < m_UI_Length; i++)
             {
                 for (int j = 0; j < m_UI_Length; j++)
@@ -235,10 +235,10 @@ namespace Mukouyama
             }
         }
 
-        /**/// 各UIを動かす
+        /**/// 各プレイヤーUIを動かす
         private void MovePlayerRankUI(UI_Info[] UI_DataArray, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            // 各UIの状態をチェックし、動かせる条件に合っていれば動かす
+            // 各プレイヤーUIの状態をチェックし、動かせる条件に合っていれば動かす
             for (int i = 0; i < m_UI_Length; i++) { CheckPlayerRankAndMove(UI_DataArray[i], PlayersDataArray); }
         }
 
@@ -346,25 +346,25 @@ namespace Mukouyama
             }
         }
 
+        // DoTweenで各順位の座標へ動かす
         /**/// 順位が上がる場合
         private void MoveUpward(UI_Info UI, Vector3[] ArrivalPath, int ArrivalPos)
         {
             // 移動地点を曲がりながら移動
             UI.UI_Position.transform.DOLocalPath(ArrivalPath, m_arrivalTime, PathType.CatmullRom)
-            // 完了時に呼ばれる        
-            .OnComplete(() => { UpdateArrivalUIParam(UI, ArrivalPos); });
+                // 完了時に呼ばれる        
+                .OnComplete(() => { UpdateArrivalUIParam(UI, ArrivalPos); });
             // UIのパラメータを更新
             UI.UI_MoveType = UI_MOVE_TYPE.MOVING;
         }
 
-        // DoTweenで各順位の座標へ動かす
         /**/// 順位が下がる場合
         private void MoveDownward(UI_Info UI, Vector3 ArrivalPath, int ArrivalPos)
         {
             // 下に移動
             UI.UI_Position.transform.DOLocalMove(ArrivalPath, m_arrivalTime)
-            // 完了時に呼ばれる
-            .OnComplete(() => { UpdateArrivalUIParam(UI, ArrivalPos); });
+                // 完了時に呼ばれる
+                .OnComplete(() => { UpdateArrivalUIParam(UI, ArrivalPos); });
             // UIのパラメータを更新
             UI.UI_MoveType = UI_MOVE_TYPE.MOVING;
         }
