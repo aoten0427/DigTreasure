@@ -22,7 +22,7 @@ namespace Mukouyama
             PlayerControll();
         }
 
-        // ゲーム終了
+        /*// ゲーム終了
         private void EndGame()
         {
             //Escが押された時
@@ -35,7 +35,7 @@ namespace Mukouyama
     Application.Quit();//ゲームプレイ終了
 #endif
             }
-        }
+        }*/
 
         // (デバッグ)プレイヤーのスコアを増加させる
         private void AddScores()

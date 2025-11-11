@@ -172,12 +172,6 @@ namespace Mukouyama
             MovePlayerRankUI(UI_Data_Array, PlayersDataArray);
         }
 
-        /*********************************
-        * 
-        * 順位変更処理(数値情報のみ)
-        *
-        **********************************/
-
         /**/// UIの現在地が順位通りに整列しているかをチェック
         private bool CheckRankSorted(UI_Info[] UI_Data_Array, PlayersData.PlayerInfo[] PlayersDataArray)
         {
