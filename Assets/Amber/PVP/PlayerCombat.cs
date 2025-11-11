@@ -39,11 +39,11 @@ public class PlayerCombat : NetworkBehaviour
     [Header("バリアー")]
     [SerializeField] private float _barrierRadius;
     [SerializeField] private float _barrierCD;
-    private bool _barrierOnCD = false;
     [HideInInspector] public bool _barrierActive => _barrierCoroutine != null && _barrierBtnWaiting;
     [SerializeField] private float _barrierBtnHoldDuration;
     private bool _barrierBtnWaiting = true;
     private IEnumerator _barrierCoroutine = null;
+    [SerializeField] private NetworkObject _barrierModel;
     public static event System.Action OnPlayerBarrierStart;
     public static event System.Action OnPlayerBarrierEnd;
 
@@ -60,6 +60,7 @@ public class PlayerCombat : NetworkBehaviour
     private void Awake()
     {
         _treasureList = Resources.Load<TreasureList>("Treasure/TreasureList");
+        _barrierModel.transform.localScale *= _barrierRadius;
     }
     private void OnEnable()
     {
@@ -85,6 +86,8 @@ public class PlayerCombat : NetworkBehaviour
             _inventory = GetComponent<PlayerInventory>();
             _treasureHeight = _treasurePrefab.GetComponent<Collider>().bounds.extents.y * 2f;
             _treasureSpawner = FindFirstObjectByType<NetworkTreasureSpawner>(FindObjectsInactive.Include);
+            Debug.Log("BarrModel valid: " + _barrierModel.IsValid);
+            RpcToggleBarrierModel(false);
         }
     }
     private void Update()
@@ -271,12 +274,14 @@ public class PlayerCombat : NetworkBehaviour
     {
         OnPlayerBarrierStart?.Invoke();
         _barrierBtnWaiting = true;
+        RpcToggleBarrierModel(true);
     }
     private void EndBarrier()
     {
         OnPlayerBarrierEnd?.Invoke();
         _barrierCoroutine = BarrierCD();
         StartCoroutine(_barrierCoroutine);
+        RpcToggleBarrierModel(false);
     }
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RpcBarrierEffect(PlayerCombat barrierPlayer)
@@ -284,6 +289,11 @@ public class PlayerCombat : NetworkBehaviour
         if (!barrierPlayer)
             return;
         Knockback((transform.position - barrierPlayer.transform.position).normalized);
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RpcToggleBarrierModel(bool visible)
+    {
+        _barrierModel.gameObject.SetActive(visible);
     }
 
     //機能オン・オッフ
