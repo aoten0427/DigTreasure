@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 
 namespace Mukouyama
@@ -59,7 +60,7 @@ namespace Mukouyama
 
         // プレイヤー名クラス配列
         [SerializeField]
-        private PlayerName[] m_PlayerNames = new PlayerName[4];
+        private GameObject[] m_PlayerNames = new GameObject[4];
 
         /*********************************
         * 
@@ -85,7 +86,12 @@ namespace Mukouyama
         /**/// プログラム開始時処理(ゲームオブジェクト生成後)
         private void Start()
         {
-            // プレイヤー情報の初期化
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // ↓外部からプレイヤー数を取得
+
+            // ↑外部からプレイヤー数を取得
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // プレイヤー情報の初期化(↑から取得した人数を使う)
             InitializePleyerInfo(m_PlayerNum);
         }
 
@@ -110,7 +116,7 @@ namespace Mukouyama
                 // ↑外部からプレイヤー名を取得
                 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 m_PlayerInfoArray[i] = new PlayerInfo(i + 1, "プレイヤー" + (i + 1)/*外部から取得したプレイヤー名に変更*/, 0, 0, 0, 0, i + 1);
-                m_PlayerNames[i].SetUI_PlayerName(i);
+                m_PlayerNames[i].GetComponent<TextMeshProUGUI>().text = m_PlayerInfoArray[i].Player_Name;
             }
         }
 
@@ -142,8 +148,8 @@ namespace Mukouyama
             // 順位変更処理(数値情報のみ)
             UpdatePlace(m_PlayerInfoArray);
 
-            // 数値確認(デバッグ)
-            //CheckPlayerData();
+            /*// 数値確認(デバッグ)
+            CheckPlayerData();*/
         }
 
         /**********************************
