@@ -15,7 +15,7 @@ public class LoadManager : MonoBehaviour
     {
         get
         {
-            if (s_instance == null) Debug.LogError("[LoadManager]インスタンスがありません");
+            if (s_instance == null) Debug.LogWarning("[LoadManager]インスタンスがありません");
             return s_instance;
         }
         private set { s_instance = value; }
@@ -168,7 +168,7 @@ public class LoadManager : MonoBehaviour
     public void Show()
     {
         if (m_loadScreen == null) return;
-        if (m_tasks.Count == 0) return;
+        //if (m_tasks.Count == 0) return;
         m_registrationScreen[m_loadScreen].SetActive(true);
         m_loadScreen.Show();
     }

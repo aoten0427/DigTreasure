@@ -48,6 +48,8 @@ namespace NetWork
         [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
         public void RPC_IsReady(PlayerRef user)
         {
+            if (!Runner.IsSharedModeMasterClient) return;
+
             m_readyUser.Add(user);
             if (m_islog) Debug.Log("人数:" + m_readyUser.Count + "人:" + Time.time);
             if (m_readyUser.Count >= m_statingNumber)
@@ -64,6 +66,8 @@ namespace NetWork
         [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
         private void RPC_ReadyAction()
         {
+            if (!Runner.IsSharedModeMasterClient) return;
+
             AllUserReadyAction?.Invoke();
             if (m_islog) Debug.Log("全てのユーザーの準備が完了:" + "合計" + m_readyUser.Count + "人" + Time.time);
         }

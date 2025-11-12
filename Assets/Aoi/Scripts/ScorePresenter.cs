@@ -85,4 +85,9 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
     {
         
     }
+
+    private void OnDestroy()
+    {
+        if (m_gameLauncher != null) m_gameLauncher.RemoveOnDataChangeAction(ChangeData);
+    }
 }

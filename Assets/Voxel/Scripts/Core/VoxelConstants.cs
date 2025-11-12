@@ -21,6 +21,18 @@ namespace VoxelWorld
         // ボクセル関連定数
         //個別ボクセルのサイズ
         public const float VOXEL_SIZE = 0.5f;
+        //ボクセルサイズの逆数（除算を乗算に最適化）
+        public const float INV_VOXEL_SIZE = 1f / VOXEL_SIZE; // = 2.0f
+
+        // チャンクのワールドサイズ定数
+        public const float CHUNK_WORLD_WIDTH = CHUNK_WIDTH * VOXEL_SIZE;   // = 8.0f
+        public const float CHUNK_WORLD_HEIGHT = CHUNK_HEIGHT * VOXEL_SIZE; // = 8.0f
+        public const float CHUNK_WORLD_DEPTH = CHUNK_DEPTH * VOXEL_SIZE;   // = 8.0f
+
+        // チャンクワールドサイズの逆数（除算を乗算に最適化）
+        public const float INV_CHUNK_WORLD_WIDTH = 1f / CHUNK_WORLD_WIDTH;   // = 0.125f
+        public const float INV_CHUNK_WORLD_HEIGHT = 1f / CHUNK_WORLD_HEIGHT; // = 0.125f
+        public const float INV_CHUNK_WORLD_DEPTH = 1f / CHUNK_WORLD_DEPTH;   // = 0.125f
 
         // パフォーマンス関連定数
         //同時破壊可能な最大ボクセル数
@@ -49,7 +61,7 @@ namespace VoxelWorld
         //基本ボクセルタイプの開始ID
         public const int BASE_VOXEL_ID_START = 1;
         //最大ボクセルタイプ数
-        public const int MAX_VOXEL_TYPES = 256;
+        public const byte MAX_VOXEL_TYPES = 255;
 
         // メッシュ生成関連定数
         //面の方向を表す列挙型
@@ -76,7 +88,7 @@ namespace VoxelWorld
         public const float DEFAULT_TEST_HARDNESS = 1.0f;
 
         //デフォルトの最大耐久度
-        public const float DEFAULT_MAX_DURABILITY = 1f;
+        public const short DEFAULT_MAX_DURABILITY = 1;
 
 
         // 座標変換用ヘルパーメソッド
@@ -104,9 +116,9 @@ namespace VoxelWorld
         public static Vector3Int WorldToChunkPosition(Vector3 worldPosition)
         {
             return new Vector3Int(
-                Mathf.FloorToInt(worldPosition.x / (CHUNK_WIDTH * VOXEL_SIZE)),
-                Mathf.FloorToInt(worldPosition.y / (CHUNK_HEIGHT * VOXEL_SIZE)),
-                Mathf.FloorToInt(worldPosition.z / (CHUNK_DEPTH * VOXEL_SIZE))
+                Mathf.FloorToInt(worldPosition.x * INV_CHUNK_WORLD_WIDTH),
+                Mathf.FloorToInt(worldPosition.y * INV_CHUNK_WORLD_HEIGHT),
+                Mathf.FloorToInt(worldPosition.z * INV_CHUNK_WORLD_DEPTH)
             );
         }
         
@@ -145,9 +157,9 @@ namespace VoxelWorld
         public static Vector3Int SeparatedObjectWorldToIndex(Vector3 localPosition)
         {
             return new Vector3Int(
-                Mathf.FloorToInt(localPosition.x / VOXEL_SIZE),
-                Mathf.FloorToInt(localPosition.y / VOXEL_SIZE),
-                Mathf.FloorToInt(localPosition.z / VOXEL_SIZE)
+                Mathf.FloorToInt(localPosition.x * INV_VOXEL_SIZE),
+                Mathf.FloorToInt(localPosition.y * INV_VOXEL_SIZE),
+                Mathf.FloorToInt(localPosition.z * INV_VOXEL_SIZE)
             );
         }
         
