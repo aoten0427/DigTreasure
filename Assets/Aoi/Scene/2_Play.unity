@@ -710,7 +710,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_userdataManagerPrefab:
     RawGuidValue: d9b82a56fcc084442a155dbeecfc4eaf
-  m_isLog: 0
+  m_isLog: 1
   m_debugId: 0
   m_debugName: 
   m_debugTreasureCount: 0
@@ -3340,7 +3340,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   networkRunnerPrefab: {fileID: 4657061677986877192, guid: c15ccfb7a7d915e4faabded158dc82ff, type: 3}
   m_autoConnect: 1
-  m_isLog: 1
+  m_isLog: 0
   m_spawnService: {fileID: 170338722}
   m_readyService: {fileID: 170338721}
   m_loadingService: {fileID: 170338720}
@@ -5369,7 +5369,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17a3d27700fd37949bbbbcb3000b98fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameTime: 120
+  GameTime: 10
   m_startCountDown: {fileID: 2121432284}
   m_isLog: 1
 --- !u!1 &1926540992

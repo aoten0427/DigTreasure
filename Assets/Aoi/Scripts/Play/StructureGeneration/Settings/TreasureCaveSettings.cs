@@ -33,12 +33,22 @@ namespace StructureGeneration
         [Tooltip("宝を中心からずらす最大距離（メートル）")]
         public float treasureOffsetRange = 2f;
 
-        [Header("生成位置")]
-        [Tooltip("Y座標の最小値")]
-        public float minYPosition = -30f;
+        [Header("接続点設定")]
+        [Range(0f, 50f)]
+        public float connectionPointInset = 5f;
 
-        [Tooltip("Y座標の最大値")]
-        public float maxYPosition = -15f;
+        [Header("放射状配置設定")]
+        [Tooltip("中央洞窟からの基本距離（メートル）")]
+        public float baseDistance = 60f;
+
+        [Tooltip("距離のランダム変動幅（メートル）")]
+        public float distanceVariation = 5f;
+
+        [Tooltip("角度のランダム変動幅（度）")]
+        public float angleVariation = 10f;
+
+        [Tooltip("Y座標のランダム変動幅（メートル）")]
+        public float yVariation = 5f;
 
         public override StructureType GetStructureType()
         {

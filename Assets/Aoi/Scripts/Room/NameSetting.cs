@@ -10,10 +10,19 @@ public class NameSetting : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        for(int i = 0;i  < m_playerPositions.Length;i++)
+        for (int i = 0; i < m_playerPositions.Length; i++)
         {
-            Vector3 pos = m_camera.WorldToScreenPoint(m_playerPositions[i].position);
-            m_namePositions[i].position = pos;
+            Vector3 screenPos = m_camera.WorldToScreenPoint(m_playerPositions[i].position);
+
+            // カメラの背後にあるかチェック
+            if (screenPos.z < 0)
+            {
+                m_namePositions[i].gameObject.SetActive(false);
+                continue;
+            }
+
+            //m_namePositions[i].gameObject.SetActive(true);
+            m_namePositions[i].position = screenPos;
         }
     }
 }

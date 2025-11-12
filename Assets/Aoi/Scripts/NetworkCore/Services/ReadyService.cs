@@ -17,6 +17,8 @@ namespace NetWork
         private NetworkRunner m_runner;
         private ReadyManager m_readyManager;
 
+        public int StartingNumber { get { return m_startingNumber; }set { m_startingNumber = value; } }
+
         /// <summary>
         /// 全てのユーザーの準備が完了した際のイベント
         /// </summary>

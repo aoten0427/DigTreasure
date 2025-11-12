@@ -107,11 +107,12 @@ namespace VoxelWorld
             foreach (var update in voxelUpdates)
             {
                 Vector3Int chunkPos = VoxelConstants.WorldToChunkPosition(update.WorldPosition);
-                if (!chunkGroups.ContainsKey(chunkPos))
+                if (!chunkGroups.TryGetValue(chunkPos, out var list))
                 {
-                    chunkGroups[chunkPos] = new List<VoxelUpdate>();
+                    list = new List<VoxelUpdate>();
+                    chunkGroups[chunkPos] = list;
                 }
-                chunkGroups[chunkPos].Add(update);
+                list.Add(update);
             }
 
             return chunkGroups;
@@ -186,8 +187,8 @@ namespace VoxelWorld
                     result.SuccessCount++;
                     result.AppliedChanges.Add(update);
 
-                    // 境界ボクセルかチェック
-                    if (IsChunkBoundaryVoxel(localPosition))
+                    // 境界ボクセルかチェック（既に境界ボクセルが見つかっている場合はスキップ）
+                    if (!hasBoundaryVoxel && IsChunkBoundaryVoxel(localPosition))
                     {
                         hasBoundaryVoxel = true;
                     }
@@ -232,9 +233,9 @@ namespace VoxelWorld
         {
             Vector3 localWorldPos = worldPosition - chunkWorldPos;
             return new Vector3Int(
-                Mathf.FloorToInt(localWorldPos.x / VoxelConstants.VOXEL_SIZE),
-                Mathf.FloorToInt(localWorldPos.y / VoxelConstants.VOXEL_SIZE),
-                Mathf.FloorToInt(localWorldPos.z / VoxelConstants.VOXEL_SIZE)
+                Mathf.FloorToInt(localWorldPos.x * VoxelConstants.INV_VOXEL_SIZE),
+                Mathf.FloorToInt(localWorldPos.y * VoxelConstants.INV_VOXEL_SIZE),
+                Mathf.FloorToInt(localWorldPos.z * VoxelConstants.INV_VOXEL_SIZE)
             );
         }
 

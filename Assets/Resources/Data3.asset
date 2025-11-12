@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_voxelId: 3
   m_displayName: Default Voxel
-  m_color: {r: 0.3660378, g: 0.3660378, b: 0.3660378, a: 1}
+  m_color: {r: 1, g: 0, b: 0, a: 1}
   m_hardness: 1
   m_maxDurability: 1
   m_isDestructible: 1

@@ -50,6 +50,11 @@ namespace StructureGeneration
         ConnectionPoint GetClosestConnectionPoint(Vector3 targetPosition);
 
         /// <summary>
+        /// すべての接続点を取得
+        /// </summary>
+        List<ConnectionPoint> GetConnectionPoints();
+
+        /// <summary>
         /// 構造物の占有範囲（バウンディングボックス）
         /// </summary>
         Bounds GetBounds();

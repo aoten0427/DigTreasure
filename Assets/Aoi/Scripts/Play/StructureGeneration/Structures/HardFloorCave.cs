@@ -10,6 +10,8 @@ namespace StructureGeneration
     /// </summary>
     public class HardFloorCave : BaseStructure
     {
+        private const float DEFAULT_WALL_THICKNESS = 2f;
+
         private readonly HardFloorCaveSettings settings;
         private float actualHorizontalRadius;
         private float actualVerticalRadius;
@@ -47,14 +49,16 @@ namespace StructureGeneration
                 centerPosition,
                 actualHorizontalRadius,
                 actualVerticalRadius,
-                2f, // 壁の厚さ（薄め）
+                DEFAULT_WALL_THICKNESS,
                 settings.floorThickness,
-                1, // 壁
-                settings.floorVoxelId, // 床
+                1, // wallVoxelId
+                settings.floorVoxelId,
                 settings.innerVoxelId,
                 seed,
-                settings.shapeRandomness,
-                0.05f // 床のノイズスケール
+                settings.wallNoiseAmplitude,
+                settings.floorNoiseAmplitude,
+                settings.noiseOctaves,
+                settings.wavesPerSize
             );
 
             // ボクセルデータを生成（扁球ドーム型）
@@ -64,8 +68,17 @@ namespace StructureGeneration
             connectionPoints = GenerateDomeConnectionPoints(
                 centerPosition,
                 actualHorizontalRadius,
-                settings.maxConnectionPoints
+                settings.maxConnectionPoints,
+                null,  // targetDirection: 均等分散
+                settings.connectionPointInset  // 設定から取得
             );
+
+            // 内部装飾（ピラミッド）を生成
+            if (settings.generatePyramid)
+            {
+                var pyramidVoxels = await GeneratePyramidDecorationAsync(seed);
+                voxelUpdates.AddRange(pyramidVoxels);
+            }
 
             // フレーム分散のため待機
             await Task.Yield();
@@ -76,6 +89,55 @@ namespace StructureGeneration
                 SpecialPoints = new Dictionary<string, Vector3>(),
                 ConnectionPoints = connectionPoints
             };
+        }
+
+        /// <summary>
+        /// ピラミッド装飾を生成（複数個）
+        /// </summary>
+        private async Task<List<VoxelUpdate>> GeneratePyramidDecorationAsync(int seed)
+        {
+            var allPyramidVoxels = new List<VoxelUpdate>();
+            Random.InitState(seed);
+
+            for (int i = 0; i < settings.pyramidCount; i++)
+            {
+                // ランダムな位置を計算（中心からの距離と角度）
+                float distance = Random.Range(settings.pyramidMinDistanceFromCenter, settings.pyramidMaxDistanceFromCenter);
+                float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+
+                Vector3 offset = new Vector3(
+                    Mathf.Cos(angle) * distance,
+                    0f,
+                    Mathf.Sin(angle) * distance
+                );
+
+                Vector3 pyramidBase = centerPosition + offset;
+
+                // ランダムなサイズ
+                float height = Random.Range(settings.pyramidMinHeight, settings.pyramidMaxHeight);
+                float baseRadius = Random.Range(settings.pyramidMinBaseRadius, settings.pyramidMaxBaseRadius);
+
+                // ピラミッドを生成
+                var pyramid = new PyramidStructure($"{id}_pyramid_{i}", seed + i);
+                var pyramidVoxels = await pyramid.GenerateAsync(
+                    pyramidBase,
+                    height,
+                    baseRadius,
+                    settings.pyramidVoxelId
+                );
+
+                allPyramidVoxels.AddRange(pyramidVoxels);
+
+                // フレーム分散
+                if (i % 2 == 0)
+                {
+                    await Task.Yield();
+                }
+            }
+
+            Debug.Log($"ピラミッド装飾生成完了: {settings.pyramidCount}個、合計{allPyramidVoxels.Count}ボクセル");
+
+            return allPyramidVoxels;
         }
 
         public override bool CanConnectTo(IStructure target)

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aab3d6e5587b1f941a4c544b0b2387cf, type: 3}
+  m_Name: MapGeneratorSettings
+  m_EditorClassIdentifier: 
+  masterSeed: 1
+  useChunkBasedPlacement: 1
+  minChunkCoord: {x: -5, y: -5, z: -5}
+  maxChunkCoord: {x: 4, y: 0, z: 4}
+  fillVoxelId: 1
+  fillPlacementArea: 1
+  treasureCaveSettings: {fileID: 11400000, guid: a7ef5263d16f56b4e84e17fba5201984, type: 2}
+  hardFloorCaveSettings: {fileID: 11400000, guid: 498c1823180934e42939ce7283a9e1bc, type: 2}
+  randomWalkCaveSettings: {fileID: 11400000, guid: c335e13120c16b846a4d0914a872d354, type: 2}
+  connectionSettings: {fileID: 11400000, guid: 34a80ad9a7bb5314a8751eaea409404e, type: 2}
+  connectionsPerStructure: 1
+  openTunnelRatio: 1
+  maxConnectionHeightDiff: 30
+  generateBoundaryWalls: 1
+  boundaryWallVoxelId: 3
+  generateSurfaceTerrain: 1
+  surfaceBaseHeight: 0
+  surfaceCenterHeight: 2
+  surfaceFlatCenterRatio: 0.85
+  surfaceEdgeHeight: 15
+  surfaceBoundaryInset: 3
+  surfaceVoxelId: 2
+  surfaceNoiseAmplitude: 1.5
+  surfaceNoiseFrequency: 0.08

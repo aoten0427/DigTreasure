@@ -14,16 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minCount: 1
   maxCount: 1
-  priority: 10
-  placementPriority: 10
-  maxConnectionPoints: 2
-  maxAutoConnectionDistance: 80
+  priority: 5
+  maxConnectionPoints: 32
   minHorizontalRadius: 35
   maxHorizontalRadius: 35
   minVerticalRadius: 12
   maxVerticalRadius: 15
-  floorThickness: 2
+  floorThickness: 5
   floorVoxelId: 5
   innerVoxelId: 0
-  shapeRandomness: 0.559
+  wallNoiseAmplitude: 0.1
+  floorNoiseAmplitude: 0.205
+  noiseOctaves: 3
+  wavesPerSize: 4
   centerPosition: {x: 0, y: -35, z: 0}
+  connectionPointInset: 0
+  generatePyramid: 1
+  pyramidCount: 8
+  pyramidMinHeight: 10
+  pyramidMaxHeight: 20
+  pyramidMinBaseRadius: 1
+  pyramidMaxBaseRadius: 2
+  pyramidMinDistanceFromCenter: 0
+  pyramidMaxDistanceFromCenter: 50
+  pyramidVoxelId: 1

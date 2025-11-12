@@ -11,6 +11,12 @@ namespace StructureGeneration
     /// </summary>
     public abstract class BaseStructure : IStructure
     {
+        // 定数定義
+        protected const float CONNECTION_FAN_ANGLE_DEGREES = 120f;
+        protected const float CONNECTION_RADIUS_RATIO = 0.15f;
+        private const float DEFAULT_NOISE_SCALE = 0.15f;
+        private const float INNER_NOISE_SCALE_RATIO = 0.5f;
+
         protected readonly string id;
         protected readonly int baseSeed;
         protected Vector3 centerPosition;
@@ -66,6 +72,14 @@ namespace StructureGeneration
         }
 
         /// <summary>
+        /// すべての接続点を取得
+        /// </summary>
+        public List<ConnectionPoint> GetConnectionPoints()
+        {
+            return connectionPoints ?? new List<ConnectionPoint>();
+        }
+
+        /// <summary>
         /// バウンディングボックスを取得
         /// </summary>
         public abstract Bounds GetBounds();
@@ -73,65 +87,66 @@ namespace StructureGeneration
         /// <summary>
         /// ドーム型構造用の接続点を生成（水平な側面のみ）
         /// </summary>
-        protected List<ConnectionPoint> GenerateDomeConnectionPoints(Vector3 center, float radius, int count)
+        /// <param name="center">中心位置</param>
+        /// <param name="radius">半径</param>
+        /// <param name="count">接続点数</param>
+        /// <param name="targetDirection">優先方向（nullの場合は均等分散）</param>
+        /// <param name="insetDistance">接続点を内側に配置するオフセット距離（メートル）</param>
+        protected List<ConnectionPoint> GenerateDomeConnectionPoints(Vector3 center, float radius, int count, Vector3? targetDirection = null, float insetDistance = 3f,float yoffset = 0)
         {
             var points = new List<ConnectionPoint>();
             if (count <= 0) return points;
 
-            // 水平方向に均等分散
-            float angleStep = 360f / count;
-
-            for (int i = 0; i < count; i++)
+            if (targetDirection.HasValue)
             {
-                float angle = i * angleStep * Mathf.Deg2Rad;
-                float x = Mathf.Cos(angle);
-                float z = Mathf.Sin(angle);
+                // 目標方向がある場合：その方向を中心に扇状に配置
+                Vector3 targetDir = new Vector3(targetDirection.Value.x, 0, targetDirection.Value.z).normalized;
+                float baseAngle = Mathf.Atan2(targetDir.z, targetDir.x);
 
-                // 床より少し上の高さ（中心と同じ高さ）
-                Vector3 direction = new Vector3(x, 0, z).normalized;
-                Vector3 position = center + direction * radius;
+                // 扇の角度範囲
+                float fanAngle = CONNECTION_FAN_ANGLE_DEGREES * Mathf.Deg2Rad;
+                float angleStep = count > 1 ? fanAngle / (count - 1) : 0f;
 
-                points.Add(new ConnectionPoint(
-                    $"{id}_connection_{i}",
-                    position,
-                    direction,
-                    radius * 0.15f // 接続点の半径
-                ));
+                for (int i = 0; i < count; i++)
+                {
+                    float angle = baseAngle + (i - (count - 1) / 2f) * angleStep;
+                    float x = Mathf.Cos(angle);
+                    float z = Mathf.Sin(angle);
+
+                    Vector3 direction = new Vector3(x, 0, z).normalized;
+                    Vector3 position = center + direction * (radius - insetDistance);
+                    position.y += yoffset;  // yoffsetを適用
+
+                    points.Add(new ConnectionPoint(
+                        $"{id}_connection_{i}",
+                        position,
+                        direction,
+                        radius * CONNECTION_RADIUS_RATIO
+                    ));
+                }
             }
-
-            return points;
-        }
-
-        /// <summary>
-        /// 球面上に均等分散した接続点を生成（黄金比を使用）
-        /// </summary>
-        protected List<ConnectionPoint> GenerateConnectionPoints(Vector3 center, float radius, int count)
-        {
-            var points = new List<ConnectionPoint>();
-            if (count <= 0) return points;
-
-            float goldenRatio = (1f + Mathf.Sqrt(5f)) / 2f;
-            float angleIncrement = Mathf.PI * 2f * goldenRatio;
-
-            for (int i = 0; i < count; i++)
+            else
             {
-                float t = (float)i / count;
-                float inclination = Mathf.Acos(1f - 2f * t);
-                float azimuth = angleIncrement * i;
+                // 目標方向がない場合：水平方向に均等分散
+                float angleStep = 360f / count;
 
-                float x = Mathf.Sin(inclination) * Mathf.Cos(azimuth);
-                float y = Mathf.Sin(inclination) * Mathf.Sin(azimuth);
-                float z = Mathf.Cos(inclination);
+                for (int i = 0; i < count; i++)
+                {
+                    float angle = i * angleStep * Mathf.Deg2Rad;
+                    float x = Mathf.Cos(angle);
+                    float z = Mathf.Sin(angle);
 
-                Vector3 direction = new Vector3(x, y, z).normalized;
-                Vector3 position = center + direction * radius;
+                    Vector3 direction = new Vector3(x, 0, z).normalized;
+                    Vector3 position = center + direction * (radius - insetDistance);
+                    position.y += yoffset;
 
-                points.Add(new ConnectionPoint(
-                    $"{id}_connection_{i}",
-                    position,
-                    direction,
-                    radius * 0.1f // 接続点の半径は構造物の10%
-                ));
+                    points.Add(new ConnectionPoint(
+                        $"{id}_connection_{i}",
+                        position,
+                        direction,
+                        radius * CONNECTION_RADIUS_RATIO
+                    ));
+                }
             }
 
             return points;
@@ -143,46 +158,6 @@ namespace StructureGeneration
         protected VoxelUpdate CreateVoxelUpdate(Vector3 worldPosition, byte voxelId)
         {
             return new VoxelUpdate(worldPosition, voxelId);
-        }
-
-        /// <summary>
-        /// 球体領域のボクセル更新リストを生成
-        /// </summary>
-        protected List<VoxelUpdate> GenerateSphereVoxels(Vector3 center, float radius, byte voxelId)
-        {
-            var updates = new List<VoxelUpdate>();
-            float voxelSize = VoxelConstants.VOXEL_SIZE;
-
-            int range = Mathf.CeilToInt(radius / voxelSize);
-            Vector3Int centerVoxel = new Vector3Int(
-                Mathf.RoundToInt(center.x / voxelSize),
-                Mathf.RoundToInt(center.y / voxelSize),
-                Mathf.RoundToInt(center.z / voxelSize)
-            );
-
-            for (int x = -range; x <= range; x++)
-            {
-                for (int y = -range; y <= range; y++)
-                {
-                    for (int z = -range; z <= range; z++)
-                    {
-                        Vector3Int voxelPos = centerVoxel + new Vector3Int(x, y, z);
-                        Vector3 worldPos = new Vector3(
-                            voxelPos.x * voxelSize,
-                            voxelPos.y * voxelSize,
-                            voxelPos.z * voxelSize
-                        );
-
-                        float distance = Vector3.Distance(worldPos, center);
-                        if (distance <= radius)
-                        {
-                            updates.Add(CreateVoxelUpdate(worldPos, voxelId));
-                        }
-                    }
-                }
-            }
-
-            return updates;
         }
 
         /// <summary>
@@ -204,14 +179,7 @@ namespace StructureGeneration
             float voxelSize = VoxelConstants.VOXEL_SIZE;
             float outerRadius = radius + wallThickness;
 
-            int range = Mathf.CeilToInt(outerRadius / voxelSize);
-            Vector3Int centerVoxel = new Vector3Int(
-                Mathf.RoundToInt(center.x / voxelSize),
-                Mathf.RoundToInt(center.y / voxelSize),
-                Mathf.RoundToInt(center.z / voxelSize)
-            );
-
-            // 床の基準高さ（中心のY座標と同じ）
+            var (range, centerVoxel) = CalculateVoxelRange(center, outerRadius, voxelSize);
             float baseFloorY = center.y;
 
             for (int x = -range; x <= range; x++)
@@ -227,71 +195,15 @@ namespace StructureGeneration
                             voxelPos.z * voxelSize
                         );
 
-                        // 中心からの水平距離と垂直距離
-                        Vector3 offset = worldPos - center;
-                        float horizontalDist = Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z);
-                        float verticalDist = offset.y;
+                        var noiseValues = CalculateNoiseValues(worldPos, center, noiseSeed, noiseScale, floorNoiseScale, radius, baseFloorY);
+                        byte? voxelType = ClassifyDomeVoxelType(
+                            worldPos, center, noiseValues,
+                            radius, outerRadius, wallThickness, floorThickness,
+                            wallVoxelId, floorVoxelId, innerVoxelId);
 
-                        // 3Dノイズで自然な形状を作る
-                        float noise3D = Mathf.PerlinNoise(
-                            (worldPos.x + noiseSeed) * 0.1f,
-                            (worldPos.y + noiseSeed) * 0.1f
-                        ) * Mathf.PerlinNoise(
-                            (worldPos.z + noiseSeed * 2) * 0.1f,
-                            (worldPos.x + noiseSeed * 3) * 0.1f
-                        );
-
-                        // ノイズを-0.5~0.5の範囲に正規化
-                        noise3D = (noise3D - 0.5f) * 2f;
-
-                        // 床の高さにノイズを適用
-                        float floorNoise = Mathf.PerlinNoise(
-                            worldPos.x * 0.2f + noiseSeed,
-                            worldPos.z * 0.2f + noiseSeed
-                        );
-                        floorNoise = (floorNoise - 0.5f) * 2f * floorNoiseScale;
-                        float floorY = baseFloorY + floorNoise * radius;
-
-                        // 半球の距離計算（Y > center.yの部分のみ）
-                        float hemisphereRadius = outerRadius + noise3D * noiseScale * radius;
-
-                        // 床より下の場合
-                        if (worldPos.y < floorY)
+                        if (voxelType.HasValue)
                         {
-                            // 床の範囲内かチェック
-                            if (worldPos.y >= floorY - floorThickness && horizontalDist <= radius)
-                            {
-                                updates.Add(CreateVoxelUpdate(worldPos, floorVoxelId));
-                            }
-                            continue;
-                        }
-
-                        // 半球の判定（床より上）
-                        float distFromCenter = Mathf.Sqrt(
-                            horizontalDist * horizontalDist +
-                            verticalDist * verticalDist
-                        );
-
-                        // 外側の境界
-                        if (distFromCenter <= hemisphereRadius && horizontalDist <= outerRadius)
-                        {
-                            // 内側の境界（ノイズ適用）
-                            float innerRadius = radius + noise3D * noiseScale * radius * 0.5f;
-                            float innerDist = Mathf.Sqrt(
-                                horizontalDist * horizontalDist +
-                                verticalDist * verticalDist
-                            );
-
-                            if (innerDist > innerRadius)
-                            {
-                                // 壁
-                                updates.Add(CreateVoxelUpdate(worldPos, wallVoxelId));
-                            }
-                            else
-                            {
-                                // 内部空間
-                                updates.Add(CreateVoxelUpdate(worldPos, innerVoxelId));
-                            }
+                            updates.Add(CreateVoxelUpdate(worldPos, voxelType.Value));
                         }
                     }
                 }
@@ -301,55 +213,95 @@ namespace StructureGeneration
         }
 
         /// <summary>
-        /// 球殻（空洞のある球）領域のボクセル更新リストを生成
+        /// ボクセル範囲を計算
         /// </summary>
-        protected List<VoxelUpdate> GenerateSphericalShellVoxels(
-            Vector3 center,
-            float outerRadius,
-            float innerRadius,
-            byte outerVoxelId,
-            byte innerVoxelId)
+        private (int range, Vector3Int centerVoxel) CalculateVoxelRange(Vector3 center, float outerRadius, float voxelSize)
         {
-            var updates = new List<VoxelUpdate>();
-            float voxelSize = VoxelConstants.VOXEL_SIZE;
-
             int range = Mathf.CeilToInt(outerRadius / voxelSize);
             Vector3Int centerVoxel = new Vector3Int(
                 Mathf.RoundToInt(center.x / voxelSize),
                 Mathf.RoundToInt(center.y / voxelSize),
                 Mathf.RoundToInt(center.z / voxelSize)
             );
+            return (range, centerVoxel);
+        }
 
-            for (int x = -range; x <= range; x++)
+        /// <summary>
+        /// ノイズ値の構造体
+        /// </summary>
+        private struct NoiseValues
+        {
+            public float noise3D;
+            public float floorY;
+            public float horizontalDist;
+            public float verticalDist;
+        }
+
+        /// <summary>
+        /// ノイズ値を計算
+        /// </summary>
+        private NoiseValues CalculateNoiseValues(
+            Vector3 worldPos, Vector3 center, int noiseSeed,
+            float noiseScale, float floorNoiseScale, float radius, float baseFloorY)
+        {
+            Vector3 offset = worldPos - center;
+            float horizontalDist = Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z);
+            float verticalDist = offset.y;
+
+            // 3Dノイズで自然な形状を作る
+            float noise3D = NoiseUtility.GetSimple3DNoise(worldPos, noiseSeed, 0.1f);
+
+            // 床の高さにノイズを適用
+            float floorNoise = NoiseUtility.Get2DNoise(worldPos.x, worldPos.z, noiseSeed, 0.2f) * floorNoiseScale;
+            float floorY = baseFloorY + floorNoise * radius;
+
+            return new NoiseValues
             {
-                for (int y = -range; y <= range; y++)
+                noise3D = noise3D,
+                floorY = floorY,
+                horizontalDist = horizontalDist,
+                verticalDist = verticalDist
+            };
+        }
+
+        /// <summary>
+        /// ドーム型のボクセルタイプを分類
+        /// </summary>
+        private byte? ClassifyDomeVoxelType(
+            Vector3 worldPos, Vector3 center, NoiseValues noise,
+            float radius, float outerRadius, float wallThickness, float floorThickness,
+            byte wallVoxelId, byte floorVoxelId, byte innerVoxelId)
+        {
+            // 床より下の場合
+            if (worldPos.y < noise.floorY)
+            {
+                if (worldPos.y >= noise.floorY - floorThickness && noise.horizontalDist <= radius)
                 {
-                    for (int z = -range; z <= range; z++)
-                    {
-                        Vector3Int voxelPos = centerVoxel + new Vector3Int(x, y, z);
-                        Vector3 worldPos = new Vector3(
-                            voxelPos.x * voxelSize,
-                            voxelPos.y * voxelSize,
-                            voxelPos.z * voxelSize
-                        );
-
-                        float distance = Vector3.Distance(worldPos, center);
-
-                        if (distance <= outerRadius && distance > innerRadius)
-                        {
-                            // 外殻部分
-                            updates.Add(CreateVoxelUpdate(worldPos, outerVoxelId));
-                        }
-                        else if (distance <= innerRadius)
-                        {
-                            // 内部空間
-                            updates.Add(CreateVoxelUpdate(worldPos, innerVoxelId));
-                        }
-                    }
+                    return floorVoxelId;
                 }
+                return null;
             }
 
-            return updates;
+            // 半球の判定（床より上）
+            float hemisphereRadius = outerRadius + noise.noise3D * DEFAULT_NOISE_SCALE * radius;
+            float distFromCenter = Mathf.Sqrt(
+                noise.horizontalDist * noise.horizontalDist +
+                noise.verticalDist * noise.verticalDist
+            );
+
+            // 外側の境界内かチェック
+            if (distFromCenter <= hemisphereRadius && noise.horizontalDist <= outerRadius)
+            {
+                float innerRadius = radius + noise.noise3D * DEFAULT_NOISE_SCALE * radius * INNER_NOISE_SCALE_RATIO;
+                float innerDist = Mathf.Sqrt(
+                    noise.horizontalDist * noise.horizontalDist +
+                    noise.verticalDist * noise.verticalDist
+                );
+
+                return innerDist > innerRadius ? wallVoxelId : innerVoxelId;
+            }
+
+            return null;
         }
     }
 }

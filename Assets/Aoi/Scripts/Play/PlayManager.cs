@@ -65,6 +65,10 @@ public class PlayManager : NetworkBehaviour
         m_gameTimer = GameTime;
         m_ongameTimer.Value = m_gameTimer;
 
+        var userdata = m_gameLauncher.UserData;
+        userdata.m_isPlayData = true;
+        m_gameLauncher.UserData = userdata;
+
         StartCoroutine(Wait());
     }
 

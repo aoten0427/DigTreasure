@@ -38,7 +38,7 @@ namespace NetWork
             m_loadManager = LoadManager.Instance;
             if (m_loadManager != null)
             {
-                m_currentLoadEvent = AddLoadingEvent(1.0f,"基本ローディング");
+                //m_currentLoadEvent = AddLoadingEvent(1.0f,"基本ローディング");
                 m_loadManager.Show();
                 if (m_isLog) Debug.Log("[LoadingService] ロード画面を表示しました。");
             }
@@ -49,7 +49,7 @@ namespace NetWork
         /// </summary>
         public void CompleteLoading()
         {
-            StartCoroutine(LoadEventFinish());
+            //StartCoroutine(LoadEventFinish());
         }
 
         IEnumerator LoadEventFinish()
@@ -58,7 +58,7 @@ namespace NetWork
 
             if (m_currentLoadEvent != null)
             {
-                m_currentLoadEvent.Value = 1.0f;
+                //m_currentLoadEvent.Value = 1.0f;
                 if (m_isLog) Debug.Log("[LoadingService] ロード完了を通知しました。");
             }
         }

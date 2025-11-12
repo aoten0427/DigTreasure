@@ -128,9 +128,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 20207500}
-  - component: {fileID: 20207501}
-  - component: {fileID: 20207502}
-  - component: {fileID: 20207503}
+  - component: {fileID: 20207505}
+  - component: {fileID: 20207506}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -153,43 +152,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &20207501
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 20207499}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed35485fe03c71047bf9b0e7f2182304, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  settings: {fileID: 11400000, guid: a7ef5263d16f56b4e84e17fba5201984, type: 2}
-  worldManager: {fileID: 1681864021}
-  testSeed: 12345
-  fieldCenter: {x: 0, y: -20, z: 0}
-  fieldSize: {x: 100, y: 50, z: 100}
---- !u!114 &20207502
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 20207499}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e1114c5d5c695f4fa6cb87f544eff6d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  settings: {fileID: 11400000, guid: c335e13120c16b846a4d0914a872d354, type: 2}
-  worldManager: {fileID: 1681864021}
-  testSeed: 99999
-  fieldCenter: {x: 0, y: -20, z: 0}
-  fieldSize: {x: 100, y: 50, z: 100}
-  useVisibleBlocks: 1
-  visibleBlockId: 2
---- !u!114 &20207503
+--- !u!114 &20207505
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -198,14 +161,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 20207499}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 186a9b54b51638a478bd21f46aff85e0, type: 3}
+  m_Script: {fileID: 11500000, guid: af0082d28643e0a4f9decd472ceb4c15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settings: {fileID: 11400000, guid: 498c1823180934e42939ce7283a9e1bc, type: 2}
-  worldManager: {fileID: 1681864021}
-  testSeed: 54321
-  fieldCenter: {x: 0, y: -20, z: 0}
-  fieldSize: {x: 100, y: 50, z: 100}
+  settings: {fileID: 11400000, guid: ec011947d17c8e342aedc7bea48be338, type: 2}
+  generateOnStart: 1
+  startDelay: 10
+--- !u!114 &20207506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20207499}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b916a7c5ec75853469c4021e53ebc747, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  runTest: 0
+  basePosition: {x: 0, y: -20, z: 0}
+  height: 20
+  baseRadius: 3
+  voxelId: 1
+  seed: 12345
 --- !u!1 &402998229
 GameObject:
   m_ObjectHideFlags: 0
@@ -254,7 +233,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_userdataManagerPrefab:
-    RawGuidValue: 00000000000000000000000000000000
+    RawGuidValue: d9b82a56fcc084442a155dbeecfc4eaf
   m_isLog: 0
   m_debugId: 0
   m_debugName: 
@@ -452,6 +431,7 @@ GameObject:
   m_Component:
   - component: {fileID: 596942457}
   - component: {fileID: 596942458}
+  - component: {fileID: 596942459}
   m_Layer: 0
   m_Name: Logger
   m_TagString: Untagged
@@ -489,6 +469,18 @@ MonoBehaviour:
   m_enableLogging: 1
   m_logToConsole: 0
   m_includeStackTrace: 0
+--- !u!114 &596942459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596942456}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 713cc8058e5404744aea34fbb1c6c5ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &975891469
 GameObject:
   m_ObjectHideFlags: 0
@@ -557,6 +549,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1058014882
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1058014884}
+  - component: {fileID: 1058014883}
+  m_Layer: 0
+  m_Name: GameObject (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1058014883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1058014882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2521963c95b76345b98cb6f773d2397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameLauncher: {fileID: 1857259460}
+  playerPrefab:
+    RawGuidValue: 83e91b8548c9ba54f9187b4aecde9a57
+--- !u!4 &1058014884
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1058014882}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.2546766, y: -0.66902035, z: 1.7092798}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1681864019
 GameObject:
   m_ObjectHideFlags: 0
@@ -600,17 +639,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7878dcd09bbd3ac4fa388a78a4e110c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_worldSizeInChunksMin: {x: -10, y: -5, z: -10}
-  m_worldSizeInChunksMax: {x: 10, y: 0, z: 10}
+  m_worldSizeInChunksMin: {x: -10, y: -10, z: -10}
+  m_worldSizeInChunksMax: {x: 10, y: 2, z: 10}
   m_isInitializeCreateChunk: 1
   m_voxelMaterial: {fileID: 2100000, guid: 2b1e4587679c7204e944569092a95697, type: 2}
   m_boundaryMeshSettings:
-    forwardBoundaryZ: 2147483647
-    backBoundaryZ: -2147483648
-    upBoundaryY: 2147483647
-    downBoundaryY: -2147483648
-    rightBoundaryX: 2147483647
-    leftBoundaryX: -2147483648
+    forwardBoundaryZ: 4
+    backBoundaryZ: -5
+    upBoundaryY: -1
+    downBoundaryY: -5
+    rightBoundaryX: 5
+    leftBoundaryX: -5
     enableForward: 1
     enableBack: 1
     enableUp: 1
@@ -888,3 +927,4 @@ SceneRoots:
   - {fileID: 1970485972}
   - {fileID: 596942457}
   - {fileID: 20207500}
+  - {fileID: 1058014884}

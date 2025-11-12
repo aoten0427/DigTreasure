@@ -29,39 +29,13 @@ namespace StructureGeneration
         public byte floorVoxelId;
         public byte innerVoxelId;
         public int noiseSeed;
-        public float noiseScale;
-        public float floorNoiseScale;
+        public float wallNoiseAmplitude;  // 壁のノイズ振幅（特性サイズに対する割合）
+        public float floorNoiseAmplitude; // 床のノイズ振幅（特性サイズに対する割合）
+        public int noiseOctaves;          // ノイズのオクターブ数
+        public float wavesPerSize;        // サイズあたりの波の数
 
         /// <summary>
-        /// 球形・半球用のコンストラクタ（horizontalRadius == verticalRadius）
-        /// </summary>
-        public ShapeParameters(
-            Vector3 center,
-            float radius,
-            float wallThickness,
-            float floorThickness,
-            byte wallVoxelId,
-            byte floorVoxelId,
-            byte innerVoxelId,
-            int noiseSeed,
-            float noiseScale = 0.15f,
-            float floorNoiseScale = 0.1f)
-        {
-            this.center = center;
-            this.horizontalRadius = radius;
-            this.verticalRadius = radius;
-            this.wallThickness = wallThickness;
-            this.floorThickness = floorThickness;
-            this.wallVoxelId = wallVoxelId;
-            this.floorVoxelId = floorVoxelId;
-            this.innerVoxelId = innerVoxelId;
-            this.noiseSeed = noiseSeed;
-            this.noiseScale = noiseScale;
-            this.floorNoiseScale = floorNoiseScale;
-        }
-
-        /// <summary>
-        /// 扁球用のコンストラクタ（horizontalRadius != verticalRadius）
+        /// 扁球用のコンストラクタ
         /// </summary>
         public ShapeParameters(
             Vector3 center,
@@ -73,8 +47,10 @@ namespace StructureGeneration
             byte floorVoxelId,
             byte innerVoxelId,
             int noiseSeed,
-            float noiseScale = 0.15f,
-            float floorNoiseScale = 0.1f)
+            float wallNoiseAmplitude = 0.10f,
+            float floorNoiseAmplitude = 0.10f,
+            int noiseOctaves = 3,
+            float wavesPerSize = 4f)
         {
             this.center = center;
             this.horizontalRadius = horizontalRadius;
@@ -85,8 +61,10 @@ namespace StructureGeneration
             this.floorVoxelId = floorVoxelId;
             this.innerVoxelId = innerVoxelId;
             this.noiseSeed = noiseSeed;
-            this.noiseScale = noiseScale;
-            this.floorNoiseScale = floorNoiseScale;
+            this.wallNoiseAmplitude = wallNoiseAmplitude;
+            this.floorNoiseAmplitude = floorNoiseAmplitude;
+            this.noiseOctaves = noiseOctaves;
+            this.wavesPerSize = wavesPerSize;
         }
     }
 
@@ -132,28 +110,20 @@ namespace StructureGeneration
                         float horizontalDist = Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z);
                         float verticalDist = offset.y;
 
-                        // 3Dノイズで自然な形状を作る
-                        float noise3D = Mathf.PerlinNoise(
-                            (worldPos.x + param.noiseSeed) * 0.1f,
-                            (worldPos.y + param.noiseSeed) * 0.1f
-                        ) * Mathf.PerlinNoise(
-                            (worldPos.z + param.noiseSeed * 2) * 0.1f,
-                            (worldPos.x + param.noiseSeed * 3) * 0.1f
-                        );
+                        // 特性サイズ
+                        float characteristicSize = param.horizontalRadius;
 
-                        // ノイズを-0.5~0.5の範囲に正規化
-                        noise3D = (noise3D - 0.5f) * 2f;
+                        // 壁・天井用ノイズ
+                        float noise3D = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed, param.noiseOctaves, param.wavesPerSize);
 
-                        // 床の高さにノイズを適用
-                        float floorNoise = Mathf.PerlinNoise(
-                            worldPos.x * 0.2f + param.noiseSeed,
-                            worldPos.z * 0.2f + param.noiseSeed
-                        );
-                        floorNoise = (floorNoise - 0.5f) * 2f * param.floorNoiseScale;
-                        float floorY = baseFloorY + floorNoise * param.horizontalRadius;
+                        // 床の高さ用ノイズ
+                        float floorNoise = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed + 1000, param.noiseOctaves, param.wavesPerSize * 0.5f);
+                        float floorHeightAmplitude = characteristicSize * param.floorNoiseAmplitude;
+                        float floorY = baseFloorY + floorNoise * floorHeightAmplitude;
 
-                        // 半球の距離計算（Y > center.yの部分のみ）
-                        float hemisphereRadius = outerRadius + noise3D * param.noiseScale * param.horizontalRadius;
+                        // 半球のノイズ適用
+                        float wallAmplitude = characteristicSize * param.wallNoiseAmplitude;
+                        float hemisphereRadius = outerRadius + noise3D * wallAmplitude;
 
                         // 床より下の場合
                         if (worldPos.y < floorY)
@@ -175,8 +145,8 @@ namespace StructureGeneration
                         // 外側の境界
                         if (distFromCenter <= hemisphereRadius && horizontalDist <= outerRadius)
                         {
-                            // 内側の境界（ノイズ適用）
-                            float innerRadius = param.horizontalRadius + noise3D * param.noiseScale * param.horizontalRadius * 0.5f;
+                            // 内側の境界（ノイズ適用、振幅は外側の半分）
+                            float innerRadius = param.horizontalRadius + noise3D * wallAmplitude * 0.5f;
                             float innerDist = Mathf.Sqrt(
                                 horizontalDist * horizontalDist +
                                 verticalDist * verticalDist
@@ -241,31 +211,26 @@ namespace StructureGeneration
                         float horizontalDist = Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z);
                         float verticalDist = offset.y;
 
-                        // 3Dノイズで自然な形状を作る
-                        float noise3D = Mathf.PerlinNoise(
-                            (worldPos.x + param.noiseSeed) * 0.1f,
-                            (worldPos.y + param.noiseSeed) * 0.1f
-                        ) * Mathf.PerlinNoise(
-                            (worldPos.z + param.noiseSeed * 2) * 0.1f,
-                            (worldPos.x + param.noiseSeed * 3) * 0.1f
-                        );
+                        // 洞窟の特性サイズ（半径の平均）
+                        float characteristicSize = (param.horizontalRadius + param.verticalRadius) / 2f;
 
-                        // ノイズを-0.5~0.5の範囲に正規化
-                        noise3D = (noise3D - 0.5f) * 2f;
+                        // 壁・天井用の3Dノイズ
+                        float noise3D = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed, param.noiseOctaves, param.wavesPerSize);
 
-                        // 床の高さにノイズを適用
-                        float floorNoise = Mathf.PerlinNoise(
-                            worldPos.x * 0.2f + param.noiseSeed,
-                            worldPos.z * 0.2f + param.noiseSeed
-                        );
-                        floorNoise = (floorNoise - 0.5f) * 2f * param.floorNoiseScale;
-                        float floorY = baseFloorY + floorNoise * param.horizontalRadius;
+                        // 床の高さ用ノイズ（より低周波で穏やか）
+                        float floorHeightNoise = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed + 1000, param.noiseOctaves, param.wavesPerSize * 0.5f);
+                        float floorHeightAmplitude = characteristicSize * param.floorNoiseAmplitude;
+                        float floorY = baseFloorY + floorHeightNoise * floorHeightAmplitude;
+
+                        // 床の半径用ノイズ（さらに低周波）
+                        float floorRadiusNoise = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed + 2000, param.noiseOctaves, param.wavesPerSize * 0.375f);
+                        float noisedFloorRadius = param.horizontalRadius + floorRadiusNoise * floorHeightAmplitude * 2f;
 
                         // 床より下の場合
                         if (worldPos.y < floorY)
                         {
-                            // 床の範囲内かチェック
-                            if (worldPos.y >= floorY - param.floorThickness && horizontalDist <= param.horizontalRadius)
+                            // 床の範囲内かチェック（ノイズを適用した半径を使用）
+                            if (worldPos.y >= floorY - param.floorThickness && horizontalDist <= noisedFloorRadius)
                             {
                                 updates.Add(new VoxelUpdate(worldPos, param.floorVoxelId));
                             }
@@ -273,21 +238,21 @@ namespace StructureGeneration
                         }
 
                         // 扁球の判定（床より上）
-                        // 楕円体の距離式: (dx²+dz²)/a² + dy²/b² <= 1
-                        // ノイズを適用した半径
-                        float noisedHorizontalRadius = outerHorizontalRadius + noise3D * param.noiseScale * param.horizontalRadius;
-                        float noisedVerticalRadius = outerVerticalRadius + noise3D * param.noiseScale * param.verticalRadius;
+                        float wallAmplitude = characteristicSize * param.wallNoiseAmplitude;
+
+                        float noisedHorizontalRadius = outerHorizontalRadius + noise3D * wallAmplitude;
+                        float noisedVerticalRadius = outerVerticalRadius + noise3D * wallAmplitude;
 
                         // 外側の楕円体判定
                         float outerEllipsoidDist =
                             (horizontalDist * horizontalDist) / (noisedHorizontalRadius * noisedHorizontalRadius) +
                             (verticalDist * verticalDist) / (noisedVerticalRadius * noisedVerticalRadius);
 
-                        if (outerEllipsoidDist <= 1.0f && horizontalDist <= outerHorizontalRadius)
+                        if (outerEllipsoidDist <= 1.0f)
                         {
-                            // 内側の楕円体判定（ノイズを弱めに適用）
-                            float innerHorizontalRadius = param.horizontalRadius + noise3D * param.noiseScale * param.horizontalRadius * 0.5f;
-                            float innerVerticalRadius = param.verticalRadius + noise3D * param.noiseScale * param.verticalRadius * 0.5f;
+                            // 内側の楕円体判定（ノイズ振幅は外側の半分）
+                            float innerHorizontalRadius = param.horizontalRadius + noise3D * wallAmplitude * 0.5f;
+                            float innerVerticalRadius = param.verticalRadius + noise3D * wallAmplitude * 0.5f;
 
                             float innerEllipsoidDist =
                                 (horizontalDist * horizontalDist) / (innerHorizontalRadius * innerHorizontalRadius) +
@@ -312,63 +277,77 @@ namespace StructureGeneration
         }
 
         /// <summary>
-        /// 完全な球体を生成
+        /// 細長い三角形（ピラミッド）を生成
         /// </summary>
-        public static List<VoxelUpdate> GenerateSphere(ShapeParameters param)
+        /// <param name="basePosition">底面の中心位置</param>
+        /// <param name="height">高さ（メートル）</param>
+        /// <param name="baseRadius">底面の半径（メートル）</param>
+        /// <param name="voxelId">ボクセルID</param>
+        /// <param name="seed">ノイズシード</param>
+        /// <param name="noiseAmplitudeRatio">ノイズ振幅の比率（半径に対する割合）</param>
+        /// <param name="noiseFrequency">ノイズの周波数</param>
+        public static List<VoxelUpdate> GeneratePyramid(
+            Vector3 basePosition,
+            float height,
+            float baseRadius,
+            byte voxelId,
+            int seed,
+            float noiseAmplitudeRatio = 0.08f,
+            float noiseFrequency = 0.15f)
         {
             var updates = new List<VoxelUpdate>();
             float voxelSize = VoxelConstants.VOXEL_SIZE;
-            float outerRadius = param.horizontalRadius + param.wallThickness;
 
-            int range = Mathf.CeilToInt(outerRadius / voxelSize);
-            Vector3Int centerVoxel = new Vector3Int(
-                Mathf.RoundToInt(param.center.x / voxelSize),
-                Mathf.RoundToInt(param.center.y / voxelSize),
-                Mathf.RoundToInt(param.center.z / voxelSize)
+            // 処理範囲を計算
+            int rangeX = Mathf.CeilToInt(baseRadius / voxelSize);
+            int rangeY = Mathf.CeilToInt(height / voxelSize);
+            int rangeZ = Mathf.CeilToInt(baseRadius / voxelSize);
+
+            Vector3Int baseVoxel = new Vector3Int(
+                Mathf.RoundToInt(basePosition.x / voxelSize),
+                Mathf.RoundToInt(basePosition.y / voxelSize),
+                Mathf.RoundToInt(basePosition.z / voxelSize)
             );
 
-            for (int x = -range; x <= range; x++)
+            // ピラミッドの頂点位置
+            Vector3 apexPosition = basePosition + Vector3.up * height;
+
+            for (int x = -rangeX; x <= rangeX; x++)
             {
-                for (int y = -range; y <= range; y++)
+                for (int y = 0; y <= rangeY; y++)
                 {
-                    for (int z = -range; z <= range; z++)
+                    for (int z = -rangeZ; z <= rangeZ; z++)
                     {
-                        Vector3Int voxelPos = centerVoxel + new Vector3Int(x, y, z);
+                        Vector3Int voxelPos = baseVoxel + new Vector3Int(x, y, z);
                         Vector3 worldPos = new Vector3(
                             voxelPos.x * voxelSize,
                             voxelPos.y * voxelSize,
                             voxelPos.z * voxelSize
                         );
 
-                        // 3Dノイズで自然な形状を作る
-                        float noise3D = Mathf.PerlinNoise(
-                            (worldPos.x + param.noiseSeed) * 0.1f,
-                            (worldPos.y + param.noiseSeed) * 0.1f
-                        ) * Mathf.PerlinNoise(
-                            (worldPos.z + param.noiseSeed * 2) * 0.1f,
-                            (worldPos.x + param.noiseSeed * 3) * 0.1f
+                        // 高さに応じた半径を計算（線形補間）
+                        float heightRatio = (worldPos.y - basePosition.y) / height;
+                        if (heightRatio < 0f || heightRatio > 1f)
+                            continue;
+
+                        // 高さに応じて半径を縮小（底面 → 頂点で0に）
+                        float currentRadius = baseRadius * (1f - heightRatio);
+
+                        // 中心からの水平距離
+                        float horizontalDist = Mathf.Sqrt(
+                            Mathf.Pow(worldPos.x - basePosition.x, 2) +
+                            Mathf.Pow(worldPos.z - basePosition.z, 2)
                         );
 
-                        noise3D = (noise3D - 0.5f) * 2f;
+                        // ノイズを適用して表面を粗くする
+                        float noiseAmplitude = baseRadius * noiseAmplitudeRatio;
+                        float noise = NoiseUtility.GetSimple3DNoise(worldPos, seed, noiseFrequency);
+                        float noisedRadius = currentRadius + noise * noiseAmplitude;
 
-                        // ノイズを適用した半径
-                        float noisedOuterRadius = outerRadius + noise3D * param.noiseScale * param.horizontalRadius;
-                        float noisedInnerRadius = param.horizontalRadius + noise3D * param.noiseScale * param.horizontalRadius * 0.5f;
-
-                        float distance = Vector3.Distance(worldPos, param.center);
-
-                        if (distance <= noisedOuterRadius)
+                        // ピラミッドの内部判定（ノイズ適用後）
+                        if (horizontalDist <= noisedRadius)
                         {
-                            if (distance > noisedInnerRadius)
-                            {
-                                // 壁
-                                updates.Add(new VoxelUpdate(worldPos, param.wallVoxelId));
-                            }
-                            else
-                            {
-                                // 内部空間
-                                updates.Add(new VoxelUpdate(worldPos, param.innerVoxelId));
-                            }
+                            updates.Add(new VoxelUpdate(worldPos, voxelId));
                         }
                     }
                 }

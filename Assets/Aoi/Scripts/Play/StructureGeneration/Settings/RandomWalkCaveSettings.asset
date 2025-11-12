@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a689d1fd8f9dabe43ad6d337e1a5cb96, type: 3}
   m_Name: RandomWalkCaveSettings
   m_EditorClassIdentifier: 
-  minCount: 1
-  maxCount: 1
+  minCount: 0
+  maxCount: 0
   priority: 10
   placementPriority: 10
-  maxConnectionPoints: 2
+  maxConnectionPoints: 1
   maxAutoConnectionDistance: 80
   minWalkSteps: 10
   maxWalkSteps: 30

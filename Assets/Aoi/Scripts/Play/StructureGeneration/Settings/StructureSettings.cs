@@ -18,15 +18,9 @@ namespace StructureGeneration
         [Tooltip("生成優先度（高いほど後に生成され、他の構造物を上書きする）")]
         public int priority = 10;
 
-        [Tooltip("配置優先度（高いほど先に配置される）")]
-        public int placementPriority = 10;
-
         [Header("接続")]
         [Tooltip("この構造物が持つ最大接続点数")]
         public int maxConnectionPoints = 2;
-
-        [Tooltip("自動接続を試みる最大距離（メートル）")]
-        public float maxAutoConnectionDistance = 80f;
 
         /// <summary>
         /// 構造物のタイプを取得
