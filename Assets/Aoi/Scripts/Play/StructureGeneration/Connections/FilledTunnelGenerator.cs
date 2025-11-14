@@ -10,6 +10,15 @@ namespace StructureGeneration
     /// </summary>
     public class FilledTunnelGenerator : IConnectionGenerator
     {
+        // 定数
+        private const int FRAME_YIELD_INTERVAL = 10;
+        private const float INNER_RADIUS_RATIO = 0.6f;
+        private const float DEFAULT_TUNNEL_RADIUS = 4f;
+        private const float DEFAULT_NOISE_SCALE = 0.2f;
+        private const byte DEFAULT_FILL_VOXEL_ID = 2;  // 柔らかい石
+        private const byte DEFAULT_INNER_VOXEL_ID = 0;  // 空気
+        private const float DEFAULT_CURVE_HEIGHT = 10f;
+
         private readonly float tunnelRadius;
         private readonly float noiseScale;
         private readonly byte fillVoxelId;
@@ -20,12 +29,12 @@ namespace StructureGeneration
         public ConnectionType SupportedType => ConnectionType.FilledTunnel;
 
         public FilledTunnelGenerator(
-            float tunnelRadius = 4f,
-            float noiseScale = 0.2f,
-            byte fillVoxelId = 2,  // 柔らかい石
-            byte innerVoxelId = 0,  // 空気
+            float tunnelRadius = DEFAULT_TUNNEL_RADIUS,
+            float noiseScale = DEFAULT_NOISE_SCALE,
+            byte fillVoxelId = DEFAULT_FILL_VOXEL_ID,
+            byte innerVoxelId = DEFAULT_INNER_VOXEL_ID,
             PathGenerationMode pathMode = PathGenerationMode.Bezier,
-            float curveHeight = 10f)
+            float curveHeight = DEFAULT_CURVE_HEIGHT)
         {
             this.tunnelRadius = tunnelRadius;
             this.noiseScale = noiseScale;
@@ -37,20 +46,24 @@ namespace StructureGeneration
 
         public async Task<List<VoxelUpdate>> GenerateAsync(ConnectionData connection, int seed)
         {
-            var updates = new List<VoxelUpdate>();
+            var voxelUpdates = new List<VoxelUpdate>();
             float voxelSize = VoxelConstants.VOXEL_SIZE;
 
             Vector3 start = connection.SourcePoint.Position;
             Vector3 end = connection.TargetPoint.Position;
-            float distance = Vector3.Distance(start, end);
 
-            // パスポイントを生成（直線 or ベジェ曲線）
-            List<Vector3> pathPoints = GeneratePathPoints(start, end, connection, distance);
-
-            // トンネルのセグメント数を計算（1メートルごと）
-            int segments = pathPoints.Count;
+            // パスポイントを生成（PathGeneratorを使用）
+            List<Vector3> pathPoints = PathGenerator.GeneratePathPoints(
+                start,
+                end,
+                connection.SourcePoint.Direction,
+                connection.TargetPoint.Direction,
+                pathMode,
+                curveHeight
+            );
 
             // 各セグメントでトンネルを生成
+            int segments = pathPoints.Count;
             for (int i = 0; i < segments; i++)
             {
                 Vector3 currentPos = pathPoints[i];
@@ -80,16 +93,8 @@ namespace StructureGeneration
                             Vector3 toVoxel = worldPos - currentPos;
                             float distFromAxis = toVoxel.magnitude;
 
-                            // ノイズを追加して自然な形状に
-                            float noise = Mathf.PerlinNoise(
-                                (worldPos.x + seed) * 0.1f,
-                                (worldPos.z + seed) * 0.1f
-                            ) * Mathf.PerlinNoise(
-                                (worldPos.y + seed * 2) * 0.1f,
-                                (worldPos.x + seed * 3) * 0.1f
-                            );
-                            noise = (noise - 0.5f) * 2f * noiseScale;
-
+                            // ノイズを追加して自然な形状に（TunnelNoiseHelperを使用）
+                            float noise = TunnelNoiseHelper.CalculateTunnelNoise(worldPos, seed, noiseScale);
                             float effectiveRadius = tunnelRadius + noise * tunnelRadius;
 
                             // 外側: 柔らかい石で埋める
@@ -97,115 +102,25 @@ namespace StructureGeneration
                             if (distFromAxis <= effectiveRadius)
                             {
                                 // 内側の半径（プレイヤーが掘る部分）
-                                float innerRadius = effectiveRadius * 0.6f;
+                                float innerRadius = effectiveRadius * INNER_RADIUS_RATIO;
 
-                                if (distFromAxis <= innerRadius)
-                                {
-                                    // 内部は空気にしない（柔らかい石で埋める）
-                                    updates.Add(new VoxelUpdate(worldPos, fillVoxelId));
-                                }
-                                else
-                                {
-                                    // 外側も柔らかい石
-                                    updates.Add(new VoxelUpdate(worldPos, fillVoxelId));
-                                }
+                                // 現在の実装では、すべて柔らかい石で埋める
+                                // 将来的に内側を空気にする場合は、以下の条件を使用
+                                // if (distFromAxis > innerRadius) { ... }
+                                voxelUpdates.Add(new VoxelUpdate(worldPos, fillVoxelId));
                             }
                         }
                     }
                 }
 
                 // フレーム分散
-                if (i % 10 == 0)
+                if (i % FRAME_YIELD_INTERVAL == 0)
                 {
                     await Task.Yield();
                 }
             }
 
-            return updates;
-        }
-
-        /// <summary>
-        /// パスポイントを生成（直線またはベジェ曲線）
-        /// </summary>
-        private List<Vector3> GeneratePathPoints(Vector3 start, Vector3 end, ConnectionData connection, float distance)
-        {
-            var pathPoints = new List<Vector3>();
-
-            if (pathMode == PathGenerationMode.Straight)
-            {
-                // 直線パス
-                int segments = Mathf.CeilToInt(distance / 1f);
-                for (int i = 0; i <= segments; i++)
-                {
-                    float t = i / (float)segments;
-                    pathPoints.Add(Vector3.Lerp(start, end, t));
-                }
-            }
-            else // PathGenerationMode.Bezier
-            {
-                // ベジェ曲線パス
-                // 制御点を計算
-                Vector3 control1, control2;
-                CalculateBezierControlPoints(start, end, connection, out control1, out control2);
-
-                // ベジェ曲線に沿ってポイントを生成
-                int segments = Mathf.CeilToInt(distance / 1f);
-                for (int i = 0; i <= segments; i++)
-                {
-                    float t = i / (float)segments;
-                    pathPoints.Add(CalculateCubicBezierPoint(t, start, control1, control2, end));
-                }
-            }
-
-            return pathPoints;
-        }
-
-        /// <summary>
-        /// ベジェ曲線の制御点を計算
-        /// </summary>
-        private void CalculateBezierControlPoints(Vector3 start, Vector3 end, ConnectionData connection, out Vector3 control1, out Vector3 control2)
-        {
-            // 中間点
-            Vector3 midPoint = (start + end) * 0.5f;
-
-            // 2つの構造物の位置関係を分析
-            float horizontalDist = new Vector3(end.x - start.x, 0, end.z - start.z).magnitude;
-            float verticalDiff = Mathf.Abs(end.y - start.y);
-
-            // 曲線の高さを決定（Y軸の差が大きい場合は上方向に迂回）
-            float actualCurveHeight = curveHeight;
-            if (verticalDiff > 15f)
-            {
-                // 大きな高度差がある場合は、より高く迂回
-                actualCurveHeight = curveHeight + verticalDiff * 0.3f;
-            }
-
-            // 制御点1: 開始点から少し進んで上方向にオフセット
-            Vector3 startDirection = connection.SourcePoint.Direction;
-            control1 = start + startDirection * (horizontalDist * 0.25f) + Vector3.up * actualCurveHeight;
-
-            // 制御点2: 終了点から少し戻って上方向にオフセット
-            Vector3 endDirection = connection.TargetPoint.Direction;
-            control2 = end - endDirection * (horizontalDist * 0.25f) + Vector3.up * actualCurveHeight;
-        }
-
-        /// <summary>
-        /// 3次ベジェ曲線上の点を計算
-        /// </summary>
-        private Vector3 CalculateCubicBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
-        {
-            float u = 1 - t;
-            float tt = t * t;
-            float uu = u * u;
-            float uuu = uu * u;
-            float ttt = tt * t;
-
-            Vector3 p = uuu * p0; // (1-t)^3 * P0
-            p += 3 * uu * t * p1; // 3(1-t)^2 * t * P1
-            p += 3 * u * tt * p2; // 3(1-t) * t^2 * P2
-            p += ttt * p3;        // t^3 * P3
-
-            return p;
+            return voxelUpdates;
         }
     }
 }

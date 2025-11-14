@@ -8,11 +8,6 @@ namespace StructureGeneration
     [CreateAssetMenu(fileName = "HardFloorCaveSettings", menuName = "StructureGeneration/HardFloorCaveSettings")]
     public class HardFloorCaveSettings : StructureSettings
     {
-        // コンストラクタで接続点数を増やす（お宝部屋が多数接続できるように）
-        public HardFloorCaveSettings()
-        {
-            maxConnectionPoints = 32;  // デフォルトの2から32に増加
-        }
 
         [Header("洞窟のサイズ")]
         [Tooltip("洞窟の水平半径の最小値（メートル、x-z方向）")]
@@ -101,11 +96,6 @@ namespace StructureGeneration
         public override StructureType GetStructureType()
         {
             return StructureType.HardFloorCave;
-        }
-
-        public override IStructure CreateStructure(string id, int seed)
-        {
-            return new HardFloorCave(id, seed, this);
         }
     }
 }

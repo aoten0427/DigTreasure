@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UniRx;
+using System.Diagnostics;
 
 namespace VoxelWorld
 {
@@ -23,6 +24,10 @@ namespace VoxelWorld
 
         // 自動メッシュ更新フラグ
         private bool m_enableAutoMeshUpdate;
+
+        // パフォーマンス計測用
+        public bool EnablePerformanceLogging { get; set; } = false;
+        private Stopwatch m_performanceStopwatch = new Stopwatch();
 
         /// <summary>
         /// VoxelBatchManagerを初期化
@@ -56,7 +61,7 @@ namespace VoxelWorld
         public IEnumerator SetVoxelsAsync(
             List<VoxelUpdate> voxelUpdates,
             bool isSender = false,
-            int chunksPerFrame = 10,
+            int chunksPerFrame = 50,
             ReactiveProperty<float> progressProperty = null,
             Action<int> onComplete = null)
         {
@@ -102,6 +107,8 @@ namespace VoxelWorld
         /// </summary>
         private Dictionary<Vector3Int, List<VoxelUpdate>> GroupVoxelUpdatesByChunk(List<VoxelUpdate> voxelUpdates)
         {
+            if (EnablePerformanceLogging) m_performanceStopwatch.Restart();
+
             var chunkGroups = new Dictionary<Vector3Int, List<VoxelUpdate>>();
 
             foreach (var update in voxelUpdates)
@@ -113,6 +120,12 @@ namespace VoxelWorld
                     chunkGroups[chunkPos] = list;
                 }
                 list.Add(update);
+            }
+
+            if (EnablePerformanceLogging)
+            {
+                m_performanceStopwatch.Stop();
+                //UnityEngine.Debug.Log($"[Performance] GroupVoxelUpdatesByChunk: {m_performanceStopwatch.ElapsedMilliseconds}ms ({voxelUpdates.Count} voxels, {chunkGroups.Count} chunks)");
             }
 
             return chunkGroups;
@@ -137,6 +150,12 @@ namespace VoxelWorld
             ReactiveProperty<float> progressProperty,
             VoxelSetResult result)
         {
+            Stopwatch totalStopwatch = null;
+            if (EnablePerformanceLogging)
+            {
+                totalStopwatch = Stopwatch.StartNew();
+            }
+
             int totalChunks = chunkGroups.Count;
             int processedChunks = 0;
 
@@ -162,6 +181,12 @@ namespace VoxelWorld
                     }
                     yield return null;
                 }
+            }
+
+            if (EnablePerformanceLogging && totalStopwatch != null)
+            {
+                totalStopwatch.Stop();
+                //UnityEngine.Debug.Log($"[Performance] ProcessVoxelDataSetting: {totalStopwatch.ElapsedMilliseconds}ms ({result.SuccessCount} voxels, {totalChunks} chunks)");
             }
         }
 
@@ -256,7 +281,7 @@ namespace VoxelWorld
         /// </summary>
         private IEnumerator ProcessMeshUpdate(HashSet<Vector3Int> affectedChunks, ReactiveProperty<float> progressProperty)
         {
-            Debug.Log($"[VoxelBatchManager] ProcessMeshUpdate started: affectedChunks={affectedChunks.Count}");
+            //UnityEngine.Debug.Log($"[VoxelBatchManager] ProcessMeshUpdate started: affectedChunks={affectedChunks.Count}");
 
             if (m_meshManager != null)
             {
@@ -273,13 +298,13 @@ namespace VoxelWorld
                     //Debug.Log($"[VoxelBatchManager] Mesh progress: {mp * 100:F1}% (overall: {(0.5f + mp * 0.5f) * 100:F1}%)");
                 });
 
-                // メッシュ更新を登録
-                Debug.Log($"[VoxelBatchManager] Calling MeshUpdate for {affectedChunks.Count} chunks");
+                    // メッシュ更新を登録
+                    //UnityEngine.Debug.Log($"[VoxelBatchManager] Calling MeshUpdate for {affectedChunks.Count} chunks");
                 m_meshManager.MeshUpdate(
                     affectedChunks,
                     meshProgress,
                     () => {
-                        Debug.Log("[VoxelBatchManager] Mesh update complete callback invoked!");
+                        //UnityEngine.Debug.Log("[VoxelBatchManager] Mesh update complete callback invoked!");
                         meshUpdateComplete = true;
                     }
                 );
@@ -291,17 +316,17 @@ namespace VoxelWorld
                     waitFrames++;
                     if (waitFrames % 60 == 0)
                     {
-                        Debug.Log($"[VoxelBatchManager] Waiting for mesh update... ({waitFrames} frames)");
+                        //UnityEngine.Debug.Log($"[VoxelBatchManager] Waiting for mesh update... ({waitFrames} frames)");
                     }
                     yield return null;
                 }
 
-                Debug.Log($"[VoxelBatchManager] Mesh update finished after {waitFrames} frames");
+                //UnityEngine.Debug.Log($"[VoxelBatchManager] Mesh update finished after {waitFrames} frames");
                 subscription.Dispose();
             }
             else
             {
-                Debug.LogWarning("[VoxelBatchManager] VoxelMeshManagerが初期化されていません。メッシュ更新をスキップします。");
+                //UnityEngine.Debug.LogWarning("[VoxelBatchManager] VoxelMeshManagerが初期化されていません。メッシュ更新をスキップします。");
             }
         }
 
@@ -310,7 +335,7 @@ namespace VoxelWorld
         /// </summary>
         private void CompleteProcessing(ReactiveProperty<float> progressProperty, Action<int> onComplete, int successCount)
         {
-            Debug.Log($"[VoxelBatchManager] CompleteProcessing called: successCount={successCount}, onComplete={(onComplete != null ? "exists" : "null")}");
+            //UnityEngine.Debug.Log($"[VoxelBatchManager] CompleteProcessing called: successCount={successCount}, onComplete={(onComplete != null ? "exists" : "null")}");
 
             if (progressProperty != null)
             {
@@ -319,7 +344,7 @@ namespace VoxelWorld
 
             onComplete?.Invoke(successCount);
 
-            Debug.Log($"[VoxelBatchManager] onComplete invoked");
+            //UnityEngine.Debug.Log($"[VoxelBatchManager] onComplete invoked");
         } 
         #endregion
 
@@ -351,7 +376,7 @@ namespace VoxelWorld
         {
             if (m_chunkManager == null)
             {
-                Debug.LogWarning("[VoxelBatchManager] ChunkManagerが初期化されていません");
+                UnityEngine.Debug.LogWarning("[VoxelBatchManager] ChunkManagerが初期化されていません");
                 onComplete?.Invoke(0);
                 return 0;
             }
@@ -380,7 +405,7 @@ namespace VoxelWorld
             {
                 if (m_chunkManager.GetChunk(chunkPos) == null)
                 {
-                    Debug.LogWarning($"[VoxelBatchManager] チャンク{chunkPos}が見つかりません");
+                    UnityEngine.Debug.LogWarning($"[VoxelBatchManager] チャンク{chunkPos}が見つかりません");
                     continue;
                 }
 

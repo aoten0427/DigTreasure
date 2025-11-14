@@ -644,8 +644,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_worldSizeInChunksMin: {x: 0, y: 0, z: 0}
   m_worldSizeInChunksMax: {x: 4, y: 4, z: 4}
+  m_isInitializeCreateChunk: 1
   m_voxelMaterial: {fileID: 2100000, guid: 2b1e4587679c7204e944569092a95697, type: 2}
   m_boundaryMeshSettings:
+    forwardBoundaryZ: 2147483647
+    backBoundaryZ: -2147483648
+    upBoundaryY: 2147483647
+    downBoundaryY: -2147483648
+    rightBoundaryX: 2147483647
+    leftBoundaryX: -2147483648
     enableForward: 1
     enableBack: 1
     enableUp: 1

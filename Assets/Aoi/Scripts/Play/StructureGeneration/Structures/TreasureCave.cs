@@ -10,101 +10,98 @@ namespace StructureGeneration
     /// </summary>
     public class TreasureCave : BaseStructure
     {
-        private readonly TreasureCaveSettings settings;
-        private readonly Vector3? fixedPosition;  // 固定位置（nullの場合はランダム）
-        private readonly Vector3? targetPosition; // 接続点の向き先（中央洞窟など）
-        private float actualRadius;
-        private float actualWallThickness;
-        private Vector3 treasurePosition;
-        private Bounds bounds;
+        // 定数
+        private const float DEFAULT_WALL_NOISE_AMPLITUDE = 0.10f;
+        private const float DEFAULT_FLOOR_NOISE_AMPLITUDE = 0.08f;
+        private const int DEFAULT_NOISE_OCTAVES = 3;
+        private const float DEFAULT_WAVES_PER_SIZE = 4f;
+        private const float CONNECTION_POINT_Y_OFFSET = 2.0f;
+
+        private readonly TreasureCaveSettings m_settings;
+        private readonly Vector3 m_fixedPosition; 
+        private readonly Vector3? m_targetPosition; 
+        private float m_actualRadius;
+        private float m_actualWallThickness;
+        private Vector3 m_treasurePosition;
+        private Bounds m_bounds;
 
         public override StructureType Type => StructureType.TreasureCave;
-        public override int Priority => settings.priority;
+        public override int Priority => m_settings.priority;
 
-        public TreasureCave(string id, int seed, TreasureCaveSettings settings, Vector3? fixedPosition = null, Vector3? targetPosition = null)
+        public TreasureCave(string id, int seed, TreasureCaveSettings settings, Vector3 fixedPosition, Vector3? targetPosition = null)
             : base(id, seed)
         {
-            this.settings = settings;
-            this.fixedPosition = fixedPosition;
-            this.targetPosition = targetPosition;
+            m_settings = settings;
+            m_fixedPosition = fixedPosition;
+            m_targetPosition = targetPosition;
         }
 
-        public override async Task<StructureResult> GenerateAsync(int seed, Bounds fieldBounds)
+        public override async Task<StructureResult> GenerateAsync(int seed)
         {
             // シードを初期化
             Random.InitState(seed);
 
             // パラメータを決定
-            actualRadius = Random.Range(settings.minRadius, settings.maxRadius);
-            actualWallThickness = Random.Range(settings.minWallThickness, settings.maxWallThickness);
+            m_actualRadius = Random.Range(m_settings.minRadius, m_settings.maxRadius);
+            m_actualWallThickness = Random.Range(m_settings.minWallThickness, m_settings.maxWallThickness);
 
-            // 生成位置を決定（固定位置のみサポート）
-            if (fixedPosition.HasValue)
-            {
-                centerPosition = fixedPosition.Value;
-            }
-            else
-            {
-                // 固定位置が指定されていない場合はエラー
-                Debug.LogError($"TreasureCave {id}: 固定位置が指定されていません。放射状配置のみサポートしています。");
-                centerPosition = Vector3.zero;
-            }
+            centerPosition = m_fixedPosition;
 
             // バウンディングボックスを計算
-            float totalRadius = actualRadius + actualWallThickness;
-            bounds = new Bounds(
+            float totalRadius = m_actualRadius + m_actualWallThickness;
+            m_bounds = new Bounds(
                 centerPosition,
                 new Vector3(totalRadius * 2f, totalRadius * 2f, totalRadius * 2f)
             );
 
             // 宝の位置を決定（中心から少しずらす）
             Vector3 treasureOffset = new Vector3(
-                Random.Range(-settings.treasureOffsetRange, settings.treasureOffsetRange),
-                Random.Range(-settings.treasureOffsetRange, settings.treasureOffsetRange),
-                Random.Range(-settings.treasureOffsetRange, settings.treasureOffsetRange)
+                Random.Range(-m_settings.treasureOffsetRange, m_settings.treasureOffsetRange),
+                Random.Range(-m_settings.treasureOffsetRange, m_settings.treasureOffsetRange),
+                Random.Range(-m_settings.treasureOffsetRange, m_settings.treasureOffsetRange)
             );
-            treasurePosition = centerPosition + treasureOffset;
+            m_treasurePosition = centerPosition + treasureOffset;
 
             // ボクセルデータを生成（半球ドーム）
             var shapeParams = new ShapeParameters(
                 centerPosition,
-                actualRadius,
-                actualRadius,  // 垂直半径も同じ（半球）
-                actualWallThickness,
-                actualWallThickness,  // 床の厚さ
-                settings.wallVoxelId,
-                settings.wallVoxelId, // 床も壁と同じ素材
-                settings.innerVoxelId,
+                m_actualRadius,
+                m_actualRadius,  // 垂直半径も同じ（半球）
+                m_actualWallThickness,
+                m_actualWallThickness,  // 床の厚さ
+                m_settings.wallVoxelId,
+                m_settings.wallVoxelId, // 床も壁と同じ素材
+                m_settings.innerVoxelId,
                 seed,
-                0.10f,  // 壁のノイズ振幅
-                0.08f,  // 床のノイズ振幅
-                3,      // オクターブ数
-                4f      // 波の数
+                DEFAULT_WALL_NOISE_AMPLITUDE,
+                DEFAULT_FLOOR_NOISE_AMPLITUDE,
+                DEFAULT_NOISE_OCTAVES,
+                DEFAULT_WAVES_PER_SIZE
             );
 
             var voxelUpdates = VoxelShapeGenerator.GenerateDome(shapeParams);
 
-            // 接続点を生成（ドーム型用：水平な側面のみ）
+            // 接続点を生成
             // targetPositionがある場合は、その方向を優先的に向ける
             Vector3? targetDirection = null;
-            if (targetPosition.HasValue)
+            if (m_targetPosition.HasValue)
             {
-                targetDirection = targetPosition.Value - centerPosition;
+                targetDirection = m_targetPosition.Value - centerPosition;
             }
 
             connectionPoints = GenerateDomeConnectionPoints(
                 centerPosition,
-                actualRadius + actualWallThickness,
-                settings.maxConnectionPoints,
+                m_actualRadius + m_actualWallThickness,
+                m_settings.maxConnectionPoints,
                 targetDirection,
-                settings.connectionPointInset,
-                2.0f
+                m_settings.connectionPointInset,
+                CONNECTION_POINT_Y_OFFSET
             ) ;
 
             // 特殊ポイント（宝の位置）
             var specialPoints = new Dictionary<string, Vector3>
             {
-                { "treasure", treasurePosition }
+                { "treasure", m_treasurePosition }
             };
 
             // フレーム分散のため少し待機
@@ -130,7 +127,7 @@ namespace StructureGeneration
 
         public override Bounds GetBounds()
         {
-            return bounds;
+            return m_bounds;
         }
     }
 }

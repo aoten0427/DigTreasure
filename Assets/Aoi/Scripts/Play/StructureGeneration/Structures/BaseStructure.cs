@@ -11,12 +11,6 @@ namespace StructureGeneration
     /// </summary>
     public abstract class BaseStructure : IStructure
     {
-        // 定数定義
-        protected const float CONNECTION_FAN_ANGLE_DEGREES = 120f;
-        protected const float CONNECTION_RADIUS_RATIO = 0.15f;
-        private const float DEFAULT_NOISE_SCALE = 0.15f;
-        private const float INNER_NOISE_SCALE_RATIO = 0.5f;
-
         protected readonly string id;
         protected readonly int baseSeed;
         protected Vector3 centerPosition;
@@ -37,7 +31,7 @@ namespace StructureGeneration
         /// <summary>
         /// 構造物を非同期生成
         /// </summary>
-        public abstract Task<StructureResult> GenerateAsync(int seed, Bounds fieldBounds);
+        public abstract Task<StructureResult> GenerateAsync(int seed);
 
         /// <summary>
         /// 接続可能かどうかを判定
@@ -85,7 +79,7 @@ namespace StructureGeneration
         public abstract Bounds GetBounds();
 
         /// <summary>
-        /// ドーム型構造用の接続点を生成（水平な側面のみ）
+        /// ドーム型構造用の接続点を生成
         /// </summary>
         /// <param name="center">中心位置</param>
         /// <param name="radius">半径</param>
@@ -104,7 +98,7 @@ namespace StructureGeneration
                 float baseAngle = Mathf.Atan2(targetDir.z, targetDir.x);
 
                 // 扇の角度範囲
-                float fanAngle = CONNECTION_FAN_ANGLE_DEGREES * Mathf.Deg2Rad;
+                float fanAngle = StructureConstants.CONNECTION_FAN_ANGLE_DEGREES * Mathf.Deg2Rad;
                 float angleStep = count > 1 ? fanAngle / (count - 1) : 0f;
 
                 for (int i = 0; i < count; i++)
@@ -121,7 +115,7 @@ namespace StructureGeneration
                         $"{id}_connection_{i}",
                         position,
                         direction,
-                        radius * CONNECTION_RADIUS_RATIO
+                        radius * StructureConstants.CONNECTION_RADIUS_RATIO
                     ));
                 }
             }
@@ -144,7 +138,7 @@ namespace StructureGeneration
                         $"{id}_connection_{i}",
                         position,
                         direction,
-                        radius * CONNECTION_RADIUS_RATIO
+                        radius * StructureConstants.CONNECTION_RADIUS_RATIO
                     ));
                 }
             }
@@ -152,16 +146,9 @@ namespace StructureGeneration
             return points;
         }
 
-        /// <summary>
-        /// ボクセル更新リストを作成するヘルパーメソッド
-        /// </summary>
-        protected VoxelUpdate CreateVoxelUpdate(Vector3 worldPosition, byte voxelId)
-        {
-            return new VoxelUpdate(worldPosition, voxelId);
-        }
 
         /// <summary>
-        /// 自然な洞窟風ドーム構造を生成（ノイズ付き）
+        /// ドーム構造を生成
         /// </summary>
         protected List<VoxelUpdate> GenerateNaturalDomeVoxels(
             Vector3 center,
@@ -203,7 +190,7 @@ namespace StructureGeneration
 
                         if (voxelType.HasValue)
                         {
-                            updates.Add(CreateVoxelUpdate(worldPos, voxelType.Value));
+                            updates.Add(new VoxelUpdate(worldPos, voxelType.Value));
                         }
                     }
                 }
@@ -248,7 +235,7 @@ namespace StructureGeneration
             float horizontalDist = Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z);
             float verticalDist = offset.y;
 
-            // 3Dノイズで自然な形状を作る
+            // 3Dノイズ
             float noise3D = NoiseUtility.GetSimple3DNoise(worldPos, noiseSeed, 0.1f);
 
             // 床の高さにノイズを適用
@@ -283,7 +270,7 @@ namespace StructureGeneration
             }
 
             // 半球の判定（床より上）
-            float hemisphereRadius = outerRadius + noise.noise3D * DEFAULT_NOISE_SCALE * radius;
+            float hemisphereRadius = outerRadius + noise.noise3D * StructureConstants.DEFAULT_NOISE_SCALE * radius;
             float distFromCenter = Mathf.Sqrt(
                 noise.horizontalDist * noise.horizontalDist +
                 noise.verticalDist * noise.verticalDist
@@ -292,7 +279,7 @@ namespace StructureGeneration
             // 外側の境界内かチェック
             if (distFromCenter <= hemisphereRadius && noise.horizontalDist <= outerRadius)
             {
-                float innerRadius = radius + noise.noise3D * DEFAULT_NOISE_SCALE * radius * INNER_NOISE_SCALE_RATIO;
+                float innerRadius = radius + noise.noise3D * StructureConstants.DEFAULT_NOISE_SCALE * radius * StructureConstants.INNER_NOISE_SCALE_RATIO;
                 float innerDist = Mathf.Sqrt(
                     noise.horizontalDist * noise.horizontalDist +
                     noise.verticalDist * noise.verticalDist

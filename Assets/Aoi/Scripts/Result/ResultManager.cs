@@ -160,7 +160,7 @@ public class ResultManager : NetworkBehaviour
     /// <returns></returns>
     IEnumerator WatiUserData()
     {
-        yield return new WaitUntil(() => resultData.Count >= 2);
+        yield return new WaitUntil(() => resultData.Count >= Runner.ActivePlayers.Count());
         SendData();
         
     }

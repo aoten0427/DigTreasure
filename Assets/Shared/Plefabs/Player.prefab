@@ -383,9 +383,9 @@ MonoBehaviour:
   m_targetChunks: 1
   m_targetSeparatedObjects: 1
   m_enableLogging: 0
-  m_blowTime: 0.7
-  m_blowMinVelocity: 1
-  m_blowInterval: 0.05
+  m_blowTime: 0.5
+  m_blowMinVelocity: 5
+  m_blowInterval: 0.02
   m_offset: {x: 0, y: 1, z: 0}
 --- !u!1 &4193331265326495694
 GameObject:
@@ -746,8 +746,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4677915432225903430}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.15843159, y: 0.8298138, z: -0.29411745, w: -0.44699392}
-  m_LocalPosition: {x: 6.4864836, y: 6.297613, z: 4.273828}
+  m_LocalRotation: {x: -0.028548831, y: 0.5188412, z: 0.017340234, w: 0.8542179}
+  m_LocalPosition: {x: -8.854167, y: -0.6676813, z: -4.599775}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -831,7 +831,7 @@ MonoBehaviour:
     SplineCurvature: 0.5
   RecenteringTarget: 2
   HorizontalAxis:
-    Value: -123.38017
+    Value: 62.547943
     Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
@@ -841,7 +841,7 @@ MonoBehaviour:
       Time: 2
     Restrictions: 0
   VerticalAxis:
-    Value: 39.032516
+    Value: -3.8283799
     Center: 17.5
     Range: {x: -10, y: 45}
     Wrap: 0

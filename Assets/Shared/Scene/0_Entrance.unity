@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_userdataManagerPrefab:
     RawGuidValue: d9b82a56fcc084442a155dbeecfc4eaf
-  m_isLog: 0
+  m_isLog: 1
   m_debugId: 0
   m_debugName: 
   m_debugTreasureCount: 0
@@ -202,7 +202,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_readyPrefab:
-    RawGuidValue: e60ea78a720de6e41bf5b058426b4462
+    RawGuidValue: 1fb2a2d05c5a76345bdc29ac7a2891a7
   m_startingNumber: 2
   m_isLog: 0
 --- !u!114 &38372308
@@ -217,7 +217,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f9f4313452cf154c86e95f63889b5ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_isLog: 0
+  m_isLog: 1
 --- !u!1 &53482565
 GameObject:
   m_ObjectHideFlags: 0
@@ -2011,8 +2011,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 98e765b7192e64c40a1acddcf36cfd09, type: 2}
+  m_sharedMaterial: {fileID: 1073107852956869507, guid: 98e765b7192e64c40a1acddcf36cfd09, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

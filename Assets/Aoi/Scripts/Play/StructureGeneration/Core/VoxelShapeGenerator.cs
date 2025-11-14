@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using VoxelWorld;
 
@@ -74,25 +75,61 @@ namespace StructureGeneration
     public static class VoxelShapeGenerator
     {
         /// <summary>
+        /// ボクセル範囲を計算
+        /// </summary>
+        private static (int range, Vector3Int centerVoxel) CalculateVoxelRange(Vector3 center, float outerRadius)
+        {
+            float voxelSize = VoxelConstants.VOXEL_SIZE;
+            int range = Mathf.CeilToInt(outerRadius / voxelSize);
+            Vector3Int centerVoxel = new Vector3Int(
+                Mathf.RoundToInt(center.x / voxelSize),
+                Mathf.RoundToInt(center.y / voxelSize),
+                Mathf.RoundToInt(center.z / voxelSize)
+            );
+            return (range, centerVoxel);
+        }
+
+        /// <summary>
+        /// ノイズ振幅を計算
+        /// </summary>
+        private static (float floorHeightAmplitude, float wallAmplitude) CalculateNoiseAmplitudes(
+            float characteristicSize,
+            float floorNoiseAmplitude,
+            float wallNoiseAmplitude)
+        {
+            return (
+                characteristicSize * floorNoiseAmplitude,
+                characteristicSize * wallNoiseAmplitude
+            );
+        }
+
+        /// <summary>
         /// 半球ドームを生成（床の上に半球形）
+        /// 並列処理で高速化
         /// </summary>
         public static List<VoxelUpdate> GenerateDome(ShapeParameters param)
         {
-            var updates = new List<VoxelUpdate>();
             float voxelSize = VoxelConstants.VOXEL_SIZE;
             float outerRadius = param.horizontalRadius + param.wallThickness;
 
-            int range = Mathf.CeilToInt(outerRadius / voxelSize);
-            Vector3Int centerVoxel = new Vector3Int(
-                Mathf.RoundToInt(param.center.x / voxelSize),
-                Mathf.RoundToInt(param.center.y / voxelSize),
-                Mathf.RoundToInt(param.center.z / voxelSize)
-            );
+            // ボクセル範囲を計算
+            var (range, centerVoxel) = CalculateVoxelRange(param.center, outerRadius);
 
             // 床の基準高さ（中心のY座標と同じ）
             float baseFloorY = param.center.y;
 
-            for (int x = -range; x <= range; x++)
+            // ノイズ振幅を計算
+            float characteristicSize = param.horizontalRadius;
+            var (floorHeightAmplitude, wallAmplitude) = CalculateNoiseAmplitudes(
+                characteristicSize,
+                param.floorNoiseAmplitude,
+                param.wallNoiseAmplitude);
+
+            // 並列処理用のリスト
+            var updates = new System.Collections.Concurrent.ConcurrentBag<VoxelUpdate>();
+
+            // X軸を並列処理
+            System.Threading.Tasks.Parallel.For(-range, range + 1, x =>
             {
                 for (int y = -range; y <= range; y++)
                 {
@@ -110,19 +147,14 @@ namespace StructureGeneration
                         float horizontalDist = Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z);
                         float verticalDist = offset.y;
 
-                        // 特性サイズ
-                        float characteristicSize = param.horizontalRadius;
-
                         // 壁・天井用ノイズ
                         float noise3D = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed, param.noiseOctaves, param.wavesPerSize);
 
                         // 床の高さ用ノイズ
                         float floorNoise = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed + 1000, param.noiseOctaves, param.wavesPerSize * 0.5f);
-                        float floorHeightAmplitude = characteristicSize * param.floorNoiseAmplitude;
                         float floorY = baseFloorY + floorNoise * floorHeightAmplitude;
 
                         // 半球のノイズ適用
-                        float wallAmplitude = characteristicSize * param.wallNoiseAmplitude;
                         float hemisphereRadius = outerRadius + noise3D * wallAmplitude;
 
                         // 床より下の場合
@@ -165,35 +197,41 @@ namespace StructureGeneration
                         }
                     }
                 }
-            }
+            });
 
-            return updates;
+            return updates.ToList();
         }
 
         /// <summary>
         /// 扁球ドームを生成（床の上に扁平な半楕円体）
+        /// 並列処理で高速化
         /// </summary>
         public static List<VoxelUpdate> GenerateEllipsoidDome(ShapeParameters param)
         {
-            var updates = new List<VoxelUpdate>();
             float voxelSize = VoxelConstants.VOXEL_SIZE;
 
             // 外側の半径（壁の厚さを含む）
             float outerHorizontalRadius = param.horizontalRadius + param.wallThickness;
             float outerVerticalRadius = param.verticalRadius + param.wallThickness;
 
-            // 処理範囲を計算（水平方向の半径を基準）
-            int range = Mathf.CeilToInt(outerHorizontalRadius / voxelSize);
-            Vector3Int centerVoxel = new Vector3Int(
-                Mathf.RoundToInt(param.center.x / voxelSize),
-                Mathf.RoundToInt(param.center.y / voxelSize),
-                Mathf.RoundToInt(param.center.z / voxelSize)
-            );
+            // ボクセル範囲を計算（水平方向の半径を基準）
+            var (range, centerVoxel) = CalculateVoxelRange(param.center, outerHorizontalRadius);
 
             // 床の基準高さ（中心のY座標と同じ）
             float baseFloorY = param.center.y;
 
-            for (int x = -range; x <= range; x++)
+            // ノイズ振幅を計算（半径の平均を特性サイズとする）
+            float characteristicSize = (param.horizontalRadius + param.verticalRadius) / 2f;
+            var (floorHeightAmplitude, wallAmplitude) = CalculateNoiseAmplitudes(
+                characteristicSize,
+                param.floorNoiseAmplitude,
+                param.wallNoiseAmplitude);
+
+            // 並列処理用のリスト
+            var updates = new System.Collections.Concurrent.ConcurrentBag<VoxelUpdate>();
+
+            // X軸を並列処理
+            System.Threading.Tasks.Parallel.For(-range, range + 1, x =>
             {
                 for (int y = -range; y <= range; y++)
                 {
@@ -211,15 +249,11 @@ namespace StructureGeneration
                         float horizontalDist = Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z);
                         float verticalDist = offset.y;
 
-                        // 洞窟の特性サイズ（半径の平均）
-                        float characteristicSize = (param.horizontalRadius + param.verticalRadius) / 2f;
-
                         // 壁・天井用の3Dノイズ
                         float noise3D = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed, param.noiseOctaves, param.wavesPerSize);
 
                         // 床の高さ用ノイズ（より低周波で穏やか）
                         float floorHeightNoise = NoiseUtility.GetAdaptiveNoise(worldPos, characteristicSize, param.noiseSeed + 1000, param.noiseOctaves, param.wavesPerSize * 0.5f);
-                        float floorHeightAmplitude = characteristicSize * param.floorNoiseAmplitude;
                         float floorY = baseFloorY + floorHeightNoise * floorHeightAmplitude;
 
                         // 床の半径用ノイズ（さらに低周波）
@@ -238,8 +272,6 @@ namespace StructureGeneration
                         }
 
                         // 扁球の判定（床より上）
-                        float wallAmplitude = characteristicSize * param.wallNoiseAmplitude;
-
                         float noisedHorizontalRadius = outerHorizontalRadius + noise3D * wallAmplitude;
                         float noisedVerticalRadius = outerVerticalRadius + noise3D * wallAmplitude;
 
@@ -271,9 +303,9 @@ namespace StructureGeneration
                         }
                     }
                 }
-            }
+            });
 
-            return updates;
+            return updates.ToList();
         }
 
         /// <summary>

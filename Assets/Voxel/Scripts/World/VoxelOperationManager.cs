@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UniRx;
+using System.Diagnostics;
 
 namespace VoxelWorld
 {
@@ -32,6 +33,21 @@ namespace VoxelWorld
 
         // イベント発火条件（StateAuthorityチェック用）
         private Func<bool> m_shouldFireEvent = () => true;
+
+        // パフォーマンス計測用
+        private bool m_enablePerformanceLogging = false;
+        public bool EnablePerformanceLogging
+        {
+            get => m_enablePerformanceLogging;
+            set
+            {
+                m_enablePerformanceLogging = value;
+                if (m_batchManager != null)
+                {
+                    m_batchManager.EnablePerformanceLogging = value;
+                }
+            }
+        }
 
         // プロパティ
         public bool EnableAutoMeshUpdate
@@ -98,7 +114,7 @@ namespace VoxelWorld
         {
             if (m_chunkManager == null)
             {
-                Debug.LogWarning("[VoxelOperationManager] ChunkManagerが初期化されていません");
+                UnityEngine.Debug.LogWarning("[VoxelOperationManager] ChunkManagerが初期化されていません");
                 return Voxel.Empty;
             }
 
@@ -141,7 +157,7 @@ namespace VoxelWorld
         {
             if (m_chunkManager == null)
             {
-                Debug.LogWarning("[VoxelOperationManager] ChunkManagerが初期化されていません");
+                UnityEngine.Debug.LogWarning("[VoxelOperationManager] ChunkManagerが初期化されていません");
                 if (progressProperty != null) progressProperty.Value = 1.0f;
                 onComplete?.Invoke(0);
                 return;
@@ -157,7 +173,7 @@ namespace VoxelWorld
             // coroutineRunnerのチェック
             if (m_coroutineRunner == null)
             {
-                Debug.LogError("[VoxelOperationManager] CoroutineRunnerが設定されていません！VoxelOperationManager.SetManager()でMonoBehaviourを渡してください。");
+                UnityEngine.Debug.LogError("[VoxelOperationManager] CoroutineRunnerが設定されていません！VoxelOperationManager.SetManager()でMonoBehaviourを渡してください。");
                 if (progressProperty != null) progressProperty.Value = 1.0f;
                 onComplete?.Invoke(0);
                 return;
@@ -175,6 +191,14 @@ namespace VoxelWorld
         public int DestroyVoxelsWithPower(List<Vector3> worldPositions, float attackPower,
             Vector3 destractionPoint,Vector3 effectDirection)
         {
+            Stopwatch totalStopwatch = null;
+            Stopwatch stepStopwatch = null;
+            if (EnablePerformanceLogging)
+            {
+                totalStopwatch = Stopwatch.StartNew();
+                stepStopwatch = new Stopwatch();
+            }
+
             if (worldPositions == null || worldPositions.Count == 0)
             {
                 return 0;
@@ -185,6 +209,8 @@ namespace VoxelWorld
             var affectedChunks = new HashSet<Vector3Int>();
 
             // チャンクごとにグループ化して破壊判定
+            if (EnablePerformanceLogging) stepStopwatch.Restart();
+
             var chunkGroups = new Dictionary<Vector3Int, List<Vector3>>();
 
             foreach (var position in worldPositions)
@@ -197,9 +223,17 @@ namespace VoxelWorld
                 chunkGroups[chunkPos].Add(position);
             }
 
+            if (EnablePerformanceLogging)
+            {
+                stepStopwatch.Stop();
+                UnityEngine.Debug.Log($"[Performance] DestroyVoxelsWithPower - Grouping: {stepStopwatch.ElapsedMilliseconds}ms ({worldPositions.Count} positions, {chunkGroups.Count} chunks)");
+            }
+
 
             int destroyVoxelID = -1;
             // チャンクごとに一括判定
+            if (EnablePerformanceLogging) stepStopwatch.Restart();
+
             foreach (var kvp in chunkGroups)
             {
                 Chunk chunk = m_chunkManager.GetChunk(kvp.Key);
@@ -208,17 +242,23 @@ namespace VoxelWorld
                     foreach (var position in kvp.Value)
                     {
                         Voxel currentVoxel = chunk.GetVoxelFromWorldPosition(position);
- 
+
                         if (!currentVoxel.IsEmpty && currentVoxel.CanBeDestroyed(attackPower))
                         {
                             if (destroyVoxelID == -1) destroyVoxelID = currentVoxel.VoxelId;
                             voxelUpdates.Add(new VoxelUpdate { WorldPosition = position, VoxelID = Voxel.Empty });
                             actualDestroyedPositions.Add(position);
-                            
+
                         }
                     }
                     affectedChunks.Add(kvp.Key);
                 }
+            }
+
+            if (EnablePerformanceLogging)
+            {
+                stepStopwatch.Stop();
+                UnityEngine.Debug.Log($"[Performance] DestroyVoxelsWithPower - Destruction Check: {stepStopwatch.ElapsedMilliseconds}ms ({actualDestroyedPositions.Count} destroyed)");
             }
 
             // 実際に破壊処理実行
@@ -248,6 +288,12 @@ namespace VoxelWorld
             //        m_onVoxelsDestroyed.Invoke(actualDestroyedPositions);
             //    }
             //}
+
+            if (EnablePerformanceLogging && totalStopwatch != null)
+            {
+                totalStopwatch.Stop();
+                UnityEngine.Debug.Log($"[Performance] DestroyVoxelsWithPower - Total: {totalStopwatch.ElapsedMilliseconds}ms");
+            }
 
             return actualDestroyedPositions.Count;
         }

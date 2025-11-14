@@ -21,7 +21,7 @@ MonoBehaviour:
   minVerticalRadius: 12
   maxVerticalRadius: 15
   floorThickness: 5
-  floorVoxelId: 5
+  floorVoxelId: 3
   innerVoxelId: 0
   wallNoiseAmplitude: 0.1
   floorNoiseAmplitude: 0.205

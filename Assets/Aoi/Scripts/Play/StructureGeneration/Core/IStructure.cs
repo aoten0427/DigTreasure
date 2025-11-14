@@ -19,25 +19,25 @@ namespace StructureGeneration
     /// </summary>
     public interface IStructure
     {
-        /// <summary>一意なID</summary>
+        /// m_id
         string Id { get; }
 
-        /// <summary>構造物の種類</summary>
+        ///構造物の種類
         StructureType Type { get; }
 
-        /// <summary>生成優先度（高いほど後に上書き）</summary>
+        ///生成優先度（高いほど後に上書き
         int Priority { get; }
 
-        /// <summary>中心位置（ワールド座標）</summary>
+        /// <中心位置
         Vector3 CenterPosition { get; }
 
         /// <summary>
         /// ボクセルデータを非同期生成
         /// seedとフィールド範囲を受け取り、位置も含めて全て自分で決定する
         /// </summary>
-        /// <param name="seed">シード値（個体ごとにユニーク）</param>
+        /// <param name="seed">シード値</param>
         /// <param name="fieldBounds">フィールドの範囲</param>
-        Task<StructureResult> GenerateAsync(int seed, Bounds fieldBounds);
+        Task<StructureResult> GenerateAsync(int seed);
 
         /// <summary>
         /// 指定された構造物と接続可能かチェック
@@ -55,7 +55,7 @@ namespace StructureGeneration
         List<ConnectionPoint> GetConnectionPoints();
 
         /// <summary>
-        /// 構造物の占有範囲（バウンディングボックス）
+        /// 構造物の占有範囲
         /// </summary>
         Bounds GetBounds();
     }

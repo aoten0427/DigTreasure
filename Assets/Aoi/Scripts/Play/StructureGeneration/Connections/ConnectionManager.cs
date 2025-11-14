@@ -137,8 +137,9 @@ namespace StructureGeneration
 
                 if (!generators.TryGetValue(connection.Type, out var generator))
                 {
-                    Debug.LogError($"接続タイプ {connection.Type} のジェネレーターが見つかりません");
-                    continue;
+                    throw new System.InvalidOperationException(
+                        $"接続タイプ {connection.Type} のジェネレーターが見つかりません。" +
+                        $"ConnectionSettingsでジェネレーターを登録してください。");
                 }
 
                 // 接続ごとに異なるシードを使用
@@ -158,10 +159,16 @@ namespace StructureGeneration
         /// </summary>
         public async Task<List<VoxelUpdate>> GenerateConnectionAsync(ConnectionData connection, int seed)
         {
+            if (connection == null)
+            {
+                throw new System.ArgumentNullException(nameof(connection), "接続データがnullです。");
+            }
+
             if (!generators.TryGetValue(connection.Type, out var generator))
             {
-                Debug.LogError($"接続タイプ {connection.Type} のジェネレーターが見つかりません");
-                return new List<VoxelUpdate>();
+                throw new System.InvalidOperationException(
+                    $"接続タイプ {connection.Type} のジェネレーターが見つかりません。" +
+                    $"ConnectionSettingsでジェネレーターを登録してください。");
             }
 
             return await generator.GenerateAsync(connection, seed);
