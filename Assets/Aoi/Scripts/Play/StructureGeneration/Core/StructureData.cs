@@ -9,13 +9,13 @@ namespace StructureGeneration
     /// </summary>
     public class StructureResult
     {
-        /// <summary>生成されたボクセルデータ</summary>
+        ///生成されたボクセルデータ
         public List<VoxelUpdate> VoxelUpdates { get; set; }
 
-        /// <summary>特殊ポイント（宝の位置など）</summary>
+        ///特殊ポイント（宝の位置など）
         public Dictionary<string, Vector3> SpecialPoints { get; set; }
 
-        /// <summary>実際に生成された接続点</summary>
+        //実際に生成された接続点
         public List<ConnectionPoint> ConnectionPoints { get; set; }
 
         public StructureResult()
@@ -31,19 +31,19 @@ namespace StructureGeneration
     /// </summary>
     public class ConnectionPoint
     {
-        /// <summary>接続点のID</summary>
+        //接続点のID
         public string Id { get; set; }
 
-        /// <summary>ワールド座標での位置</summary>
+        //ワールド座標での位置
         public Vector3 Position { get; set; }
 
-        /// <summary>接続方向（正規化されたベクトル）</summary>
+        //接続方向
         public Vector3 Direction { get; set; }
 
-        /// <summary>接続可能な半径</summary>
+        //接続可能な半径
         public float Radius { get; set; }
 
-        /// <summary>既に使用済みか</summary>
+        ///既に使用済みか
         public bool IsUsed { get; set; }
 
         public ConnectionPoint(string id, Vector3 position, Vector3 direction, float radius)

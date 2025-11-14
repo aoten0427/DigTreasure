@@ -20,13 +20,14 @@ MonoBehaviour:
   fillPlacementArea: 1
   treasureCaveSettings: {fileID: 11400000, guid: a7ef5263d16f56b4e84e17fba5201984, type: 2}
   hardFloorCaveSettings: {fileID: 11400000, guid: 498c1823180934e42939ce7283a9e1bc, type: 2}
-  randomWalkCaveSettings: {fileID: 11400000, guid: c335e13120c16b846a4d0914a872d354, type: 2}
   connectionSettings: {fileID: 11400000, guid: 34a80ad9a7bb5314a8751eaea409404e, type: 2}
   connectionsPerStructure: 1
-  openTunnelRatio: 1
+  openTunnelRatio: 0
   maxConnectionHeightDiff: 30
   generateBoundaryWalls: 1
-  boundaryWallVoxelId: 3
+  boundaryWallVoxelId: 5
+  generateInvisibleBoundaryColliders: 1
+  ceilingHeight: 50
   generateSurfaceTerrain: 1
   surfaceBaseHeight: 0
   surfaceCenterHeight: 2

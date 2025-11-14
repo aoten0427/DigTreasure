@@ -24,7 +24,22 @@ public class NetworkTreasureSpawner : NetworkBehaviour
             treasure.SetScorePoint(scorePoint);
             treasure.SetMeshIndex(meshIndex);
         });
-        newTreasure.transform.parent = transform;
+        //newTreasure.transform.parent = transform;
+    }
+
+    public void SpawnTreasure(Vector3 spawnPosition)
+    {
+        if (!Object.HasStateAuthority) return;
+
+        int selectindex = Random.Range(0, _treasureList.allTreasure.Count);
+        int point = _treasureList.allTreasure[selectindex].point;
+
+        Treasure newTreasure = Runner.Spawn(_treasurePrefab, spawnPosition, Quaternion.identity, onBeforeSpawned: (runner, obj) =>
+        {
+            Treasure treasure = obj.GetComponent<Treasure>();
+            treasure.SetScorePoint(point);
+            treasure.SetMeshIndex(selectindex);
+        });
     }
 
     public Vector3 SpawnRandomTreasure()

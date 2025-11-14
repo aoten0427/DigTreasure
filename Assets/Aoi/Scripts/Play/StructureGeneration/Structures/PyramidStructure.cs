@@ -15,19 +15,19 @@ namespace StructureGeneration
         private const float NOISE_AMPLITUDE_RATIO = 0.08f;
         private const float NOISE_FREQUENCY = 0.15f;
 
-        private readonly string id;
-        private readonly int seed;
-        private Vector3 basePosition;
-        private Bounds bounds;
+        private readonly string m_id;
+        private readonly int m_seed;
+        private Vector3 m_basePosition;
+        private Bounds m_bounds;
 
-        public string Id => id;
-        public Vector3 BasePosition => basePosition;
-        public Bounds GetBounds() => bounds;
+        public string Id => m_id;
+        public Vector3 BasePosition => m_basePosition;
+        public Bounds GetBounds() => m_bounds;
 
         public PyramidStructure(string id, int seed)
         {
-            this.id = id;
-            this.seed = seed;
+            m_id = id;
+            m_seed = seed;
         }
 
         /// <summary>
@@ -43,27 +43,24 @@ namespace StructureGeneration
             float baseRadius,
             byte voxelId)
         {
-            this.basePosition = basePos;
+            m_basePosition = basePos;
 
-            Debug.Log($"ピラミッド生成開始: 位置={basePos}, 高さ={height}m, 底面半径={baseRadius}m");
 
             var voxels = VoxelShapeGenerator.GeneratePyramid(
                 basePos,
                 height,
                 baseRadius,
                 voxelId,
-                seed,
+                m_seed,
                 NOISE_AMPLITUDE_RATIO,
                 NOISE_FREQUENCY
             );
 
             // バウンディングボックスを計算
-            bounds = new Bounds(
+            m_bounds = new Bounds(
                 basePos + Vector3.up * (height / 2f),
                 new Vector3(baseRadius * 2f, height, baseRadius * 2f)
             );
-
-            Debug.Log($"ピラミッド生成完了: ボクセル数={voxels.Count}");
 
             await Task.Yield();
             return voxels;

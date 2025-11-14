@@ -26,12 +26,5 @@ namespace StructureGeneration
         /// 構造物のタイプを取得
         /// </summary>
         public abstract StructureType GetStructureType();
-
-        /// <summary>
-        /// 構造物のインスタンスを作成
-        /// </summary>
-        /// <param name="id">構造物の一意なID</param>
-        /// <param name="seed">生成に使用するシード値</param>
-        public abstract IStructure CreateStructure(string id, int seed);
     }
 }

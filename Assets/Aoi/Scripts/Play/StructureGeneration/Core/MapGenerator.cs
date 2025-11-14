@@ -12,27 +12,37 @@ namespace StructureGeneration
     /// </summary>
     public class MapGenerator
     {
-        // 定数定義
-        private const int CHUNK_SIZE = 16;
-        private const int FRAME_YIELD_INTERVAL = 5;
+        private readonly MapGeneratorSettings m_settings;
+        private readonly VoxelOperationManager m_operationManager;
+        private readonly ConnectionManager m_connectionManager;
 
-        private readonly MapGeneratorSettings settings;
-        private readonly VoxelOperationManager operationManager;
-        private readonly ConnectionManager connectionManager;
+        // 各種ジェネレーター
+        private readonly BoundaryWallGenerator m_boundaryWallGenerator;
+        private readonly SurfaceTerrainGenerator m_surfaceTerrainGenerator;
+        private readonly VoxelFillGenerator m_voxelFillGenerator;
 
-        private readonly List<IStructure> structures;
+        private readonly List<IStructure> m_structures;
         private System.Random random;
-        private int currentSeed;
+        private int m_currentSeed = 12345;
 
-        public IReadOnlyList<IStructure> Structures => structures;
-        public IReadOnlyList<ConnectionData> Connections => connectionManager.Connections;
+        public IReadOnlyList<IStructure> Structures => m_structures;
+        public IReadOnlyList<ConnectionData> Connections => m_connectionManager.Connections;
 
-        public MapGenerator(MapGeneratorSettings settings, VoxelOperationManager operationManager)
+        private bool m_isLog;
+
+        public MapGenerator(MapGeneratorSettings settings, VoxelOperationManager operationManager, bool isLog = false)
         {
-            this.settings = settings;
-            this.operationManager = operationManager;
-            this.connectionManager = new ConnectionManager(settings.connectionSettings);
-            this.structures = new List<IStructure>();
+            m_settings = settings;
+            m_operationManager = operationManager;
+            m_connectionManager = new ConnectionManager(settings.connectionSettings);
+            m_structures = new List<IStructure>();
+
+            // ジェネレーターの初期化
+            m_boundaryWallGenerator = new BoundaryWallGenerator();
+            m_surfaceTerrainGenerator = new SurfaceTerrainGenerator();
+            m_voxelFillGenerator = new VoxelFillGenerator();
+            m_isLog = isLog; 
+
         }
 
         /// <summary>
@@ -41,513 +51,121 @@ namespace StructureGeneration
         /// <param name="progressProperty">進捗を報告するReactiveProperty（0.0～1.0）</param>
         public async Task<MapGenerationResult> GenerateMapAsync(ReactiveProperty<float> progressProperty = null)
         {
-            Debug.Log("=== マップ生成開始 ===");
 
             // シード初期化
-            currentSeed = settings.masterSeed;
-            if (currentSeed == 0)
-            {
-                currentSeed = System.Environment.TickCount;
-            }
-            random = new System.Random(currentSeed);
-            Debug.Log($"マップシード: {currentSeed}");
+            //m_currentSeed = m_settings.masterSeed;
+            //if (m_currentSeed == 0)
+            //{
+            //    m_currentSeed = System.Environment.TickCount;
+            //}
+            //random = new System.Random(m_currentSeed);
+            //Debug.Log($"マップシード: {m_currentSeed}");
 
             // 既存のデータをクリア
-            structures.Clear();
-            connectionManager.ClearConnections();
+            m_structures.Clear();
+            m_connectionManager.ClearConnections();
 
-            // 1. 境界壁のボクセルリストを生成（最優先で配置）
+            // 境界壁のボクセルリストを生成
             List<VoxelUpdate> boundaryVoxels = null;
-            if (settings.generateBoundaryWalls)
+            if (m_settings.generateBoundaryWalls)
             {
-                boundaryVoxels = await GenerateBoundaryWallsAsync();
-                Debug.Log($"境界壁ボクセル生成完了: {boundaryVoxels.Count}個");
+                boundaryVoxels = await m_boundaryWallGenerator.GenerateWallsAsync(
+                    m_settings.minChunkCoord,
+                    m_settings.maxChunkCoord,
+                    m_settings.boundaryWallVoxelId
+                );
             }
-            progressProperty?.SetValueAndForceNotify(0.05f);
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_BOUNDARY_WALLS);
 
-            // 2. 配置範囲を埋めるボクセルリストを生成（地下のみ、配置はしない）
+            // 地下を埋める
             List<VoxelUpdate> fillVoxels = null;
-            if (settings.fillPlacementArea && settings.fillVoxelId > 0)
+            if (m_settings.fillPlacementArea && m_settings.fillVoxelId > 0)
             {
-                fillVoxels = await GenerateFillVoxelsAsync();
-                Debug.Log($"範囲を埋めるボクセル生成完了（地下のみ）: {fillVoxels.Count}個");
+                fillVoxels = await m_voxelFillGenerator.GenerateAsync(
+                    m_settings.minChunkCoord,
+                    m_settings.maxChunkCoord,
+                    m_settings.fillVoxelId,
+                    m_settings.surfaceBaseHeight
+                );
             }
-            progressProperty?.SetValueAndForceNotify(0.10f);
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_FILL_VOXELS);
 
-            // 3. 地表のボクセルリストを生成
+            // 地表のボクセルリストを生成
             List<VoxelUpdate> surfaceVoxels = null;
-            if (settings.generateSurfaceTerrain)
+            if (m_settings.generateSurfaceTerrain)
             {
-                surfaceVoxels = await GenerateSurfaceTerrainAsync();
-                Debug.Log($"地表ボクセル生成完了: {surfaceVoxels.Count}個");
+                var surfaceSettings = new SurfaceSettings(
+                    m_settings.surfaceBaseHeight,
+                    m_settings.surfaceCenterHeight,
+                    m_settings.surfaceEdgeHeight,
+                    m_settings.surfaceFlatCenterRatio,
+                    m_settings.surfaceBoundaryInset,
+                    m_settings.surfaceVoxelId,
+                    m_settings.surfaceNoiseAmplitude,
+                    m_settings.surfaceNoiseFrequency
+                );
+                surfaceVoxels = await m_surfaceTerrainGenerator.GenerateAsync(
+                    m_settings.minChunkCoord,
+                    m_settings.maxChunkCoord,
+                    surfaceSettings,
+                    m_currentSeed
+                );
             }
-            progressProperty?.SetValueAndForceNotify(0.15f);
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_SURFACE_VOXELS);
 
-            // 4. 構造物の配置位置を決定
-            var positions = GenerateStructurePositions();
-            Debug.Log($"配置位置生成完了: {positions.Count}個");
-            progressProperty?.SetValueAndForceNotify(0.20f);
+            //構造物の配置位置を決定
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_STRUCTURE_POSITIONS);
 
-            // 5. 構造物を生成
-            await GenerateStructuresAsync(positions);
-            Debug.Log($"構造物生成完了: {structures.Count}個");
-            progressProperty?.SetValueAndForceNotify(0.25f);
+            //構造物を生成
+            await GenerateStructuresAsync();
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_STRUCTURES);
 
-            // 6. すべての構造物のボクセルデータを生成（接続点も初期化される）
+            // すべての構造物のボクセルデータを生成
             var structureVoxels = await GenerateAllStructureVoxelsAsync();
-            Debug.Log($"構造物ボクセル生成完了: {structureVoxels.Count}個");
-            progressProperty?.SetValueAndForceNotify(0.30f);
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_STRUCTURE_VOXELS);
 
-            // 7. 接続を生成（構造物の接続点が初期化された後）
+            // 接続を生成
             GenerateConnections();
-            Debug.Log($"接続生成完了: {connectionManager.Connections.Count}個");
-            progressProperty?.SetValueAndForceNotify(0.35f);
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_CONNECTIONS);
 
-            // 8. すべての接続のボクセルデータを生成
-            var connectionVoxels = await connectionManager.GenerateAllConnectionsAsync(currentSeed);
-            Debug.Log($"接続ボクセル生成完了: {connectionVoxels.Count}個");
-            progressProperty?.SetValueAndForceNotify(0.40f);
+            // すべての接続のボクセルデータを生成
+            var connectionVoxels = await m_connectionManager.GenerateAllConnectionsAsync(m_currentSeed);
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_CONNECTION_VOXELS);
 
-            // 9. ワールドに一度に配置（fill → surface → structures → connections → boundary の順）
-            progressProperty?.SetValueAndForceNotify(0.5f);
+            //ワールドに一度に配置
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_VOXEL_PLACEMENT_START);
             await PlaceVoxelsInWorldAsync(fillVoxels, surfaceVoxels, structureVoxels, connectionVoxels, boundaryVoxels, progressProperty);
 
-            // 10. 透明な境界壁（Collider）を生成
-            if (settings.generateInvisibleBoundaryColliders)
+            //透明な境界壁（Collider）を生成
+            if (m_settings.generateInvisibleBoundaryColliders)
             {
-                GenerateBoundaryColliders();
-                Debug.Log("透明境界壁（Collider）生成完了");
+                m_boundaryWallGenerator.GenerateColliders(
+                    m_settings.minChunkCoord,
+                    m_settings.maxChunkCoord,
+                    m_settings.ceilingHeight
+                );
             }
 
-            progressProperty?.SetValueAndForceNotify(1.0f);
-            Debug.Log("=== マップ生成完了 ===");
+            progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_COMPLETE);
 
             return new MapGenerationResult(
-                structures.ToList(),
-                connectionManager.Connections.ToList(),
-                currentSeed
+                m_structures.ToList(),
+                m_connectionManager.Connections.ToList(),
+                m_currentSeed
             );
         }
 
-        /// <summary>
-        /// 配置範囲を埋めるボクセルリストを生成（地下のみ、配置はしない）
-        /// </summary>
-        private async Task<List<VoxelUpdate>> GenerateFillVoxelsAsync()
-        {
-            if (!settings.useChunkBasedPlacement)
-                return new List<VoxelUpdate>();
-
-            var fillVoxels = new List<VoxelUpdate>();
-            float voxelSize = VoxelConstants.VOXEL_SIZE;
-
-            // チャンク座標からワールド座標範囲を計算
-            Vector3Int minChunk = settings.minChunkCoord;
-            Vector3Int maxChunk = settings.maxChunkCoord;
-            Vector3 minWorld = new Vector3(minChunk.x * CHUNK_SIZE, minChunk.y * CHUNK_SIZE, minChunk.z * CHUNK_SIZE);
-            Vector3 maxWorld = new Vector3((maxChunk.x + 1) * CHUNK_SIZE, (maxChunk.y + 1) * CHUNK_SIZE, (maxChunk.z + 1) * CHUNK_SIZE);
-
-            // ボクセル範囲を計算
-            Vector3Int minVoxel = new Vector3Int(
-                Mathf.FloorToInt(minWorld.x / voxelSize),
-                Mathf.FloorToInt(minWorld.y / voxelSize),
-                Mathf.FloorToInt(minWorld.z / voxelSize)
-            );
-            Vector3Int maxVoxel = new Vector3Int(
-                Mathf.FloorToInt(maxWorld.x / voxelSize),
-                Mathf.FloorToInt(maxWorld.y / voxelSize),
-                Mathf.FloorToInt(maxWorld.z / voxelSize)
-            );
-
-            // 地表の基準高さまでに制限（地下のみ）
-            int maxFillY = Mathf.FloorToInt(settings.surfaceBaseHeight / voxelSize);
-            int actualMaxY = Mathf.Min(maxVoxel.y, maxFillY);
-
-            Debug.Log($"範囲を埋めるボクセル生成（地下のみ）: {minVoxel} - ({maxVoxel.x}, {actualMaxY}, {maxVoxel.z})");
-
-            // 地下のボクセルのみを埋める
-            int count = 0;
-            for (int x = minVoxel.x; x < maxVoxel.x; x++)
-            {
-                for (int y = minVoxel.y; y < actualMaxY; y++)
-                {
-                    for (int z = minVoxel.z; z < maxVoxel.z; z++)
-                    {
-                        Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, z * voxelSize);
-                        fillVoxels.Add(new VoxelUpdate(worldPos, settings.fillVoxelId));
-
-                        // フレーム分散
-                        count++;
-                        if (count % 10000 == 0)
-                        {
-                            await Task.Yield();
-                        }
-                    }
-                }
-            }
-
-            return fillVoxels;
-        }
-
-        /// <summary>
-        /// 地表のボクセルリストを生成（端が高く、中心がなだらか）
-        /// </summary>
-        private async Task<List<VoxelUpdate>> GenerateSurfaceTerrainAsync()
-        {
-            if (!settings.useChunkBasedPlacement)
-                return new List<VoxelUpdate>();
-
-            var surfaceVoxels = new List<VoxelUpdate>();
-            float voxelSize = VoxelConstants.VOXEL_SIZE;
-
-            // チャンク座標からワールド座標範囲を計算
-            Vector3Int minChunk = settings.minChunkCoord;
-            Vector3Int maxChunk = settings.maxChunkCoord;
-            Vector3 minWorld = new Vector3(minChunk.x * CHUNK_SIZE, minChunk.y * CHUNK_SIZE, minChunk.z * CHUNK_SIZE);
-            Vector3 maxWorld = new Vector3((maxChunk.x + 1) * CHUNK_SIZE, (maxChunk.y + 1) * CHUNK_SIZE, (maxChunk.z + 1) * CHUNK_SIZE);
-
-            // マップ中心を計算
-            Vector3 mapCenter = (minWorld + maxWorld) * 0.5f;
-            mapCenter.y = 0f; // 水平方向の中心のみ使用
-
-            // 最大水平距離を計算（中心から端まで）
-            float maxHorizontalDist = Mathf.Max(
-                Mathf.Abs(maxWorld.x - mapCenter.x),
-                Mathf.Abs(maxWorld.z - mapCenter.z)
-            );
-
-            // ボクセル範囲を計算
-            Vector3Int minVoxel = new Vector3Int(
-                Mathf.FloorToInt(minWorld.x / voxelSize),
-                Mathf.FloorToInt(minWorld.y / voxelSize),
-                Mathf.FloorToInt(minWorld.z / voxelSize)
-            );
-            Vector3Int maxVoxel = new Vector3Int(
-                Mathf.FloorToInt(maxWorld.x / voxelSize),
-                Mathf.FloorToInt(maxWorld.y / voxelSize),
-                Mathf.FloorToInt(maxWorld.z / voxelSize)
-            );
-
-            Debug.Log($"地表生成: 中心={mapCenter}, 最大距離={maxHorizontalDist}m");
-
-            int count = 0;
-
-            // x-z平面をループ
-            for (int x = minVoxel.x; x < maxVoxel.x; x++)
-            {
-                for (int z = minVoxel.z; z < maxVoxel.z; z++)
-                {
-                    // ワールド座標
-                    float worldX = x * voxelSize;
-                    float worldZ = z * voxelSize;
-
-                    // 中心からの水平距離を計算（チェビシェフ距離：四角形に対応）
-                    float horizontalDist = Mathf.Max(
-                        Mathf.Abs(worldX - mapCenter.x),
-                        Mathf.Abs(worldZ - mapCenter.z)
-                    );
-
-                    // 距離比率（0 = 中心、1 = 端）
-                    float distanceRatio = Mathf.Clamp01(horizontalDist / maxHorizontalDist);
-
-                    // 高さ補間（中心部の平坦範囲を考慮）
-                    float baseHeight;
-                    if (distanceRatio <= settings.surfaceFlatCenterRatio)
-                    {
-                        // 平坦範囲内：中心と同じ高さ
-                        baseHeight = settings.surfaceCenterHeight;
-                    }
-                    else
-                    {
-                        // 平坦範囲外：平坦範囲の端から境界まで線形補間
-                        float adjustedRatio = (distanceRatio - settings.surfaceFlatCenterRatio) / (1f - settings.surfaceFlatCenterRatio);
-                        baseHeight = Mathf.Lerp(
-                            settings.surfaceCenterHeight,
-                            settings.surfaceEdgeHeight,
-                            adjustedRatio
-                        );
-                    }
-
-                    // ノイズを適用
-                    Vector3 noisePos = new Vector3(worldX, 0, worldZ);
-                    float noise = NoiseUtility.Get2DNoise(
-                        noisePos.x,
-                        noisePos.z,
-                        currentSeed,
-                        settings.surfaceNoiseFrequency
-                    );
-                    float noisedHeight = baseHeight + noise * settings.surfaceNoiseAmplitude;
-
-                    // 境界近くは確実に高くする（境界壁をカバー）、ノイズも適用
-                    float distanceFromEdge = maxHorizontalDist - horizontalDist;
-                    if (distanceFromEdge < settings.surfaceBoundaryInset)
-                    {
-                        // 境界に近いほど高さを増やす（最低保証高さ）
-                        float edgeBoost = (settings.surfaceBoundaryInset - distanceFromEdge) / settings.surfaceBoundaryInset;
-                        float minHeight = settings.surfaceEdgeHeight + edgeBoost * 5f;
-
-                        // ノイズを適用した高さと最低保証高さの大きい方を使用
-                        noisedHeight = Mathf.Max(noisedHeight, minHeight + noise * settings.surfaceNoiseAmplitude);
-                    }
-
-                    // 地表の高さまでボクセルを積み上げる
-                    int surfaceHeightVoxels = Mathf.CeilToInt((settings.surfaceBaseHeight + noisedHeight) / voxelSize);
-                    int startY = Mathf.FloorToInt(settings.surfaceBaseHeight / voxelSize);
-
-                    for (int y = startY; y < surfaceHeightVoxels; y++)
-                    {
-                        Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, z * voxelSize);
-                        surfaceVoxels.Add(new VoxelUpdate(worldPos, settings.surfaceVoxelId));
-
-                        count++;
-                        if (count % 10000 == 0)
-                        {
-                            await Task.Yield();
-                        }
-                    }
-                }
-            }
-
-            return surfaceVoxels;
-        }
-
-        /// <summary>
-        /// 境界壁のボクセルリストを生成（x+, x-, y-, z+, z-の外側1ボクセル層）
-        /// </summary>
-        private async Task<List<VoxelUpdate>> GenerateBoundaryWallsAsync()
-        {
-            if (!settings.useChunkBasedPlacement)
-                return new List<VoxelUpdate>();
-
-            var boundaryVoxels = new List<VoxelUpdate>();
-            float voxelSize = VoxelConstants.VOXEL_SIZE;
-
-            // チャンク座標からワールド座標範囲を計算
-            Vector3Int minChunk = settings.minChunkCoord;
-            Vector3Int maxChunk = settings.maxChunkCoord;
-            Vector3 minWorld = new Vector3(minChunk.x * CHUNK_SIZE, minChunk.y * CHUNK_SIZE, minChunk.z * CHUNK_SIZE);
-            Vector3 maxWorld = new Vector3((maxChunk.x + 1) * CHUNK_SIZE, (maxChunk.y + 1) * CHUNK_SIZE, (maxChunk.z + 1) * CHUNK_SIZE);
-
-            // ボクセル範囲を計算
-            Vector3Int minVoxel = new Vector3Int(
-                Mathf.FloorToInt(minWorld.x / voxelSize),
-                Mathf.FloorToInt(minWorld.y / voxelSize),
-                Mathf.FloorToInt(minWorld.z / voxelSize)
-            );
-            Vector3Int maxVoxel = new Vector3Int(
-                Mathf.FloorToInt(maxWorld.x / voxelSize),
-                Mathf.FloorToInt(maxWorld.y / voxelSize),
-                Mathf.FloorToInt(maxWorld.z / voxelSize)
-            );
-
-            Debug.Log($"境界壁生成: {minVoxel} - {maxVoxel}");
-
-            int count = 0;
-
-            // x- 面（minX）
-            int xMin = minVoxel.x;
-            for (int y = minVoxel.y; y < maxVoxel.y; y++)
-            {
-                for (int z = minVoxel.z; z < maxVoxel.z; z++)
-                {
-                    Vector3 worldPos = new Vector3(xMin * voxelSize, y * voxelSize, z * voxelSize);
-                    boundaryVoxels.Add(new VoxelUpdate(worldPos, settings.boundaryWallVoxelId));
-
-                    count++;
-                    if (count % 10000 == 0)
-                    {
-                        await Task.Yield();
-                    }
-                }
-            }
-
-            // x+ 面（maxX - 1）
-            int xMax = maxVoxel.x - 1;
-            for (int y = minVoxel.y; y < maxVoxel.y; y++)
-            {
-                for (int z = minVoxel.z; z < maxVoxel.z; z++)
-                {
-                    Vector3 worldPos = new Vector3(xMax * voxelSize, y * voxelSize, z * voxelSize);
-                    boundaryVoxels.Add(new VoxelUpdate(worldPos, settings.boundaryWallVoxelId));
-
-                    count++;
-                    if (count % 10000 == 0)
-                    {
-                        await Task.Yield();
-                    }
-                }
-            }
-
-            // y- 面（minY）
-            int yMin = minVoxel.y;
-            for (int x = minVoxel.x; x < maxVoxel.x; x++)
-            {
-                for (int z = minVoxel.z; z < maxVoxel.z; z++)
-                {
-                    Vector3 worldPos = new Vector3(x * voxelSize, yMin * voxelSize, z * voxelSize);
-                    boundaryVoxels.Add(new VoxelUpdate(worldPos, settings.boundaryWallVoxelId));
-
-                    count++;
-                    if (count % 10000 == 0)
-                    {
-                        await Task.Yield();
-                    }
-                }
-            }
-
-            // z- 面（minZ）
-            int zMin = minVoxel.z;
-            for (int x = minVoxel.x; x < maxVoxel.x; x++)
-            {
-                for (int y = minVoxel.y; y < maxVoxel.y; y++)
-                {
-                    Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, zMin * voxelSize);
-                    boundaryVoxels.Add(new VoxelUpdate(worldPos, settings.boundaryWallVoxelId));
-
-                    count++;
-                    if (count % 10000 == 0)
-                    {
-                        await Task.Yield();
-                    }
-                }
-            }
-
-            // z+ 面（maxZ - 1）
-            int zMax = maxVoxel.z - 1;
-            for (int x = minVoxel.x; x < maxVoxel.x; x++)
-            {
-                for (int y = minVoxel.y; y < maxVoxel.y; y++)
-                {
-                    Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, zMax * voxelSize);
-                    boundaryVoxels.Add(new VoxelUpdate(worldPos, settings.boundaryWallVoxelId));
-
-                    count++;
-                    if (count % 10000 == 0)
-                    {
-                        await Task.Yield();
-                    }
-                }
-            }
-
-            return boundaryVoxels;
-        }
-
-        /// <summary>
-        /// 透明な境界壁（Collider）を生成
-        /// </summary>
-        private void GenerateBoundaryColliders()
-        {
-            if (!settings.useChunkBasedPlacement)
-                return;
-
-            // チャンク座標からワールド座標範囲を計算
-            Vector3Int minChunk = settings.minChunkCoord;
-            Vector3Int maxChunk = settings.maxChunkCoord;
-            Vector3 minWorld = new Vector3(minChunk.x * CHUNK_SIZE, minChunk.y * CHUNK_SIZE, minChunk.z * CHUNK_SIZE);
-            Vector3 maxWorld = new Vector3((maxChunk.x + 1) * CHUNK_SIZE, (maxChunk.y + 1) * CHUNK_SIZE, (maxChunk.z + 1) * CHUNK_SIZE);
-
-            // マップのサイズを計算
-            Vector3 mapSize = maxWorld - minWorld;
-            Vector3 mapCenter = (minWorld + maxWorld) * 0.5f;
-
-            // 壁の厚さ（適当に0.5m）
-            float wallThickness = 0.5f;
-
-            // 天井の高さ
-            float ceilingY = settings.ceilingHeight;
-
-            // x, z 方向の壁の高さ（地下から天井まで）
-            float verticalWallHeight = ceilingY - minWorld.y;
-            float verticalWallCenterY = (minWorld.y + ceilingY) * 0.5f;
-
-            // 境界壁用の親オブジェクトを作成
-            GameObject boundaryParent = new GameObject("InvisibleBoundaryWalls");
-            boundaryParent.transform.position = Vector3.zero;
-
-            // x- 面（minX、地下から天井まで）
-            CreateColliderWall(boundaryParent.transform, "Wall_X_Minus",
-                new Vector3(minWorld.x - wallThickness * 0.5f, verticalWallCenterY, mapCenter.z),
-                new Vector3(wallThickness, verticalWallHeight, mapSize.z));
-
-            // x+ 面（maxX、地下から天井まで）
-            CreateColliderWall(boundaryParent.transform, "Wall_X_Plus",
-                new Vector3(maxWorld.x + wallThickness * 0.5f, verticalWallCenterY, mapCenter.z),
-                new Vector3(wallThickness, verticalWallHeight, mapSize.z));
-
-            // y- 面（minY、底面）
-            CreateColliderWall(boundaryParent.transform, "Wall_Y_Minus",
-                new Vector3(mapCenter.x, minWorld.y - wallThickness * 0.5f, mapCenter.z),
-                new Vector3(mapSize.x, wallThickness, mapSize.z));
-
-            // y+ 面（maxY、天井）
-            CreateColliderWall(boundaryParent.transform, "Wall_Y_Plus_Ceiling",
-                new Vector3(mapCenter.x, ceilingY + wallThickness * 0.5f, mapCenter.z),
-                new Vector3(mapSize.x, wallThickness, mapSize.z));
-
-            // z- 面（minZ、地下から天井まで）
-            CreateColliderWall(boundaryParent.transform, "Wall_Z_Minus",
-                new Vector3(mapCenter.x, verticalWallCenterY, minWorld.z - wallThickness * 0.5f),
-                new Vector3(mapSize.x, verticalWallHeight, wallThickness));
-
-            // z+ 面（maxZ、地下から天井まで）
-            CreateColliderWall(boundaryParent.transform, "Wall_Z_Plus",
-                new Vector3(mapCenter.x, verticalWallCenterY, maxWorld.z + wallThickness * 0.5f),
-                new Vector3(mapSize.x, verticalWallHeight, wallThickness));
-
-            Debug.Log($"透明境界壁生成: 6面（x±, y±, z±）、天井高さ={ceilingY}m");
-        }
-
-        /// <summary>
-        /// Collider壁を作成
-        /// </summary>
-        private void CreateColliderWall(Transform parent, string name, Vector3 position, Vector3 size)
-        {
-            GameObject wall = new GameObject(name);
-            wall.transform.SetParent(parent);
-            wall.transform.position = position;
-
-            BoxCollider collider = wall.AddComponent<BoxCollider>();
-            collider.size = size;
-
-            // レイヤーを設定（必要に応じて）
-            // wall.layer = LayerMask.NameToLayer("Boundary");
-        }
-
-        /// <summary>
-        /// 構造物の配置位置を生成
-        /// </summary>
-        private List<Vector3> GenerateStructurePositions()
-        {
-            var positions = new List<Vector3>();
-
-            if (settings.useChunkBasedPlacement)
-            {
-                // チャンク範囲の中央に1つだけ配置
-                Vector3Int minChunk = settings.minChunkCoord;
-                Vector3Int maxChunk = settings.maxChunkCoord;
-
-                Vector3 minWorld = new Vector3(minChunk.x * CHUNK_SIZE, minChunk.y * CHUNK_SIZE, minChunk.z * CHUNK_SIZE);
-                Vector3 maxWorld = new Vector3((maxChunk.x + 1) * CHUNK_SIZE, (maxChunk.y + 1) * CHUNK_SIZE, (maxChunk.z + 1) * CHUNK_SIZE);
-
-                // 中央座標を計算
-                Vector3 centerPos = (minWorld + maxWorld) * 0.5f;
-                positions.Add(centerPos);
-
-                Debug.Log($"中央位置に配置: {centerPos}");
-            }
-
-            return positions;
-        }
 
         /// <summary>
         /// 構造物を生成
         /// </summary>
-        private async Task GenerateStructuresAsync(List<Vector3> positions)
+        private async Task GenerateStructuresAsync()
         {
             // TreasureCave（お宝部屋）を放射状配置
             await GenerateRadialTreasureCavesAsync();
 
             // HardFloorCave（中央洞窟）を配置
-            await GenerateCentralCaveAsync(positions);
+            GenerateCentralCaveAsync();
         }
 
         /// <summary>
@@ -555,36 +173,36 @@ namespace StructureGeneration
         /// </summary>
         private async Task GenerateRadialTreasureCavesAsync()
         {
-            if (settings.treasureCaveSettings == null || settings.hardFloorCaveSettings == null)
+            if (m_settings.treasureCaveSettings == null || m_settings.hardFloorCaveSettings == null)
                 return;
 
-            // seedを使って生成数を決定（再現性を保つ）
-            Random.InitState(currentSeed ^ "TreasureCaveCount".GetHashCode());
-            int actualRoomCount = Random.Range(settings.treasureCaveSettings.minCount, settings.treasureCaveSettings.maxCount + 1);
+            // seedを使って生成数を決定
+            Random.InitState(m_currentSeed ^ "TreasureCaveCount".GetHashCode());
+            int actualRoomCount = Random.Range(m_settings.treasureCaveSettings.minCount, m_settings.treasureCaveSettings.maxCount + 1);
 
             if (actualRoomCount <= 0)
                 return;
 
-            Vector3 centerCavePos = settings.hardFloorCaveSettings.centerPosition;
+            Vector3 centerCavePos = m_settings.hardFloorCaveSettings.centerPosition;
             float angleStep = 360f / actualRoomCount;
 
             for (int i = 0; i < actualRoomCount; i++)
             {
-                // シードを使った乱数初期化（再現性のため）
-                Random.InitState(currentSeed ^ i.GetHashCode());
+                // シードを使った乱数初期化
+                Random.InitState(m_currentSeed ^ i.GetHashCode());
 
-                // 角度計算（ランダム変動を加える）
-                float angle = (angleStep * i + Random.Range(-settings.treasureCaveSettings.angleVariation,
-                                                             settings.treasureCaveSettings.angleVariation)) * Mathf.Deg2Rad;
+                // 角度計算
+                float angle = (angleStep * i + Random.Range(-m_settings.treasureCaveSettings.angleVariation,
+                                                             m_settings.treasureCaveSettings.angleVariation)) * Mathf.Deg2Rad;
 
-                // 距離計算（ランダム変動を加える）
-                float distance = settings.treasureCaveSettings.baseDistance +
-                                Random.Range(-settings.treasureCaveSettings.distanceVariation,
-                                            settings.treasureCaveSettings.distanceVariation);
+                // 距離計算
+                float distance = m_settings.treasureCaveSettings.baseDistance +
+                                Random.Range(-m_settings.treasureCaveSettings.distanceVariation,
+                                            m_settings.treasureCaveSettings.distanceVariation);
 
-                // Y座標のオフセット（ランダム変動を加える）
-                float yOffset = Random.Range(-settings.treasureCaveSettings.yVariation,
-                                             settings.treasureCaveSettings.yVariation);
+                // Y座標のオフセット
+                float yOffset = Random.Range(-m_settings.treasureCaveSettings.yVariation,
+                                             m_settings.treasureCaveSettings.yVariation);
 
                 // 放射状の位置を計算
                 Vector3 position = new Vector3(
@@ -594,97 +212,29 @@ namespace StructureGeneration
                 );
 
                 // 構造物シード
-                int structureSeed = currentSeed ^ i.GetHashCode();
+                int structureSeed = m_currentSeed ^ i.GetHashCode();
                 string id = $"TreasureCave_{i}";
 
                 // 中央洞窟の位置をtargetPositionとして渡す（接続点の向き先）
-                var treasureCave = new TreasureCave(id, structureSeed, settings.treasureCaveSettings, position, centerCavePos);
-                structures.Add(treasureCave);
+                var treasureCave = new TreasureCave(id, structureSeed, m_settings.treasureCaveSettings, position, centerCavePos);
+                m_structures.Add(treasureCave);
 
-                if (i % FRAME_YIELD_INTERVAL == 0)
+                if (i % MapGeneratorConstants.STRUCTURE_YIELD_INTERVAL == 0)
                 {
                     await Task.Yield();
                 }
             }
 
-            Debug.Log($"お宝部屋を放射状に{actualRoomCount}個配置しました（minCount={settings.treasureCaveSettings.minCount}, maxCount={settings.treasureCaveSettings.maxCount}）");
         }
 
         /// <summary>
         /// HardFloorCave（中央洞窟）を配置
         /// </summary>
-        private async Task GenerateCentralCaveAsync(List<Vector3> positions)
+        private void GenerateCentralCaveAsync()
         {
-            for (int i = 0; i < positions.Count; i++)
-            {
-                // 構造物の種類を決定（現在はHardFloorCaveのみ）
-                var structureType = DetermineStructureType();
-
-                // シード派生
-                int structureSeed = currentSeed ^ i.GetHashCode();
-
-                // 構造物を生成
-                IStructure structure = CreateStructure(structureType, structureSeed, i);
-
-                if (structure != null)
-                {
-                    structures.Add(structure);
-                }
-
-                // フレーム分散
-                if (i % FRAME_YIELD_INTERVAL == 0)
-                {
-                    await Task.Yield();
-                }
-            }
+            m_structures.Add(new HardFloorCave("HardFloor",m_currentSeed, m_settings.hardFloorCaveSettings));
         }
 
-        /// <summary>
-        /// 構造物の種類を決定
-        /// </summary>
-        private System.Type DetermineStructureType()
-        {
-            // 現在はチャンクベース配置のみサポート（HardFloorCaveを中央に配置）
-            return typeof(HardFloorCave);
-        }
-
-        /// <summary>
-        /// 構造物インスタンスを作成
-        /// </summary>
-        private IStructure CreateStructure(System.Type structureType, int seed, int index)
-        {
-            string id = $"{structureType.Name}_{index}";
-
-            if (structureType == typeof(TreasureCave))
-            {
-                if (settings.treasureCaveSettings == null)
-                {
-                    Debug.LogError("TreasureCaveSettingsが設定されていません");
-                    return null;
-                }
-                return new TreasureCave(id, seed, settings.treasureCaveSettings);
-            }
-            else if (structureType == typeof(HardFloorCave))
-            {
-                if (settings.hardFloorCaveSettings == null)
-                {
-                    Debug.LogError("HardFloorCaveSettingsが設定されていません");
-                    return null;
-                }
-                return new HardFloorCave(id, seed, settings.hardFloorCaveSettings);
-            }
-            else if (structureType == typeof(RandomWalkCave))
-            {
-                if (settings.randomWalkCaveSettings == null)
-                {
-                    Debug.LogError("RandomWalkCaveSettingsが設定されていません");
-                    return null;
-                }
-                return new RandomWalkCave(id, seed, settings.randomWalkCaveSettings);
-            }
-
-            return null;
-        }
 
         /// <summary>
         /// 接続を生成
@@ -692,9 +242,9 @@ namespace StructureGeneration
         private void GenerateConnections()
         {
             // 各構造物から指定数の接続を生成
-            for (int i = 0; i < structures.Count; i++)
+            for (int i = 0; i < m_structures.Count; i++)
             {
-                var source = structures[i];
+                var source = m_structures[i];
 
                 // 接続点がない構造物はスキップ
                 var sourcePoints = source.GetConnectionPoints();
@@ -705,7 +255,7 @@ namespace StructureGeneration
                 }
 
                 // 接続先の候補を取得（近い順にソート）
-                var candidates = structures
+                var candidates = m_structures
                     .Where(s => s != source && s.GetConnectionPoints() != null && s.GetConnectionPoints().Count > 0)
                     .OrderBy(s => Vector3.Distance(
                         sourcePoints[0].Position,
@@ -715,7 +265,7 @@ namespace StructureGeneration
                 int connectionsCreated = 0;
                 foreach (var target in candidates)
                 {
-                    if (connectionsCreated >= settings.connectionsPerStructure)
+                    if (connectionsCreated >= m_settings.connectionsPerStructure)
                         break;
 
                     // CanConnectToチェック（お宝部屋同士は接続しないなど）
@@ -727,11 +277,11 @@ namespace StructureGeneration
                         sourcePoints[0].Position.y -
                         target.GetConnectionPoints()[0].Position.y);
 
-                    if (heightDiff > settings.maxConnectionHeightDiff)
+                    if (heightDiff > m_settings.maxConnectionHeightDiff)
                         continue;
 
                     // 既存の接続をチェック（双方向）
-                    bool alreadyConnected = connectionManager.Connections.Any(c =>
+                    bool alreadyConnected = m_connectionManager.Connections.Any(c =>
                         (c.SourceStructureId == source.Id && c.TargetStructureId == target.Id) ||
                         (c.SourceStructureId == target.Id && c.TargetStructureId == source.Id));
 
@@ -742,7 +292,7 @@ namespace StructureGeneration
                     ConnectionType type = DetermineConnectionType();
 
                     // 接続を作成
-                    var connection = connectionManager.CreateConnection(
+                    var connection = m_connectionManager.CreateConnection(
                         $"connection_{i}_{connectionsCreated}",
                         source,
                         target,
@@ -764,7 +314,7 @@ namespace StructureGeneration
         private ConnectionType DetermineConnectionType()
         {
             // 現在は OpenTunnel（空洞トンネル）のみ使用
-            return ConnectionType.OpenTunnel;
+            return ConnectionType.FilledTunnel;
         }
 
         /// <summary>
@@ -774,18 +324,15 @@ namespace StructureGeneration
         {
             var allVoxels = new List<VoxelUpdate>();
 
-            // フィールド境界を設定（使用しないが、インターフェース互換性のため）
-            Bounds dummyBounds = new Bounds(Vector3.zero, Vector3.one * 1000f);
 
-            for (int i = 0; i < structures.Count; i++)
+            for (int i = 0; i < m_structures.Count; i++)
             {
-                var structure = structures[i];
-                int structureSeed = currentSeed ^ structure.Id.GetHashCode();
+                var structure = m_structures[i];
+                int structureSeed = m_currentSeed ^ structure.Id.GetHashCode();
 
-                var result = await structure.GenerateAsync(structureSeed, dummyBounds);
+                var result = await structure.GenerateAsync(structureSeed);
                 allVoxels.AddRange(result.VoxelUpdates);
 
-                Debug.Log($"構造物 {structure.Id}: {result.VoxelUpdates.Count}ボクセル生成");
 
                 // フレーム分散
                 await Task.Yield();
@@ -795,14 +342,11 @@ namespace StructureGeneration
         }
 
         /// <summary>
-        /// すべてのボクセルをワールドに一度に配置（非同期、進捗付き）
+        /// すべてのボクセルをワールドに一度に配置
         /// </summary>
         /// <param name="progressProperty">親の進捗プロパティ（0.5～1.0にマッピングされる）</param>
         private async Task PlaceVoxelsInWorldAsync(List<VoxelUpdate> fillVoxels, List<VoxelUpdate> surfaceVoxels, List<VoxelUpdate> structureVoxels, List<VoxelUpdate> connectionVoxels, List<VoxelUpdate> boundaryVoxels, ReactiveProperty<float> progressProperty)
         {
-            // fill → surface → structures → connections → boundary の順で追加
-            // 後に追加されたものが優先される（上書きされる）
-            // 境界壁を最後に追加することで、何があっても境界壁が優先される
             int fillCount = fillVoxels?.Count ?? 0;
             int surfaceCount = surfaceVoxels?.Count ?? 0;
             int structureCount = structureVoxels?.Count ?? 0;
@@ -813,63 +357,42 @@ namespace StructureGeneration
             var allVoxels = new List<VoxelUpdate>(totalCount);
 
             if (fillVoxels != null)
-                allVoxels.AddRange(fillVoxels);       // 1. 範囲を埋める（地下）
+                allVoxels.AddRange(fillVoxels); 
             if (surfaceVoxels != null)
-                allVoxels.AddRange(surfaceVoxels);    // 2. 地表（fillを上書き）
+                allVoxels.AddRange(surfaceVoxels);
             if (structureVoxels != null)
-                allVoxels.AddRange(structureVoxels);  // 3. 構造物（地表を上書き）
+                allVoxels.AddRange(structureVoxels);
             if (connectionVoxels != null)
-                allVoxels.AddRange(connectionVoxels); // 4. 接続（構造物を上書き）
+                allVoxels.AddRange(connectionVoxels);
             if (boundaryVoxels != null)
-                allVoxels.AddRange(boundaryVoxels);   // 5. 境界壁（すべてを上書き、最優先）
+                allVoxels.AddRange(boundaryVoxels);
 
-            Debug.Log($"ボクセル配置開始: 埋め {fillCount}個 + 地表 {surfaceCount}個 + 構造物 {structureCount}個 + 接続 {connectionCount}個 + 境界壁 {boundaryCount}個 = 合計 {totalCount}個");
 
             // SetVoxels用の内部進捗プロパティを作成（0～1）
             var voxelProgress = new ReactiveProperty<float>(0f);
 
-            // 内部進捗を親の進捗（0.5～1.0）にマッピング
+            //進捗更新
             voxelProgress.Subscribe(value =>
             {
                 if (progressProperty != null)
                 {
-                    float mappedProgress = 0.5f + value * 0.5f;
+                    float range = MapGeneratorConstants.PROGRESS_VOXEL_PLACEMENT_END - MapGeneratorConstants.PROGRESS_VOXEL_PLACEMENT_START;
+                    float mappedProgress = MapGeneratorConstants.PROGRESS_VOXEL_PLACEMENT_START + value * range;
                     progressProperty.SetValueAndForceNotify(mappedProgress);
                 }
             });
 
             // SetVoxelsを実行し、完了を待機
             bool isComplete = false;
-            operationManager.SetVoxels(allVoxels, false, voxelProgress, _ => isComplete = true);
+            m_operationManager.SetVoxels(allVoxels, false, voxelProgress, _ => isComplete = true);
 
             while (!isComplete)
             {
                 await Task.Yield();
             }
-
-            Debug.Log("ボクセル配置完了");
         }
 
-        /// <summary>
-        /// マップ生成の統計情報を取得
-        /// </summary>
-        public string GetGenerationStats()
-        {
-            var stats = new System.Text.StringBuilder();
-            stats.AppendLine($"=== マップ生成統計 ===");
-            stats.AppendLine($"シード: {currentSeed}");
-            stats.AppendLine($"構造物総数: {structures.Count}");
-
-            var structureGroups = structures.GroupBy(s => s.GetType().Name);
-            foreach (var group in structureGroups)
-            {
-                stats.AppendLine($"  {group.Key}: {group.Count()}個");
-            }
-
-            stats.AppendLine(connectionManager.GetConnectionStats());
-
-            return stats.ToString();
-        }
+       
     }
 
     /// <summary>

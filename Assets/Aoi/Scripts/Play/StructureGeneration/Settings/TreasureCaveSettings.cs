@@ -54,10 +54,5 @@ namespace StructureGeneration
         {
             return StructureType.TreasureCave;
         }
-
-        public override IStructure CreateStructure(string id, int seed)
-        {
-            return new TreasureCave(id, seed, this);
-        }
     }
 }
