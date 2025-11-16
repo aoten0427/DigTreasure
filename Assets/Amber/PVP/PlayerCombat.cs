@@ -9,6 +9,7 @@ public class PlayerCombat : NetworkBehaviour
     //ロックオン
     [Header("ロックオン")]
     [SerializeField] private float _lockOnRange;
+    private float _lockOnRangeMod => _lockTarget && _lockTarget._barrierActive ? _barrierRadius : 0f;
     private PlayerCombat _lockTarget = null;
     [SerializeField] private float _lookSpeed;
     private bool _canLockOn = true;
@@ -40,7 +41,7 @@ public class PlayerCombat : NetworkBehaviour
     [Header("バリアー")]
     [SerializeField] private float _barrierRadius;
     [SerializeField] private float _barrierCD;
-    [HideInInspector] public bool _barrierActive => _barrierCoroutine != null && _barrierBtnWaiting;
+    [HideInInspector] public bool _barrierActive => _barrierModel.isActiveAndEnabled;
     [SerializeField] private float _barrierBtnHoldDuration;
     private bool _barrierBtnWaiting = true;
     private IEnumerator _barrierCoroutine = null;
@@ -102,7 +103,8 @@ public class PlayerCombat : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
-        if (_lockTarget && Vector3.Distance(transform.position, _lockTarget.transform.position) > _lockOnRange)
+        if (_lockTarget
+            && Vector3.Distance(transform.position, _lockTarget.transform.position) > _lockOnRange + _lockOnRangeMod)
             ChangeLockTarget(null);
 
         //バリアー
@@ -134,7 +136,7 @@ public class PlayerCombat : NetworkBehaviour
     private void LockOn()
     {
         //距離が優先、次は角
-        Collider[] nearPlayers = Physics.OverlapSphere(transform.position, _lockOnRange);
+        Collider[] nearPlayers = Physics.OverlapSphere(transform.position, _lockOnRange + _barrierRadius);
         if (nearPlayers.Length == 0)
         {
             ChangeLockTarget(null);
@@ -152,6 +154,8 @@ public class PlayerCombat : NetworkBehaviour
 
             Vector3 toTarget = p2.transform.position - transform.position;
             float dist = toTarget.magnitude;
+            if (dist > _lockOnRange + (p2._barrierActive ? _barrierRadius : 0f))
+                continue;
             float angle = Vector3.Angle(transform.forward, toTarget);
 
             if ((dist < nearestDist)
