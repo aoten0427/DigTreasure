@@ -24,6 +24,7 @@ public class PlayerCombat : NetworkBehaviour
     [SerializeField] private float _stunDuration;
     private IEnumerator _stunCoroutine = null;
     private float _stunRemaining = 0f;
+    [SerializeField] private StunAnim _stunAnim;
     public static event System.Action OnPlayerStunStart;
     public static event System.Action OnPlayerStunEnd;
 
@@ -240,6 +241,7 @@ public class PlayerCombat : NetworkBehaviour
     private IEnumerator ToggleStun()
     {
         OnPlayerStunStart?.Invoke();
+        RpcToggleStunAnim(true);
         while (_stunRemaining >= 0f)
         {
             _stunRemaining -= Time.deltaTime;
@@ -248,8 +250,14 @@ public class PlayerCombat : NetworkBehaviour
         if (_stunRemaining <= 0f)
         {
             OnPlayerStunEnd?.Invoke();
+            RpcToggleStunAnim(false);
             _stunCoroutine = null;
         }
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RpcToggleStunAnim(bool visible)
+    {
+        _stunAnim.gameObject.SetActive(visible);
     }
     private IEnumerator StartImmunity()
     {

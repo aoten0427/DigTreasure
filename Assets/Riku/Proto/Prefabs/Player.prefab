@@ -310,8 +310,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _lockOnRange: 0
   _lookSpeed: 0
+  _lockOnIcon: {fileID: 0}
   _knockbackForce: 10
   _stunDuration: 0
+  _stunAnim: {fileID: 0}
   _treasureLostPercent: 0
   _treasureDropRadiusRange: {x: 0, y: 0}
   _treasurePrefab: {fileID: 0}
@@ -319,6 +321,7 @@ MonoBehaviour:
   _barrierCD: 0
   _barrierBtnHoldDuration: 0
   _barrierModel: {fileID: 0}
+  _ImmunityDuration: 0
 --- !u!114 &3384615480656991987
 MonoBehaviour:
   m_ObjectHideFlags: 0
