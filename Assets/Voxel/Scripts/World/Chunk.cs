@@ -337,11 +337,11 @@ namespace VoxelWorld
         {
             Vector3 chunkWorldPos = VoxelConstants.ChunkToWorldPosition(m_chunkPosition.x, m_chunkPosition.y, m_chunkPosition.z);
             Vector3 relativePos = worldPosition - chunkWorldPos;
-            
+
             return new Vector3Int(
-                Mathf.FloorToInt(relativePos.x / VoxelConstants.VOXEL_SIZE),
-                Mathf.FloorToInt(relativePos.y / VoxelConstants.VOXEL_SIZE),
-                Mathf.FloorToInt(relativePos.z / VoxelConstants.VOXEL_SIZE)
+                Mathf.FloorToInt(relativePos.x * VoxelConstants.INV_VOXEL_SIZE),
+                Mathf.FloorToInt(relativePos.y * VoxelConstants.INV_VOXEL_SIZE),
+                Mathf.FloorToInt(relativePos.z * VoxelConstants.INV_VOXEL_SIZE)
             );
         }
 

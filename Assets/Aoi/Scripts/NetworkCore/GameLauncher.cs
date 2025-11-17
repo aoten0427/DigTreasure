@@ -10,6 +10,9 @@ using Unity.Collections.LowLevel.Unsafe;
 using UniRx;
 using UnityEngine.InputSystem;
 using System.Collections;
+using UnityEngine.Video;
+using System.Threading.Tasks;
+using VoxelWorld;
 
 namespace NetWork
 {
@@ -20,9 +23,11 @@ namespace NetWork
         [SerializeField] private bool m_autoConnect = false;
         [SerializeField] private bool m_isLog = false;
 
+        //
         private NetworkRunner m_networkRunner;
-        private bool m_isConnect = false;
+        private string m_roomName;
 
+        SessionList m_sessionList;
 
         // サービス
         [SerializeField] private NetworkSpawnService m_spawnService;
@@ -82,7 +87,7 @@ namespace NetWork
         /// <summary>
         /// 起動処理
         /// </summary>
-        private void Awake()
+        private async void Awake()
         {
             if (!MakeInstance()) return;
 
@@ -90,7 +95,8 @@ namespace NetWork
 
             if (m_autoConnect)
             {
-                ConnectFusion();
+                //ConnectFusion();
+                await JoinRoom("Room1", 4);
             }
         }
 
@@ -99,22 +105,19 @@ namespace NetWork
         /// </summary>
         private void InitializeServices()
         {
+            m_sessionList = new SessionList(this);
+
             if (m_spawnService == null) Debug.LogWarning("[GameLauncher]SpawnServiceがありません");
             if (m_readyService == null) Debug.LogWarning("[GameLauncher]ReadyServiceがありません");
             if (m_loadingService == null) Debug.LogWarning("[GameLauncher]LoadingServiceがありません");
             if (m_userDataService == null) Debug.LogWarning("[GameLauncher]UserDataServiceがありません");
 
+            //ネットワークに関係ないのでここで初期化
+            m_loadingService?.Initialize(m_networkRunner);
+
             if (m_isLog) Debug.Log("[GameLauncher] サービスを初期化しました。");
         }
 
-        /// <summary>
-        /// ハートビートタイムアウト時の処理
-        /// </summary>
-        private void HandlePlayerTimeout(PlayerRef player)
-        {
-            // OnPlayerLeftイベントを発火
-            OnPlayerLeft?.Invoke(m_networkRunner, player);
-        }
 
         /// <summary>
         /// インスタンス作成
@@ -131,48 +134,137 @@ namespace NetWork
             return true;
         }
 
-        /// <summary>
-        /// Fusionへの接続
-        /// </summary>
-        public async void ConnectFusion()
+        public bool IsConect()
         {
-            //接続されていたラパス
-            if (m_isConnect) return;
+            return (m_networkRunner != null)&&m_networkRunner.IsRunning;
+        }
 
-            //Runner生成
-            var networkRunner = Instantiate(networkRunnerPrefab);
-            m_networkRunner = networkRunner.GetComponent<NetworkRunner>();
-            if (m_networkRunner == null) Debug.LogError("ネットワークランナーがありません", gameObject);
+        private async void OnApplicationQuit()
+        {
+            // アプリケーション終了時に自動的にルームから退出
+            if (m_networkRunner != null && m_networkRunner.IsRunning)
+            {
+                Debug.Log("[GameLauncher] アプリケーション終了により、ルームから退出します");
+                await m_networkRunner.Shutdown();
+            }
 
+            await m_sessionList.Disconnect();
+        }
 
+        /// <summary>
+        /// 特定のルームへ参加
+        /// </summary>
+        /// <param name="roomName"></param>
+        /// <param name="maxPlayers"></param>
+        public async Task<bool> JoinRoom(string roomName, int maxPlayers = 4)
+        {
+            if (IsConect())
+            {
+                if(m_isLog)Debug.Log($"[GameLauncher] 既に接続中です。現在のルーム: {m_roomName}");
+                return false;
+            }
+
+            m_roomName = roomName;
+
+            // NetworkRunnerの初期化
+            if (m_networkRunner == null)
+            {
+                GameObject runnerObj = new GameObject("NetworkRunner");
+                m_networkRunner = runnerObj.AddComponent<NetworkRunner>();
+                m_networkRunner.AddCallbacks(this);
+            }
 
             //永続化
-            DontDestroyOnLoad(networkRunner.gameObject);
+            DontDestroyOnLoad(m_networkRunner.gameObject);
             DontDestroyOnLoad(gameObject);
 
-            networkRunner.AddCallbacks(this);
-
-            var result = await networkRunner.StartGame(new StartGameArgs
+            //起動
+            var startGameArgs = new StartGameArgs()
             {
                 GameMode = GameMode.Shared,
-                SessionName = "VoxelWorldTest",
+                SessionName = roomName,
+                PlayerCount = maxPlayers,
                 Scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex),
-                SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
+                SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>(),
+                SessionProperties = new Dictionary<string, SessionProperty>()
+                {
+                    { "IsVisible", true }
+                }
+            };
 
-            });
-
-
-            m_isConnect = true;
+            //結果を確認
+            var result = await m_networkRunner.StartGame(startGameArgs);
+            if (result.Ok)
+            {
+                if(m_isLog)Debug.Log($"[GameLauncher]ルーム '{roomName}' への接続に成功しました");
+            }
+            else
+            {
+                Debug.LogWarning($"[GameLauncher]ルーム '{roomName}' への接続に失敗: {result.ShutdownReason}");
+                return false;
+            }
 
 
             // サービスの初期化
             m_readyService?.Initialize(m_networkRunner);
             m_userDataService?.Initialize(m_networkRunner);
-            m_loadingService?.Initialize(m_networkRunner);
+            
 
-            if (m_isLog) Debug.Log("[GameLauncher] Fusion接続完了", gameObject);
+            return true;
         }
 
+        /// <summary>
+        /// 現在のルームから退出
+        /// </summary>
+        public async Task LeaveRoom()
+        {
+            if(m_networkRunner == null&&m_networkRunner.IsRunning)
+            {
+                Debug.Log("[GameLauncher]接続されていません");
+                return;
+            }
+
+            await m_networkRunner.Shutdown();
+            if (m_isLog) Debug.Log($"[GameLauncher]ルーム{m_roomName}から退出");
+            m_loadingService.DataReset();
+            m_readyService.DataReset();
+            m_userDataService?.DataReset();
+
+            m_roomName = null;
+        }
+
+
+        /// <summary>
+        /// 存在するセッションんの更新
+        /// </summary>
+        /// <returns></returns>
+        public async Task UpdateSessions()
+        {
+            //現在どこかに接続している場合は行わない
+            if (m_networkRunner != null && m_networkRunner.IsRunning) return;
+            //更新
+            await m_sessionList.UpdateSessions();
+            if (m_isLog) Debug.Log("[GameLauncher]セッションデータを更新");
+        }
+
+        /// <summary>
+        /// セッションデータを全て渡す
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, SessionInfo> GetSessionInfo()
+        {
+            return m_sessionList.AvailableSessions;
+        }
+
+        /// <summary>
+        /// セッション情報を返す
+        /// </summary>
+        /// <param name="roomName"></param>
+        /// <returns></returns>
+        public SessionInfo GetSessionInfo(string roomName)
+        {
+            return m_sessionList.GetSessionInfo(roomName);
+        }
 
         void INetworkRunnerCallbacks.OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
         {
@@ -189,8 +281,58 @@ namespace NetWork
         }
         void INetworkRunnerCallbacks.OnPlayerLeft(NetworkRunner runner, PlayerRef player)
         {
-            OnPlayerLeft?.Invoke(runner, player);
+            
+
+            StartCoroutine(PlayerLeft(runner, player));
         }
+
+        /// <summary>
+        /// ホストか確認を行いユーザーが抜けた際の処理を行う
+        /// </summary>
+        /// <param name="runner"></param>
+        /// <param name="player"></param>
+        /// <returns></returns>
+        IEnumerator PlayerLeft(NetworkRunner runner, PlayerRef player)
+        {
+            //自身が現時点でホストの場合はすぐさま処理を実行
+            if(runner.IsSharedModeMasterClient)
+            {
+                PlayerLeftAction(runner, player);
+                yield break;
+            }
+            else//ホスト出ない場合ラグがある可能性があるので待つ
+            {
+                float statitime = 0;
+                float waittime = 3.0f;
+                while(statitime > waittime)
+                {
+                    statitime += Time.deltaTime;
+                    yield return new WaitForSeconds(0.1f);
+                    if(runner.IsSceneManagerBusy)
+                    {
+                        yield return new WaitForSeconds(1.0f);
+                        PlayerLeftAction(runner, player);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// ユーザーが抜けた際に呼ばれるイベント
+        /// </summary>
+        /// <param name="runner"></param>
+        /// <param name="player"></param>
+        private void PlayerLeftAction(NetworkRunner runner, PlayerRef player)
+        {
+            m_spawnService.SpawnNetworkObjects(runner, () =>
+            {
+                m_userDataService.PlayerLeft(player);
+                OnPlayerLeft?.Invoke(runner, player);
+            });
+            
+        }
+
+
         void INetworkRunnerCallbacks.OnInput(NetworkRunner runner, NetworkInput input)
         {
             OnInput?.Invoke(runner, input);
@@ -234,8 +376,9 @@ namespace NetWork
         }
         void INetworkRunnerCallbacks.OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
         {
-            OnHostMigration?.Invoke(runner, hostMigrationToken);
+
         }
+
         void INetworkRunnerCallbacks.OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data)
         {
             OnReliableDataReceived?.Invoke(runner, player, key, data);
@@ -247,21 +390,18 @@ namespace NetWork
         void INetworkRunnerCallbacks.OnSceneLoadDone(NetworkRunner runner)
         {
 
-            OnSceneLoadStart?.Invoke(runner);
 
             // NetworkObjectのSpawn処理を実行
             m_spawnService.SpawnNetworkObjects(runner, () =>
             {
                 m_readyService.OnSceneLoadDone(runner);
                 m_userDataService.OnSceneLoadDone(runner);
-                m_loadingService.CompleteLoading();
             });
 
             OnSceneLoadDone?.Invoke(runner);
 
-
+            m_loadingService.CompleteLoading();
         }
-
 
         void INetworkRunnerCallbacks.OnSceneLoadStart(NetworkRunner runner)
         {

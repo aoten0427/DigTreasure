@@ -1,5 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
+using UniRx;
+using System.Threading.Tasks;
 
 namespace VoxelWorld
 {
@@ -19,6 +22,7 @@ namespace VoxelWorld
         [Header("ワールド設定")]
         [SerializeField] private Vector3Int m_worldSizeInChunksMin = new Vector3Int(0, 0, 0);
         [SerializeField] private Vector3Int m_worldSizeInChunksMax = new Vector3Int(4, 4, 4);
+        [SerializeField] private bool m_isInitializeCreateChunk = false;
         [SerializeField] private Material m_voxelMaterial;
 
         [Header("境界メッシュ設定")]
@@ -198,10 +202,24 @@ namespace VoxelWorld
             
             // 既存チャンクをクリーンアップ
             m_chunkManager.CleanupAllChunks();
-            
-            // 新しいチャンクを一括作成
-            m_chunkManager.CreateChunksInRange(m_worldSizeInChunksMin,m_worldSizeInChunksMax);
 
+            // 新しいチャンクを一括作成
+            if(m_isInitializeCreateChunk)CreateChunks(m_worldSizeInChunksMin, m_worldSizeInChunksMax);
+
+        }
+
+        /// <summary>
+        /// チャンク生成
+        /// </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <param name="chunkperfream"></param>
+        /// <param name="progressProperty"></param>
+        /// <param name="onComplete"></param>
+        public void CreateChunks(Vector3Int min,Vector3Int max,int chunkperfream = 100, ReactiveProperty<float> progressProperty = null,
+            Action onComplete = null)
+        {
+            StartCoroutine(m_chunkManager.CreateChunksInRangeCoroutine(min,max,chunkperfream,progressProperty,onComplete));
         }
 
         /// <summary>

@@ -8,11 +8,13 @@ public class SurroundingsDig : VoxelWorld.BaseAttack
     [SerializeField] float m_blowInterval = 0.1f;
     [SerializeField] Vector3 m_offset = Vector3.zero;
     Rigidbody rb;
+    Collider m_collider;
     private Coroutine m_blowCoroutine = null;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        m_collider = GetComponent<Collider>();
         if (rb == null)
         {
             Debug.LogWarning("[SurroundingsDig]リジッドボディがないです");
@@ -40,30 +42,49 @@ public class SurroundingsDig : VoxelWorld.BaseAttack
 
     private IEnumerator BlowCoroutine()
     {
+        Dig();
+
         float elapsedTime = 0f;
 
-        while (elapsedTime < m_blowTime)
-        {
-            //// 速度チェック（nullチェック含む）
-            //if (rb == null || rb.linearVelocity.magnitude <= m_blowMinVelocity)
-            //{
-            //    break;
-            //}
+        yield return null;
 
-            // Digを実行
-            Dig();
+        Vector3 speed = rb.linearVelocity;
+        speed.y = 0f;
+
+        while (speed.magnitude >= m_blowMinVelocity&&elapsedTime < m_blowTime)
+        {
+            //m_collider.enabled = true;
+
+            speed = rb.linearVelocity;
+            speed.y = 0f;
 
             // インターバル待機
             yield return new WaitForSeconds(m_blowInterval);
 
             elapsedTime += m_blowInterval;
+
+            
+            //m_collider.enabled = false;
+
+
+            // Digを実行Dig();
+            Dig();
+
         }
 
+        m_collider.enabled = true;
         m_blowCoroutine = null;
+
     }
 
     public void Dig()
     {
+        Vector3 dire = rb.linearVelocity;
+        dire.Normalize();
+        //dire *= 2;
+
+        AttackAtPosition(transform.position + (dire));
+        AttackAtPosition(transform.position + (dire * 2f));
         AttackAtPosition(transform.position + m_offset);
     }
 

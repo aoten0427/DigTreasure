@@ -1,5 +1,6 @@
-using Fusion;
+ï»¿using Fusion;
 using System;
+using System.Collections;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -8,32 +9,43 @@ using UnityEngine.SceneManagement;
 
 namespace NetWork
 {
+    /// <summary>
+    /// ãƒ«ãƒ¼ãƒ ç®¡ç†
+    /// </summary>
     public class RoomManager : NetworkBehaviour
     {
         GameLauncher m_gameLauncher;
+        //è¡¨ç¤ºã™ã‚‹ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
         [SerializeField] GameObject[] m_players = new GameObject[4];
+        //ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å
         [SerializeField] TextMeshProUGUI[] m_playerName = new TextMeshProUGUI[4];
+        //è‡ªèº«ã®ãƒ¢ãƒ‡ãƒ«
+        private GameObject m_player;
 
-        private GameObject m_player; // ©g‚Ìƒ‚ƒfƒ‹
-
-        //ƒ†[ƒU[‚Æ‚»‚ê‚É•R‚Ã‚­ƒIƒuƒWƒFƒNƒg‚ÌƒCƒ“ƒfƒbƒNƒX”Ô†
+        //ãƒ¦ãƒ¼ã‚¶ãƒ¼ã¨ãã‚Œã«ç´ã¥ãã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·
         [Networked, Capacity(4)]
         private NetworkDictionary<PlayerRef, int> n_usertoIndex => default;
-        //ƒCƒ“ƒfƒbƒNƒX”Ô†‚Ìg—pó‹µ
+        //ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·ã®ä½¿ç”¨çŠ¶æ³
         [Networked, Capacity(4)]
         private NetworkArray<NetworkBool> n_indexUsage => default;
 
+        //è‡ªèº«ãŒæº–å‚™å®Œäº†ã‹
+        bool m_isReady = false;
+        //å…¨å“¡ãŒæº–å‚™å®Œäº†ã‹
+        [Networked, Capacity(4)]
+        private NetworkDictionary<PlayerRef, bool> n_allisReady => default;
+
         /// <summary>
-        /// ‰Šú‰»
+        /// åˆæœŸåŒ–
         /// </summary>
         private void Start()
         {
 
             m_gameLauncher = GameLauncher.Instance;
             m_gameLauncher?.AddOnNetworkObjectSpawned(Entry);
-            //m_gameLauncher.OnPlayerLeft += RemovePlayer;
+            m_gameLauncher.OnPlayerLeft += RemovePlayer;
 
-            // ‰Šúó‘Ô‚Å‘S‚ÄƒIƒt
+            // åˆæœŸçŠ¶æ…‹ã§å…¨ã¦ã‚ªãƒ•
             foreach (var p in m_players)
             {
                 if (p != null)
@@ -49,37 +61,15 @@ namespace NetWork
                 }
             }
 
-            m_gameLauncher.SetLoadScreen(LoadType.Load1);
-
-
+            m_gameLauncher.SetLoadScreen(LoadType.None);
         }
 
         /// <summary>
-        /// ƒ†[ƒU‚ª”²‚¯‚½Û
-        /// </summary>
-        /// <param name="runner"></param>
-        /// <param name="user"></param>
-        private void RemovePlayer(NetworkRunner runner,PlayerRef user)
-        {
-            if (!Object.HasStateAuthority) return;
-            if(n_usertoIndex.ContainsKey(user))
-            {
-                int index = n_usertoIndex[user];
-                n_usertoIndex.Remove(user);
-                n_indexUsage.Set(index, false);
-
-                RPC_ReceiptUsage(user, index);
-
-                Debug.Log("ƒ†[ƒU[‚ª”²‚¯‚Ü‚µ‚½");
-            }
-        }
-
-        /// <summary>
-        /// ¶¬
+        /// ç”Ÿæˆ
         /// </summary>
         public override void Spawned()
         {
-            // ‰Šú‰»
+            // åˆæœŸåŒ–
             if (HasStateAuthority)
             {
                 for (int i = 0; i < n_indexUsage.Length; i++)
@@ -88,7 +78,7 @@ namespace NetWork
                 }
             }
 
-            // ‘Sƒ†[ƒU[‚ğƒIƒt
+            // å…¨ãƒ¦ãƒ¼ã‚¶ãƒ¼ã‚’ã‚ªãƒ•
             foreach (var p in m_players)
             {
                 if (p != null)
@@ -97,50 +87,113 @@ namespace NetWork
                 }
             }
 
-            //ƒvƒŒƒCƒV[ƒ“—p‚Ìƒ[ƒh‚ğİ’è
-
-
+            //ãƒ—ãƒ¬ã‚¤ã‚·ãƒ¼ãƒ³ç”¨ã®ãƒ­ãƒ¼ãƒ‰ã‚’è¨­å®š
             
-
-            //Entry(Runner);
         }
 
         /// <summary>
-        /// “üº
+        /// ç ´å£Šå‡¦ç†ã€€ã‚¤ãƒ™ãƒ³ãƒˆã‹ã‚‰å‰Šé™¤
+        /// </summary>
+        /// <param name="runner"></param>
+        /// <param name="hasState"></param>
+        public override void Despawned(NetworkRunner runner, bool hasState)
+        {
+            if (m_gameLauncher != null)
+            {
+                m_gameLauncher.RemoveOnNetworkObjectSpawned(Entry);
+                m_gameLauncher.OnPlayerLeft -= RemovePlayer;
+            }
+        }
+
+
+        /// <summary>
+        /// å…¥å®¤
         /// </summary>
         /// <param name="runner"></param>
         public void Entry(NetworkRunner runner)
         {
+            // RoomManagerè‡ªèº«ãŒã¾ã Spawnã•ã‚Œã¦ã„ãªã„å ´åˆã¯å¾…æ©Ÿ
+            if (Runner == null || !Object.IsValid)
+            {
+                Invoke(nameof(DelayedEntry), 1.0f);
+                return;
+            }
+            RPC_Entry(Runner.LocalPlayer);
+        }
+
+        private void DelayedEntry()
+        {
+            StartCoroutine(WaitForSpawnAndEntry());
+        }
+
+        /// <summary>
+        /// Resultã‹ã‚‰ã®ã‚ˆã¿ã“ã¿æ™‚ã«å¾…ãŸãªã„ã¨ã„ã‘ãªã„ãŸã‚æ¾
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator WaitForSpawnAndEntry()
+        {
+            // Spawnã•ã‚Œã‚‹ã¾ã§å¾…ã¤
+            yield return new WaitUntil(() => Runner != null && Object.IsValid);
             RPC_Entry(Runner.LocalPlayer);
         }
 
         /// <summary>
-        /// ƒzƒXƒg‚É“üº‚ğ’Ê’m
+        /// ãƒ›ã‚¹ãƒˆã«å…¥å®¤ã‚’é€šçŸ¥
         /// </summary>
         /// <param name="user"></param>
         [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
         private void RPC_Entry(PlayerRef user)
         {
             var userdatas = m_gameLauncher.GetAllUserData();
-            //ƒGƒ“ƒgƒŠ[’Ê’m‚Ìƒ†[ƒU[‚ª‚¢‚é‚©Šm”F
+            //ã‚¨ãƒ³ãƒˆãƒªãƒ¼é€šçŸ¥ã®ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒã„ã‚‹ã‹ç¢ºèª
             if(userdatas.ContainsKey(user))
             {
                 var userdata = userdatas[user];
                 int index = GetIndexNum();
-                //ƒ†[ƒU[ID‚ÆƒCƒ“ƒfƒbƒNƒX”Ô†‚ğ•R‚Ã‚¯
+                //ãƒ¦ãƒ¼ã‚¶ãƒ¼IDã¨ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·ã‚’ç´ã¥ã‘
                 n_usertoIndex.Add(user, index);
-                //’Ê’m‚ğ‘—‚Á‚½ƒ†[ƒU[‚Ég‚¤ƒvƒŒƒCƒ„[‚ğ“`‚¦‚é
+                //æº–å‚™å®Œäº†ã®ãƒ¡ãƒ³ãƒãƒ¼ã«è¿½åŠ 
+                n_allisReady.Add(user, false);
+                //é€šçŸ¥ã‚’é€ã£ãŸãƒ¦ãƒ¼ã‚¶ãƒ¼ã«ä½¿ã†ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’ä¼ãˆã‚‹
                 RPC_ReceiptUsage(user, index);
             }
             else
             {
-                Debug.LogWarning($"{user}‚ªUserDataManager‚É“o˜^‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+                Debug.LogWarning($"{user}ãŒUserDataManagerã«ç™»éŒ²ã•ã‚Œã¦ã„ã¾ã›ã‚“");
             }
             
         }
 
         /// <summary>
-        /// ‹ó‚¢‚Ä‚¢‚éƒCƒ“ƒfƒbƒNƒX”Ô†‚ğ•Ô‚·
+        /// ãƒ¦ãƒ¼ã‚¶ãŒæŠœã‘ãŸéš›
+        /// </summary>
+        /// <param name="runner"></param>
+        /// <param name="user"></param>
+        private void RemovePlayer(NetworkRunner runner, PlayerRef user)
+        {
+            //ãƒ›ã‚¹ãƒˆä»¥å¤–ã¯å®Ÿè¡Œã—ãªã„
+            if (!Object.HasStateAuthority) return;
+
+            if (n_usertoIndex.ContainsKey(user))
+            {
+                //å¯¾å¿œã—ãŸã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·ã‚’å–å¾—
+                int index = n_usertoIndex[user];
+                //ãƒ¦ãƒ¼ã‚¶ãƒ¼ã‚’å‰Šé™¤
+                n_usertoIndex.Remove(user);
+                //ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ä½¿ç”¨çŠ¶æ³ã‚’å¤‰æ›´
+                n_indexUsage.Set(index, false);
+                //æº–å‚™å®Œäº†ãƒ¡ãƒ³ãƒãƒ¼ã‹ã‚‰å‰Šé™¤
+                n_allisReady.Remove(user);
+
+                //å…¨ãƒ¦ãƒ¼ã‚¶ãƒ¼ã«å¤‰æ›´ã‚’é€šçŸ¥
+                RPC_ReceiptUsage(user, index);
+
+                Debug.Log("ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒæŠœã‘ã¾ã—ãŸ");
+            }
+        }
+
+        /// <summary>
+        /// ç©ºã„ã¦ã„ã‚‹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·ã‚’è¿”ã™
         /// </summary>
         /// <returns></returns>
         private int GetIndexNum()
@@ -152,12 +205,12 @@ namespace NetWork
 
                 return i;
             }
-            //‘S‚Äg‚Á‚Ä‚¢‚éê‡‚Í-1
+            //å…¨ã¦ä½¿ã£ã¦ã„ã‚‹å ´åˆã¯-1
             return -1;
         }
 
         /// <summary>
-        /// ID‚ğæ“¾
+        /// ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·ã‚’å–å¾—
         /// </summary>
         /// <param name="user"></param>
         /// <param name="index"></param>
@@ -169,11 +222,10 @@ namespace NetWork
                 if (index >= 0 && index < m_players.Length)
                 {
                     m_player = m_players[index];
-                    Debug.Log($"{user} “üº:ID {index}");
                 }
             }
 
-            //‘Sƒ†[ƒU[‚ÅƒvƒŒƒCƒ„[‚ğƒIƒ“‚É
+            //å…¨ãƒ¦ãƒ¼ã‚¶ãƒ¼ã§ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’ã‚ªãƒ³ã«
             for (int i = 0; i < m_players.Length && i < n_indexUsage.Length; i++)
             {
                 if (m_players[i] != null)
@@ -183,22 +235,20 @@ namespace NetWork
             }
 
 
-            //–¼‘Oİ’è
-            
+            //åå‰è¨­å®š
             for(int i = 0;i < m_playerName.Length;i++)
             {
                 if (m_playerName[i] != null)
                 {
-                    //ƒIƒuƒWƒFƒNƒg‚ğƒIƒ“‚É
+                    //ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ã‚ªãƒ³ã«
                     m_playerName[i].gameObject.SetActive(n_indexUsage[i]);
                 }
             }
 
+            //åå‰ã‚’å–å¾—ã—ã¦è¨­å®š
             var userdatas = m_gameLauncher.GetAllUserData();
-            var result = n_usertoIndex.Where(kvp => userdatas.ContainsKey(kvp.Key));
-
-
-            foreach(var data in result)
+            var result = n_usertoIndex.Where(kvp => kvp.Key != null && userdatas.ContainsKey(kvp.Key));
+            foreach (var data in result)
             {
                 var userdata = userdatas[data.Key];
                 m_playerName[data.Value].text = userdata.m_name.ToString();
@@ -207,15 +257,51 @@ namespace NetWork
 
         }
 
+        public void Ready()
+        {
+            m_gameLauncher.SetLoadScreen(LoadType.Load1);
+            //å®Œäº†ãƒ•ãƒ©ã‚°ã‚’åè»¢
+            m_isReady = !m_isReady;
+            //ãƒ›ã‚¹ãƒˆã¸ã®é€ä¿¡
+            RPC_Ready(Runner.LocalPlayer, m_isReady);
+        }
+
+        /// <summary>
+        /// æº–å‚™å®Œäº†é€šçŸ¥ã‚’å—ã‘å–ã‚Š
+        /// </summary>
+        [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+        public void RPC_Ready(PlayerRef user,bool ready)
+        {
+            Debug.Log("æº–å‚™å®Œäº†å—ä»˜");
+            if(n_allisReady.ContainsKey(user))
+            {
+                n_allisReady.Set(user, ready);
+                Debug.Log($"{user}ã®æº–å‚™å®Œäº†çŠ¶æ…‹:{ready}");
+            }
+            
+            //å…¨å“¡ãŒæº–å‚™å®Œäº†ãªã‚‰ã‚²ãƒ¼ãƒ é–‹å§‹
+            if(n_allisReady.All(kvp => kvp.Value))
+            {
+                GameStart();
+            }
+        }
+
         public void GameStart()
         {
             if(Object.HasStateAuthority)
             {
-                //—V‚Ôl”‚ğİ’è
+                //éŠã¶äººæ•°ã‚’è¨­å®š
                 m_gameLauncher.SetStartingNumber(Runner.ActivePlayers.Count());
-                //ƒV[ƒ“‚ğ•ÏX
+                //ã‚·ãƒ¼ãƒ³ã‚’å¤‰æ›´
                 Runner.LoadScene(SceneRef.FromIndex(2), LoadSceneMode.Single);
             }
+        }
+
+        public async void Exit()
+        {
+            await m_gameLauncher.LeaveRoom();
+
+            SceneManager.LoadScene(Config.ENTRANCE_SCENE_NUMBER, LoadSceneMode.Single);
         }
     }
 }

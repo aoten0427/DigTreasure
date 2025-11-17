@@ -60,7 +60,7 @@ namespace VoxelWorld
             
         }
 
-        private void OnDestroy()
+        public override void Despawned(NetworkRunner runner, bool hasState)
         {
             // イベント登録解除
             if (m_worldManager != null && m_worldManager.Voxels != null)

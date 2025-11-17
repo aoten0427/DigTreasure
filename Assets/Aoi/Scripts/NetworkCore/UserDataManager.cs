@@ -9,6 +9,7 @@ namespace NetWork
     {
         [Networked, Capacity(4)]
         private NetworkDictionary<PlayerRef, NetworkUserData> n_userDatas => default;
+        //データが変わった際に呼ばれるイベント
         private Action<IReadOnlyDictionary<PlayerRef, NetworkUserData>> OnDataChangeAction;
 
         [Networked]
@@ -46,6 +47,7 @@ namespace NetWork
         [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
         public void RPC_ChangeUserData(PlayerRef user, NetworkUserData data)
         {
+
             if (n_userDatas.ContainsKey(user))
             {
                 n_userDatas.Set(user, data);
@@ -56,11 +58,35 @@ namespace NetWork
             {
                 RPC_ReceiptID(user,n_id);
                 data.m_id = n_id;
+                if (data.m_name == "") data.m_name = user.ToString();
                 n_userDatas.Add(user, data);
-                if (m_isLog) Debug.Log($"[UserDataManager]Userを追加しました:{user}");
+                if (m_isLog) {
+                    Debug.Log($"[UserDataManager]Userを追加しました:{user}");
+                    Debug.Log($"現在のデータ件数:{n_userDatas.Count}");
+                }
+                
                 n_id++;
             }
         }
+
+        /// <summary>
+        /// ユーザーのデータを削除
+        /// </summary>
+        /// <param name="user"></param>
+        [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+        public void RPC_PlayerLeft(PlayerRef user)
+        {
+            if(n_userDatas.ContainsKey(user))
+            {
+                n_userDatas.Remove(user);
+                if (m_isLog)
+                {
+                    Debug.Log($"{user}のデータを削除しました");
+                    Debug.Log($"現在のデータ件数:{n_userDatas.Count}");
+                }
+            }
+        }
+
 
         /// <summary>
         /// IDを取得

@@ -100,9 +100,19 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
         NetworkObject spawnedPlayer = Runner.Spawn(playerPrefab, spawnPosition, rotation, onBeforeSpawned: (_, networkObject) =>
         {
             var player = networkObject.GetComponent<PlayerProto>();
-            player.NickName = userData.m_name;
-            player.SetPlayManager(m_playManager);
-            networkObject.gameObject.name = Runner.LocalPlayer.ToString();
+            if(player != null)
+            {
+                player.NickName = userData.m_name;
+                player.SetPlayManager(m_playManager);
+                networkObject.gameObject.name = Runner.LocalPlayer.ToString();
+            }
+            var player2 = networkObject.GetComponent<Aoi.PlayerProto>();
+            if (player2 != null)
+            {
+                player2.NickName = userData.m_name;
+                player2.SetPlayManager(m_playManager);
+                networkObject.gameObject.name = Runner.LocalPlayer.ToString();
+            }
         });
 
         Debug.Log("プレイヤー生成");

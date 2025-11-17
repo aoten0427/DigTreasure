@@ -11,7 +11,7 @@ namespace VoxelWorld
     {
         [Header("基本情報")]
         //識別ID
-        [SerializeField] private int m_voxelId;
+        [SerializeField] private byte m_voxelId;
         
         //表示名
         [SerializeField] private string m_displayName = "Default VoxelID";
@@ -24,13 +24,13 @@ namespace VoxelWorld
         //硬度
         [SerializeField, Range(0.1f, 100f)] private float m_hardness = 1.0f;
         //最大耐久度
-        [SerializeField, Range(1f, 1000f)] private float m_maxDurability = 100f;
+        [SerializeField, Range(1f, 1000f)] private short m_maxDurability = 100;
         //破壊可能かどうか
         [SerializeField] private bool m_isDestructible = true;
 
         // プロパティ
         //ボクセルID
-        public int VoxelId { get => m_voxelId; set => m_voxelId = value; }
+        public byte VoxelId { get => m_voxelId; set => m_voxelId = value; }
         //表示名
         public string DisplayName { get => m_displayName; set => m_displayName = value; }
         //基本色
@@ -38,7 +38,7 @@ namespace VoxelWorld
         //硬度
         public float Hardness { get => m_hardness; set => m_hardness = value; }
         //最大耐久度
-        public float MaxDurability { get => m_maxDurability; set => m_maxDurability = value; }
+        public short MaxDurability { get => m_maxDurability; set => m_maxDurability = value; }
         //破壊可能フラグ
         public bool IsDestructible { get => m_isDestructible; set => m_isDestructible = value; }
 

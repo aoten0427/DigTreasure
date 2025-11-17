@@ -19,7 +19,7 @@ namespace VoxelWorld
         private Queue<Vector3Int> m_meshUpdateQueue = new Queue<Vector3Int>();
         private HashSet<Vector3Int> m_meshUpdateQueueSet = new HashSet<Vector3Int>(); // 重複チェック用
         private bool m_isMeshUpdateRunning = false;
-        private int m_meshUpdatesPerFrame = 10; // 1フレームあたりのメッシュ更新数
+        private int m_meshUpdatesPerFrame = 50; // 1フレームあたりのメッシュ更新数
 
         // 自動メッシュ更新フラグ
         private bool m_enableAutoMeshUpdate;
