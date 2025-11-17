@@ -3116,7 +3116,7 @@ MonoBehaviour:
   - Position: {x: 30, y: 5, z: -30}
     RotatinY: 315
   playerPrefab:
-    RawGuidValue: 43102ba78939b114fa5b8ad3a7ab1f87
+    RawGuidValue: 52af324604c016341b990a8745d2b2f1
   m_camera: {fileID: 961739749}
 --- !u!114 &838352220
 MonoBehaviour:
