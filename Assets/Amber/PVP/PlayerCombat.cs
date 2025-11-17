@@ -9,13 +9,15 @@ public class PlayerCombat : NetworkBehaviour
     //ロックオン
     [Header("ロックオン")]
     [SerializeField] private float _lockOnRange;
+    private float _lockOnRangeMod => _lockTarget && _lockTarget._barrierActive ? _barrierRadius : 0f;
     private PlayerCombat _lockTarget = null;
     [SerializeField] private float _lookSpeed;
     private bool _canLockOn = true;
+    [SerializeField] private GameObject _lockOnIcon;
 
     //ノックバック
     [Header("ノックバック")]
-    [SerializeField] private float _knockbackForce = 10f; // AddForce用の力の大きさ
+    [SerializeField] private float _knockbackForce = 10f; //AddForce用の力の大きさ
 
     //スタン
     [Header("スタン")]
@@ -39,13 +41,18 @@ public class PlayerCombat : NetworkBehaviour
     [Header("バリアー")]
     [SerializeField] private float _barrierRadius;
     [SerializeField] private float _barrierCD;
-    [HideInInspector] public bool _barrierActive => _barrierCoroutine != null && _barrierBtnWaiting;
+    [HideInInspector] public bool _barrierActive => _barrierModel.isActiveAndEnabled;
     [SerializeField] private float _barrierBtnHoldDuration;
     private bool _barrierBtnWaiting = true;
     private IEnumerator _barrierCoroutine = null;
     [SerializeField] private NetworkObject _barrierModel;
     public static event System.Action OnPlayerBarrierStart;
     public static event System.Action OnPlayerBarrierEnd;
+
+    //ダメージ受けCT
+    [Header("ダメージ受けCT")]
+    [SerializeField] private float _ImmunityDuration;
+    [Networked] private NetworkBool _immune { get; set; } = false;
 
     //他
     private PlayerCombat _attackTarget = null;
@@ -55,7 +62,7 @@ public class PlayerCombat : NetworkBehaviour
     private bool _canAttack = true;
 
     public event Action OnPlayerAttack;
-    public event Action OnPlayerDamage;
+    public event Action<PlayerCombat> OnPlayerDamage;
 
     private void Awake()
     {
@@ -64,17 +71,19 @@ public class PlayerCombat : NetworkBehaviour
     }
     private void OnEnable()
     {
-        PlayerCombat.OnPlayerBarrierStart += DisableAttack;
-        PlayerCombat.OnPlayerBarrierStart += DisableLockOn;
-        PlayerCombat.OnPlayerBarrierEnd += EnableAttack;
-        PlayerCombat.OnPlayerBarrierEnd += EnableLockOn;
+        OnPlayerBarrierStart += DisableAttack;
+        OnPlayerBarrierStart += DisableLockOn;
+        OnPlayerBarrierEnd += EnableAttack;
+        OnPlayerBarrierEnd += EnableLockOn;
+        OnPlayerDamage += UntargetDamagedPlayer;
     }
     private void OnDisable()
     {
-        PlayerCombat.OnPlayerBarrierStart -= DisableAttack;
-        PlayerCombat.OnPlayerBarrierStart -= DisableLockOn;
-        PlayerCombat.OnPlayerBarrierEnd -= EnableAttack;
-        PlayerCombat.OnPlayerBarrierEnd -= EnableLockOn;
+        OnPlayerBarrierStart -= DisableAttack;
+        OnPlayerBarrierStart -= DisableLockOn;
+        OnPlayerBarrierEnd -= EnableAttack;
+        OnPlayerBarrierEnd -= EnableLockOn;
+        OnPlayerDamage -= UntargetDamagedPlayer;
     }
     public override void Spawned()
     {
@@ -86,7 +95,6 @@ public class PlayerCombat : NetworkBehaviour
             _inventory = GetComponent<PlayerInventory>();
             _treasureHeight = _treasurePrefab.GetComponent<Collider>().bounds.extents.y * 2f;
             _treasureSpawner = FindFirstObjectByType<NetworkTreasureSpawner>(FindObjectsInactive.Include);
-            Debug.Log("BarrModel valid: " + _barrierModel.IsValid);
             RpcToggleBarrierModel(false);
         }
     }
@@ -95,8 +103,9 @@ public class PlayerCombat : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
-        if (_lockTarget && Vector3.Distance(transform.position, _lockTarget.transform.position) > _lockOnRange)
-            _lockTarget = null;
+        if (_lockTarget
+            && Vector3.Distance(transform.position, _lockTarget.transform.position) > _lockOnRange + _lockOnRangeMod)
+            ChangeLockTarget(null);
 
         //バリアー
         if (Input.GetKey(KeyCode.I))
@@ -117,6 +126,8 @@ public class PlayerCombat : NetworkBehaviour
         //攻撃
         if (Input.GetKeyUp(KeyCode.L) && _canLockOn)
             LockOn();
+        else if (Input.GetKeyUp(KeyCode.F) && _lockTarget)
+            ChangeLockTarget(null);
         else if (Input.GetKeyUp(KeyCode.U) && _canAttack)
             Attack();
 
@@ -125,24 +136,26 @@ public class PlayerCombat : NetworkBehaviour
     private void LockOn()
     {
         //距離が優先、次は角
-        Collider[] nearPlayers = Physics.OverlapSphere(transform.position, _lockOnRange);
+        Collider[] nearPlayers = Physics.OverlapSphere(transform.position, _lockOnRange + _barrierRadius);
         if (nearPlayers.Length == 0)
         {
-            _lockTarget = null;
+            ChangeLockTarget(null);
             return;
         }
 
         float nearestDist = float.MaxValue;
         float smallestAngle = float.MaxValue;
-        PlayerCombat newLockTarget = null;
+        PlayerCombat newLockTarget = _lockTarget ? _lockTarget : null;
         foreach (Collider coll in nearPlayers)
         {
             if (coll.gameObject == gameObject || (_lockTarget && coll.gameObject == _lockTarget.gameObject)
-                || !coll.TryGetComponent(out PlayerCombat p2))
+                || !coll.TryGetComponent(out PlayerCombat p2) || p2._immune)
                 continue;
 
             Vector3 toTarget = p2.transform.position - transform.position;
             float dist = toTarget.magnitude;
+            if (dist > _lockOnRange + (p2._barrierActive ? _barrierRadius : 0f))
+                continue;
             float angle = Vector3.Angle(transform.forward, toTarget);
 
             if ((dist < nearestDist)
@@ -154,8 +167,22 @@ public class PlayerCombat : NetworkBehaviour
                 smallestAngle = angle;
             }
         }
-        if (newLockTarget)
-            _lockTarget = newLockTarget;
+        ChangeLockTarget(newLockTarget);
+    }
+    private bool ChangeLockTarget(PlayerCombat newTarget)
+    {
+        if (_lockTarget)
+            _lockTarget._lockOnIcon.SetActive(false);
+        _lockTarget = newTarget;
+        if (_lockTarget)
+            _lockTarget._lockOnIcon.SetActive(true);
+        return _lockTarget != null;
+
+    }
+    private void UntargetDamagedPlayer(PlayerCombat damaged)
+    {
+        if (_lockTarget && _lockTarget == damaged)
+            ChangeLockTarget(null);
     }
     private void HandleRotation()
     {
@@ -184,10 +211,11 @@ public class PlayerCombat : NetworkBehaviour
             attacker.RpcBarrierEffect(this);
             return;
         }
-        OnPlayerDamage?.Invoke();
+        OnPlayerDamage?.Invoke(this);
         LoseTreasure();
         StunPlayer();
         Knockback((transform.position - attacker.transform.position).normalized);
+        StartCoroutine(StartImmunity());
     }
 
     private void Knockback(Vector3 dir)
@@ -223,6 +251,12 @@ public class PlayerCombat : NetworkBehaviour
             _stunCoroutine = null;
         }
     }
+    private IEnumerator StartImmunity()
+    {
+        _immune = true;
+        yield return new WaitForSeconds(_ImmunityDuration);
+        _immune = false;
+    }
     private void LoseTreasure()
     {
         int amtLost = (int)(_treasureLostPercent * (float)(_inventory.AmountOfTreasure()));
@@ -239,7 +273,6 @@ public class PlayerCombat : NetworkBehaviour
     //攻撃したかどうかをリターン
     private bool Attack()
     {
-        Debug.Log("attack");
         OnPlayerAttack?.Invoke();
         _attackTarget = _lockTarget ? _lockTarget : GetAttackTarget();
         if (!_attackTarget)
@@ -256,7 +289,7 @@ public class PlayerCombat : NetworkBehaviour
     {
         LockOn();
         PlayerCombat returnVal = _lockTarget;
-        _lockTarget = null;
+        ChangeLockTarget(null);
         return returnVal;
     }
     private IEnumerator BufferBarrierButton()
