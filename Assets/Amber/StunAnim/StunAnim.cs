@@ -7,7 +7,7 @@ public class StunAnim : MonoBehaviour
     private void Update()
     {
         Vector3 rot = transform.rotation.eulerAngles;
-        rot.y += _rotSpd;
+        rot.y += _rotSpd * Time.deltaTime;
         transform.rotation = Quaternion.Euler(rot);
     }
 }

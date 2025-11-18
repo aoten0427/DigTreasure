@@ -384,7 +384,7 @@ namespace StructureGeneration
 
             // SetVoxelsを実行し、完了を待機
             bool isComplete = false;
-            m_operationManager.SetVoxels(allVoxels, false, voxelProgress, _ => isComplete = true);
+            m_operationManager.SetVoxels(allVoxels, isSender: false, immediate: false, voxelProgress, _ => isComplete = true);
 
             while (!isComplete)
             {

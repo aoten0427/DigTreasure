@@ -44,7 +44,7 @@ namespace VoxelWorld
                 m_enablePerformanceLogging = value;
                 if (m_batchManager != null)
                 {
-                    m_batchManager.EnablePerformanceLogging = value;
+                    m_batchManager.EnablePerformanceLogging = true;
                 }
             }
         }
@@ -80,7 +80,7 @@ namespace VoxelWorld
         /// <summary>
         /// VoxelOperationManagerを初期化
         /// </summary>
-        public void Initialize(ChunkManager chunkManager,VoxelEffectManager effectManager, MonoBehaviour coroutineRunner, bool enableAutoMeshUpdate = true, bool enableSeparationDetection = false, SeparatedObjectSpawner spawner = null)
+        public void Initialize(ChunkManager chunkManager,VoxelEffectManager effectManager, MonoBehaviour coroutineRunner, bool enableAutoMeshUpdate = true, bool enableSeparationDetection = true, SeparatedObjectSpawner spawner = null)
         {
             m_chunkManager = chunkManager;
             m_voxelEffectManager = effectManager;
@@ -124,7 +124,6 @@ namespace VoxelWorld
 
         /// <summary>
         /// 指定されたワールド座標にボクセルを設定
-        /// 注意: 非同期実行のため即座には反映されません
         /// </summary>
         /// <param name="progressProperty">進捗通知用ReactiveProperty（0.0～1.0）</param>
         /// <param name="onComplete">完了コールバック（設定成功数を返す）</param>
@@ -139,7 +138,7 @@ namespace VoxelWorld
                 new VoxelUpdate { WorldPosition = worldPosition, VoxelID = voxel }
             };
 
-            SetVoxels(voxelUpdates, true, progressProperty, onComplete);
+            SetVoxels(voxelUpdates, isSender: true, immediate: false, progressProperty, onComplete);
         }
 
         /// <summary>
@@ -148,10 +147,12 @@ namespace VoxelWorld
         /// <param name="voxelUpdates">設定するボクセルのリスト</param>
         /// <param name="isSender">ネットワーク同期でイベントを発火するか</param>
         /// <param name="progressProperty">進捗通知用ReactiveProperty（0.0～1.0、ボクセル設定50%+メッシュ更新50%）</param>
+        /// <param name="immediate">即時更新するか（true: 同期処理、false: 非同期処理）</param>
         /// <param name="onComplete">完了コールバック（設定成功数を返す）</param>
         public void SetVoxels(
             List<VoxelUpdate> voxelUpdates,
             bool isSender = false,
+            bool immediate = false,
             ReactiveProperty<float> progressProperty = null,
             Action<int> onComplete = null)
         {
@@ -170,6 +171,23 @@ namespace VoxelWorld
                 return;
             }
 
+            // 即時更新モード
+            if (immediate)
+            {
+                var result = m_batchManager.SetVoxelsImmediate(voxelUpdates, isSender);
+
+                // 進捗を完了状態に
+                if (progressProperty != null)
+                {
+                    progressProperty.Value = 1.0f;
+                }
+
+                // コールバック実行
+                onComplete?.Invoke(result.SuccessCount);
+                return;
+            }
+
+            // 非同期更新モード（既存の動作）
             // coroutineRunnerのチェック
             if (m_coroutineRunner == null)
             {
@@ -181,15 +199,16 @@ namespace VoxelWorld
 
             // VoxelBatchManagerに委譲
             m_coroutineRunner.StartCoroutine(
-                m_batchManager.SetVoxelsAsync(voxelUpdates, isSender, 10, progressProperty, onComplete)
+                m_batchManager.SetVoxelsAsync(voxelUpdates, isSender, 50, progressProperty, onComplete)
             );
         }
 
         /// <summary>
         /// 攻撃力による条件付きボクセル破壊
         /// </summary>
+        /// <param name="immediate">即時更新するか（true: コライダー即座更新、false: 非同期更新）</param>
         public int DestroyVoxelsWithPower(List<Vector3> worldPositions, float attackPower,
-            Vector3 destractionPoint,Vector3 effectDirection)
+            Vector3 destractionPoint, Vector3 effectDirection, bool immediate = false)
         {
             Stopwatch totalStopwatch = null;
             Stopwatch stepStopwatch = null;
@@ -262,7 +281,7 @@ namespace VoxelWorld
             }
 
             // 実際に破壊処理実行
-            SetVoxels(voxelUpdates, true);
+            SetVoxels(voxelUpdates, isSender: true, immediate: immediate);
 
             if(m_voxelEffectManager != null&&voxelUpdates.Count != 0)
             {

@@ -4646,6 +4646,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_treasuerNum: 200
   m_treasureSpawner: {fileID: 1757642793}
+  m_mapGeneration: {fileID: 0}
 --- !u!4 &1757642792
 Transform:
   m_ObjectHideFlags: 0
@@ -5369,7 +5370,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17a3d27700fd37949bbbbcb3000b98fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameTime: 10
+  GameTime: 120
   m_startCountDown: {fileID: 2121432284}
   m_isLog: 1
 --- !u!1 &1926540992

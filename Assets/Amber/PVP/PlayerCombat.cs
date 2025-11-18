@@ -28,6 +28,7 @@ public class PlayerCombat : NetworkBehaviour
     public static event System.Action OnPlayerStunStart;
     public static event System.Action OnPlayerStunEnd;
 
+
     //宝落とす
     [Header("宝落とす")]
     [SerializeField][Range(0, 1)] private float _treasureLostPercent;
@@ -46,6 +47,7 @@ public class PlayerCombat : NetworkBehaviour
     [SerializeField] private float _barrierBtnHoldDuration;
     private bool _barrierBtnWaiting = true;
     private IEnumerator _barrierCoroutine = null;
+    private bool _barrierPressed = false;
     [SerializeField] private NetworkObject _barrierModel;
     public static event System.Action OnPlayerBarrierStart;
     public static event System.Action OnPlayerBarrierEnd;
@@ -63,7 +65,7 @@ public class PlayerCombat : NetworkBehaviour
     private bool _canAttack = true;
 
     public event Action OnPlayerAttack;
-    public event Action<PlayerCombat> OnPlayerDamage;
+    public event Action<PlayerCombat,PlayerCombat> OnPlayerDamage;
 
     private void Awake()
     {
@@ -85,6 +87,14 @@ public class PlayerCombat : NetworkBehaviour
         OnPlayerBarrierEnd -= EnableAttack;
         OnPlayerBarrierEnd -= EnableLockOn;
         OnPlayerDamage -= UntargetDamagedPlayer;
+
+        //入力処理削除
+        {
+            var inputmanager = GameInputManager.Instance;
+            inputmanager.LookOn -= LockOn;
+            inputmanager.Attack -= Attack;
+            inputmanager.Barrier -= Barrier;
+        }
     }
     public override void Spawned()
     {
@@ -97,7 +107,17 @@ public class PlayerCombat : NetworkBehaviour
             _treasureHeight = _treasurePrefab.GetComponent<Collider>().bounds.extents.y * 2f;
             _treasureSpawner = FindFirstObjectByType<NetworkTreasureSpawner>(FindObjectsInactive.Include);
             RpcToggleBarrierModel(false);
+
+            //入力処理初期化
+            {
+                var inputmanager = GameInputManager.Instance;
+                inputmanager.LookOn += LockOn;
+                inputmanager.Attack += Attack;
+                inputmanager.Barrier += Barrier;
+            }
         }
+
+
     }
     private void Update()
     {
@@ -109,7 +129,7 @@ public class PlayerCombat : NetworkBehaviour
             ChangeLockTarget(null);
 
         //バリアー
-        if (Input.GetKey(KeyCode.I))
+        if (_barrierPressed)
         {
             if (_barrierBtnWaiting && _barrierCoroutine == null)
             {
@@ -119,23 +139,14 @@ public class PlayerCombat : NetworkBehaviour
             else if (!_barrierBtnWaiting && _barrierCoroutine != null)
                 StartBarrier();
         }
-        else if (Input.GetKeyUp(KeyCode.I))
-        {
-            EndBarrier();
-        }
-
-        //攻撃
-        if (Input.GetKeyUp(KeyCode.L) && _canLockOn)
-            LockOn();
-        else if (Input.GetKeyUp(KeyCode.F) && _lockTarget)
-            ChangeLockTarget(null);
-        else if (Input.GetKeyUp(KeyCode.U) && _canAttack)
-            Attack();
+      
 
         HandleRotation();
     }
-    private void LockOn()
+    private void LockOn(bool ispush)
     {
+        if(!_canLockOn||!ispush) return;
+
         //距離が優先、次は角
         Collider[] nearPlayers = Physics.OverlapSphere(transform.position, _lockOnRange + _barrierRadius);
         if (nearPlayers.Length == 0)
@@ -180,7 +191,7 @@ public class PlayerCombat : NetworkBehaviour
         return _lockTarget != null;
 
     }
-    private void UntargetDamagedPlayer(PlayerCombat damaged)
+    private void UntargetDamagedPlayer(PlayerCombat damaged,PlayerCombat attacker)
     {
         if (_lockTarget && _lockTarget == damaged)
             ChangeLockTarget(null);
@@ -212,7 +223,7 @@ public class PlayerCombat : NetworkBehaviour
             attacker.RpcBarrierEffect(this);
             return;
         }
-        OnPlayerDamage?.Invoke(this);
+        OnPlayerDamage?.Invoke(this,attacker);
         LoseTreasure();
         StunPlayer();
         Knockback((transform.position - attacker.transform.position).normalized);
@@ -231,7 +242,7 @@ public class PlayerCombat : NetworkBehaviour
     }
     private void StunPlayer()
     {
-        _stunRemaining += _stunDuration;
+        _stunRemaining = _stunDuration;
         if (_stunCoroutine == null)
         {
             _stunCoroutine = ToggleStun();
@@ -249,11 +260,14 @@ public class PlayerCombat : NetworkBehaviour
         }
         if (_stunRemaining <= 0f)
         {
+            _stunRemaining = 0f;
             OnPlayerStunEnd?.Invoke();
             RpcToggleStunAnim(false);
             _stunCoroutine = null;
         }
     }
+
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RpcToggleStunAnim(bool visible)
     {
@@ -278,9 +292,18 @@ public class PlayerCombat : NetworkBehaviour
             _inventory.RemoveTreasure(treasureLost[i], 1);
         }
     }
+
+    //インプット用
+    private void Attack(bool ispush)
+    {
+        Attack();
+    }
+
     //攻撃したかどうかをリターン
     private bool Attack()
     {
+        if (!_canAttack) return false;
+
         OnPlayerAttack?.Invoke();
         _attackTarget = _lockTarget ? _lockTarget : GetAttackTarget();
         if (!_attackTarget)
@@ -289,13 +312,32 @@ public class PlayerCombat : NetworkBehaviour
         _isAttacking = true;
         //アニメーション後に _isAttacking オフにする
         _isAttacking = false;
-        _attackTarget.RpcTakeDamage(this);
+
+        if(!_attackTarget._immune)
+        {
+            _attackTarget.RpcTakeDamage(this);
+        }
+        
 
         return true;
     }
+
+    private void Barrier(bool ispush)
+    {
+        if(ispush)
+        {
+            _barrierPressed = true;
+        }
+        else
+        {
+            _barrierPressed = false;
+            EndBarrier();
+        }
+    }
+
     private PlayerCombat GetAttackTarget()
     {
-        LockOn();
+        LockOn(true);
         PlayerCombat returnVal = _lockTarget;
         ChangeLockTarget(null);
         return returnVal;

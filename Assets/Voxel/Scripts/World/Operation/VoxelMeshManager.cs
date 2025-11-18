@@ -21,6 +21,12 @@ namespace VoxelWorld
         private bool m_isMeshUpdateRunning = false;
         private int m_meshUpdatesPerFrame = 50; // 1フレームあたりのメッシュ更新数
 
+        // 動的調整パラメータ
+        private const int DYNAMIC_ADJUST_TARGET_MS = 200;     // 目標フレーム時間（ms）
+        private const int DYNAMIC_ADJUST_MIN_CHUNKS = 50;     // 最小チャンク処理数/フレーム
+        private const int DYNAMIC_ADJUST_MAX_CHUNKS = 100;     // 最大チャンク処理数/フレーム
+        private const float DYNAMIC_ADJUST_RATE = 0.2f;       // 調整率（±20%）
+
         // 自動メッシュ更新フラグ
         private bool m_enableAutoMeshUpdate;
 
@@ -125,17 +131,46 @@ namespace VoxelWorld
         }
 
         /// <summary>
+        /// 前フレームの処理時間に基づいてメッシュ更新数を動的調整
+        /// </summary>
+        private int AdjustProcessingRate(int current, long lastFrameMs)
+        {
+            if (lastFrameMs > DYNAMIC_ADJUST_TARGET_MS * 1.5f) 
+            {
+                int adjusted = Math.Max(DYNAMIC_ADJUST_MIN_CHUNKS, (int)(current * (1.0f - DYNAMIC_ADJUST_RATE)));
+                Debug.Log($"[Performance] Adjusting mesh rate: {current} -> {adjusted} chunks/frame (last frame: {lastFrameMs}ms)");
+                return adjusted;
+            }
+            else if (lastFrameMs < DYNAMIC_ADJUST_TARGET_MS * 0.5f)
+            {
+                int adjusted = Math.Min(DYNAMIC_ADJUST_MAX_CHUNKS, (int)(current * (1.0f + DYNAMIC_ADJUST_RATE)));
+                Debug.Log($"[Performance] Adjusting mesh rate: {current} -> {adjusted} chunks/frame (last frame: {lastFrameMs}ms)");
+                return adjusted;
+            }
+            return current; 
+        }
+
+        /// <summary>
         /// メッシュ更新キューを段階的に処理
         /// </summary>
         private IEnumerator ProcessMeshUpdateQueue()
         {
             m_isMeshUpdateRunning = true;
+            var totalStopwatch = new System.Diagnostics.Stopwatch();
+            var frameStopwatch = new System.Diagnostics.Stopwatch();
+            totalStopwatch.Start();
+
+            int totalChunksProcessed = 0;
+            int frameCount = 0;
+            int dynamicMeshUpdatesPerFrame = m_meshUpdatesPerFrame; // 動的調整用
 
             while (m_meshUpdateQueue.Count > 0)
             {
+                frameStopwatch.Restart();
+                frameCount++;
                 var jobDataList = new List<(Vector3Int chunkPos, ChunkMesh.MeshJobData jobData)>();
 
-                for (int i = 0; i < m_meshUpdatesPerFrame && m_meshUpdateQueue.Count > 0; i++)
+                for (int i = 0; i < dynamicMeshUpdatesPerFrame && m_meshUpdateQueue.Count > 0; i++)
                 {
                     var chunkPos = m_meshUpdateQueue.Dequeue();
                     m_meshUpdateQueueSet.Remove(chunkPos);
@@ -195,8 +230,19 @@ namespace VoxelWorld
                     }
                 }
 
+                totalChunksProcessed += jobDataList.Count;
+                frameStopwatch.Stop();
+                long frameMs = frameStopwatch.ElapsedMilliseconds;
+                Debug.Log($"[Performance] MeshUpdateQueue Frame {frameCount}: {jobDataList.Count} chunks (rate: {dynamicMeshUpdatesPerFrame}) in {frameMs}ms (Queue remaining: {m_meshUpdateQueue.Count})");
+
+                // 動的調整
+                dynamicMeshUpdatesPerFrame = AdjustProcessingRate(dynamicMeshUpdatesPerFrame, frameMs);
+
                 yield return null; // 次フレームへ
             }
+
+            totalStopwatch.Stop();
+            Debug.Log($"[Performance] MeshUpdateQueue completed: {totalChunksProcessed} chunks in {totalStopwatch.ElapsedMilliseconds}ms ({frameCount} frames, avg {totalStopwatch.ElapsedMilliseconds / frameCount}ms/frame)");
 
             m_isMeshUpdateRunning = false;
         }

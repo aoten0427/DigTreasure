@@ -54,9 +54,11 @@ namespace VoxelWorld
         /// 指定位置への攻撃を実行
         /// </summary>
         /// <param name="worldPosition">攻撃位置（ワールド座標）</param>
-        public void AttackAtPosition(Vector3 worldPosition,Vector3 directio = default)
+        /// <param name="directio">エフェクト方向</param>
+        /// <param name="immediate">即時更新するか（true: コライダー即座更新、false: 非同期更新）</param>
+        public void AttackAtPosition(Vector3 worldPosition, Vector3 directio = default, bool immediate = false)
         {
-            ExecuteAttack(worldPosition,directio);
+            ExecuteAttack(worldPosition, directio, immediate);
         }
 
         /// <summary>
@@ -64,7 +66,9 @@ namespace VoxelWorld
         /// DestructionCoordinatorに全処理を委譲
         /// </summary>
         /// <param name="attackPosition">攻撃位置</param>
-        private void ExecuteAttack(Vector3 attackPosition,Vector3 effectDirection = default)
+        /// <param name="effectDirection">エフェクト方向</param>
+        /// <param name="immediate">即時更新するか</param>
+        private void ExecuteAttack(Vector3 attackPosition, Vector3 effectDirection = default, bool immediate = false)
         {
             IDestructionShape destructionShape = CreateDestructionShape(attackPosition);
 
@@ -89,6 +93,7 @@ namespace VoxelWorld
                 effectDirection,
                 m_targetChunks,
                 m_targetSeparatedObjects,
+                immediate,
                 v => Debug.Log(v)
             );
 

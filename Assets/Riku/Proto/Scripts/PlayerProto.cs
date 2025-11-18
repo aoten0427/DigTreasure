@@ -6,8 +6,6 @@ public class PlayerProto : NetworkBehaviour
 {
     //名前
     [Networked] public NetworkString<_16> NickName { get; set; }
-    //掘る場所
-    [SerializeField] private GameObject digPoint;
 
     //動作可能か
     bool m_isAction = true;
@@ -20,8 +18,7 @@ public class PlayerProto : NetworkBehaviour
     private bool canMove = true;
 
 
-    [SerializeField] private Dig m_dig;
-    [SerializeField] private GameObject m_digpoint2;
+    [SerializeField] Dig[] m_digs = new Dig[3];
     //掘り可能か
     private bool canDig = true;
 
@@ -34,8 +31,8 @@ public class PlayerProto : NetworkBehaviour
     [SerializeField] private float drag = 5f;
 
     private bool isJump = false;//ジャンプフラグ
-
     private bool isGrounded;//地面についているか
+    private Vector2 m_moveInput;//移動量
 
     //ロックオン
     private bool needLockOnRot = false;
@@ -61,6 +58,21 @@ public class PlayerProto : NetworkBehaviour
         PlayerCombat.OnPlayerBarrierStart -= DisableDig;
         PlayerCombat.OnPlayerBarrierEnd -= EnableMove;
         PlayerCombat.OnPlayerBarrierEnd -= EnableDig;
+
+        if (m_combat != null)
+        {
+            m_combat.OnPlayerDamage -= Blownaway;
+        }
+
+        //入力処理削除
+        {
+            var inputmanager = GameInputManager.Instance;
+            inputmanager.Move -= Move;
+            inputmanager.Jump -= Jump;
+            inputmanager.DigUp -= DigUp;
+            inputmanager.DigDown -= DigDown;
+            inputmanager.Attack -= DigAttack;
+        }
     }
     public override void Spawned()
     {
@@ -81,15 +93,46 @@ public class PlayerProto : NetworkBehaviour
 
         if (m_combat != null)
         {
-            m_combat.OnPlayerAttack += () =>
-            {
-                Dig(m_digpoint2.transform.position);
-            };
-            //m_combat.OnPlayerDamage += () =>
-            //{
-            //    m_surroundingsDig.Blownaway();
-            //};
+            m_combat.OnPlayerDamage += Blownaway;
         }
+
+        //入力処理初期化
+        {
+            var inputmanager = GameInputManager.Instance;
+            inputmanager.Move += Move;
+            inputmanager.Jump += Jump;
+            inputmanager.DigUp += DigUp;
+            inputmanager.DigDown += DigDown;
+            inputmanager.Attack += DigAttack;
+        }
+    }
+
+    public void Move(Vector2 move)
+    {
+        m_moveInput = move;
+    }
+
+    public void Jump(bool ispush)
+    {
+        if (ispush&&isGrounded && !isJump && m_isAction)
+        {
+            isJump = true;
+        }
+    }
+
+    public void DigUp(bool ispush)
+    {
+        if (ispush) Dig(m_digs[2], m_digs[2].transform.position);
+    }
+
+    public void DigAttack(bool ispush)
+    {
+        if (ispush) Dig(m_digs[1], m_digs[1].transform.position);
+    }
+
+    public void DigDown(bool ispush)
+    {
+        if (ispush) Dig(m_digs[0], m_digs[0].transform.position);
     }
 
     public void SetPlayManager(PlayManager playManager)
@@ -108,16 +151,16 @@ public class PlayerProto : NetworkBehaviour
         // 地面判定
         CheckGrounded();
 
-        // TODO: コントローラー対応
-        // Jキーで掘る(テスト用にキーボード対応)
-        if (Input.GetKeyDown(KeyCode.J) && canDig)
-        {
-            Dig(digPoint.transform.position);
-        }
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isJump)
-        {
-            isJump = true;
-        }
+        //// TODO: コントローラー対応
+        //// Jキーで掘る(テスト用にキーボード対応)
+        //if (Input.GetKeyDown(KeyCode.J) && canDig)
+        //{
+        //    Dig(m_digs[0], m_digs[0].transform.position);
+        //}
+        //if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isJump)
+        //{
+        //    isJump = true;
+        //}
     }
 
     public override void FixedUpdateNetwork()
@@ -135,7 +178,7 @@ public class PlayerProto : NetworkBehaviour
         if (canMove)
         {
             // 移動入力
-            var inputDirection = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
+            var inputDirection = new Vector3(m_moveInput.x, 0f, m_moveInput.y);
             Vector3 moveDirection = cameraRotation * inputDirection;
 
             // 現在の水平速度を取得
@@ -192,50 +235,53 @@ public class PlayerProto : NetworkBehaviour
 
     private void CheckGrounded()
     {
-        // Colliderの底から判定開始位置を計算
-        Vector3 rayStart = transform.position;
-        float rayDistance = groundCheckDistance;
-
-        if (playerCollider != null)
+        if (playerCollider == null)
         {
-            // Colliderの底の位置を取得
-            rayStart = playerCollider.bounds.center - new Vector3(0, playerCollider.bounds.extents.y - rayDistance, 0);
-            rayDistance = groundCheckDistance; // 底からさらに下へ
+            isGrounded = false;
+            return;
         }
 
-        // 足元から少し下に向けてRaycastで地面判定
+        // Colliderの底の中心位置
+        Vector3 boundsBottom = playerCollider.bounds.center - new Vector3(0, playerCollider.bounds.extents.y, 0);
+        boundsBottom.y += 0.3f;
+
+        // Colliderのサイズから適切なオフセット距離を計算（端より少し内側）
+        float horizontalOffset = playerCollider.bounds.extents.x * 0.8f;
+        float forwardOffset = playerCollider.bounds.extents.z * 0.8f;
+
+        // 5箇所のRaycast開始位置
+        Vector3[] rayPositions = new Vector3[5]
+        {
+                boundsBottom,                                              // 中央
+                boundsBottom + transform.forward * forwardOffset,          // 前
+                boundsBottom - transform.forward * forwardOffset,          // 後
+                boundsBottom + transform.right * horizontalOffset,         // 右
+                boundsBottom - transform.right * horizontalOffset          // 左
+        };
+
+        // いずれか1つでも地面に接していればtrue
+        isGrounded = false;
         RaycastHit hit;
-        isGrounded = Physics.Raycast(rayStart, Vector3.down, out hit, rayDistance, groundLayer);
 
-        // デバッグ情報
-        if (Input.GetKey(KeyCode.Space))
+        for (int i = 0; i < rayPositions.Length; i++)
         {
-            Debug.Log($"[CheckGrounded] isGrounded: {isGrounded}, RayStart: {rayStart}, Distance: {(hit.collider ? hit.distance.ToString() : "No Hit")}, Layer: {(hit.collider ? LayerMask.LayerToName(hit.collider.gameObject.layer) : "None")}");
+            bool hitGround = Physics.Raycast(rayPositions[i], Vector3.down, out hit, groundCheckDistance, groundLayer);
+
+            // デバッグ用の視覚化
+            Debug.DrawRay(rayPositions[i], Vector3.down * groundCheckDistance, hitGround ? Color.green : Color.red);
+
+            if (hitGround)
+            {
+                isGrounded = true;
+                break;
+            }
         }
     }
 
-    private void OnDrawGizmos()
+    private void Dig(Dig dig,Vector3 point)
     {
-        // 地面判定のRayを可視化
-        Gizmos.color = isGrounded ? Color.green : Color.red;
-
-        Vector3 startPos = transform.position;
-        if (playerCollider != null)
-        {
-            // Colliderの底から開始
-            startPos = playerCollider.bounds.center - new Vector3(0, playerCollider.bounds.extents.y, 0);
-        }
-
-        Vector3 endPos = startPos + Vector3.down * groundCheckDistance;
-        Gizmos.DrawLine(startPos, endPos);
-        Gizmos.DrawWireSphere(endPos, 0.1f);
-        Gizmos.DrawWireSphere(startPos, 0.05f); // 開始位置も表示
-    }
-
-    private void Dig(Vector3 point)
-    {
-        if (m_dig == null) return;
-        m_dig.DigPoint(point, transform.position - point + new Vector3(0, 1, 0));
+        if (dig == null) return;
+        dig.DigPoint(point, transform.position - point + new Vector3(0, 1, 0));
 
         // pointが掘る位置(プレイヤーの前方、高さは足元)になってる
     }
@@ -263,5 +309,10 @@ public class PlayerProto : NetworkBehaviour
     {
         needLockOnRot = lockOn;
         lockOnRot = targetRot;
+    }
+
+    private void Blownaway(PlayerCombat damaged,PlayerCombat attacker)
+    {
+        //m_surroundingsDig.Blownaway(damaged, attacker);
     }
 }
