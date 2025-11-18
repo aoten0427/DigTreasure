@@ -128,7 +128,7 @@ public class LoadManager : MonoBehaviour
 
                 if (incompleteTasks.Count > 0)
                 {
-                    Debug.Log($"[LoadManager] 未完了タスク: {string.Join(", ", incompleteTasks)}");
+                    //Debug.Log($"[LoadManager] 未完了タスク: {string.Join(", ", incompleteTasks)}");
                 }
 
                 return weightedSum / totalWeight;

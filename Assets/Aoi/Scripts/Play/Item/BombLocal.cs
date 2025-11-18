@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using DG.Tweening;
 
-public class Bomb : VoxelWorld.BaseAttack
+public class BombLocal : VoxelWorld.BaseAttack
 {
     [SerializeField] float m_ignitionTime = 3f;//点滅時間
     //制御用Tween
@@ -15,6 +15,7 @@ public class Bomb : VoxelWorld.BaseAttack
     [SerializeField] Material m_normal;
     [SerializeField] Material m_blink;
 
+    [SerializeField] Explosion m_explosion;
     private void Update()
     {
         if (Input.GetKeyUp(KeyCode.B))
@@ -26,7 +27,7 @@ public class Bomb : VoxelWorld.BaseAttack
     /// <summary>
     /// 点火開始
     /// </summary>
-    public void IgnitionStart()
+    public void IgnitionStart(bool isdestroy = false)
     {
         if (m_ignitionTween != null && m_ignitionTween.IsActive())
             return;
@@ -52,8 +53,14 @@ public class Bomb : VoxelWorld.BaseAttack
             .OnComplete(() =>
             {
                 StopBlink();
-                Explosion();
+                Explosion(isdestroy);
             });
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if(rb != null)
+        {
+            rb.AddForce(new Vector3 (0f, 150f, 0f));
+        }
     }
 
     /// <summary>
@@ -100,10 +107,11 @@ public class Bomb : VoxelWorld.BaseAttack
     /// <summary>
     /// 爆発
     /// </summary>
-    void Explosion()
+    void Explosion(bool isdestroy)
     {
-        AttackAtPosition(transform.position);
-        Destroy(gameObject);
+        if(isdestroy)AttackAtPosition(transform.position);
+        m_renderer.enabled = false;
+        m_explosion.PlayAnimation(() => Destroy(gameObject));
     }
 
     /// <summary>

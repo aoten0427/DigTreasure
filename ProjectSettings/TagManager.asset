@@ -6,6 +6,7 @@ TagManager:
   tags:
   - FillPoint
   - Treasure
+  - DigRange
   layers:
   - Default
   - TransparentFX

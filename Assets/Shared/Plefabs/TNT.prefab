@@ -99,7 +99,7 @@ MonoBehaviour:
   m_targetChunks: 1
   m_targetSeparatedObjects: 1
   m_enableLogging: 0
-  m_ignitionTime: 3
+  m_ignitionTime: 5
   m_renderer: {fileID: 65443847894418842}
   m_normal: {fileID: -8469494145858465668, guid: 327c24ff36b937447ae79c3c22e07e89, type: 3}
   m_blink: {fileID: 2100000, guid: f65ddb182dafe1a4ca9f6c013ddb01d6, type: 2}

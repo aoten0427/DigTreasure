@@ -24,5 +24,5 @@ EditorBuildSettings:
     path: Assets/Amber/Result/TestResult.unity
     guid: aedc011aeb29c8c4c9ce7625fc4391ca
   m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 6d4a7c067a0ebd043a738bf3fe01daea, type: 3}
   m_UseUCBPForAssetBundles: 0

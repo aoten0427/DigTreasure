@@ -16,6 +16,8 @@ namespace VoxelWorld
         public float AttackPower { get; private set; }
         //エフェクトが出る方向(zeroの場合全方向)
         public UnityEngine.Vector3 EffectDirection { get; private set; }
+        //即時更新するか（true: コライダー即座更新、false: 非同期更新）
+        public bool Immediate { get; private set; }
         //完了時コールバック（破壊数付き）
         public Action<int> OnCompleteWithCount { get; private set; }
 
@@ -26,12 +28,15 @@ namespace VoxelWorld
         /// </summary>
         /// <param name="shape">破壊形状</param>
         /// <param name="attackPower">攻撃力</param>
+        /// <param name="direction">エフェクト方向</param>
+        /// <param name="immediate">即時更新するか</param>
         /// <param name="onCompleteWithCount">完了時コールバック（破壊数を受け取る）</param>
-        public DestructionRequest(IDestructionShape shape, float attackPower, UnityEngine.Vector3 direction, Action<int> onCompleteWithCount)
+        public DestructionRequest(IDestructionShape shape, float attackPower, UnityEngine.Vector3 direction, bool immediate, Action<int> onCompleteWithCount)
         {
             Shape = shape ?? throw new ArgumentNullException(nameof(shape));
             AttackPower = Math.Max(0, attackPower);
             EffectDirection = direction;
+            Immediate = immediate;
             OnCompleteWithCount = onCompleteWithCount;
         }
     }

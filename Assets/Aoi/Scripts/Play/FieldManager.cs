@@ -114,7 +114,7 @@ public class FieldManager : NetworkBehaviour,IPlayInitialize
 
         // SetVoxelsで一括適用
         bool isComplete = false;
-        m_worldManager.Voxels.SetVoxels(voxelUpdates, false, progressProperty, _ => isComplete = true);
+        m_worldManager.Voxels.SetVoxels(voxelUpdates, isSender: false, immediate: false, progressProperty, _ => isComplete = true);
 
         while (!isComplete)
         {
