@@ -286,6 +286,7 @@ MonoBehaviour:
   _barrierBtnHoldDuration: 0.3
   _barrierModel: {fileID: 7605035648507674005}
   _ImmunityDuration: 9
+  _damageAnimPrefab: {fileID: 8105757020391104585, guid: a155c090b79c7a04594b9478f49de202, type: 3}
 --- !u!114 &3535405035700938168
 MonoBehaviour:
   m_ObjectHideFlags: 0
