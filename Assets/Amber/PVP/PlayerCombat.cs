@@ -28,7 +28,6 @@ public class PlayerCombat : NetworkBehaviour
     public static event System.Action OnPlayerStunStart;
     public static event System.Action OnPlayerStunEnd;
 
-
     //宝落とす
     [Header("宝落とす")]
     [SerializeField][Range(0, 1)] private float _treasureLostPercent;
@@ -57,6 +56,12 @@ public class PlayerCombat : NetworkBehaviour
     [SerializeField] private float _ImmunityDuration;
     [Networked] private NetworkBool _immune { get; set; } = false;
 
+    //ダメージエフェクト
+    [Header("ダメージエフェクト")]
+    [SerializeField] private DamageAnim _damageAnimPrefab;
+    private CapsuleCollider _collider;
+    private Vector3 _playerCenter => transform.TransformPoint(_collider.center);
+
     //他
     private PlayerCombat _attackTarget = null;
     private PlayerProto _playerProto;
@@ -65,12 +70,13 @@ public class PlayerCombat : NetworkBehaviour
     private bool _canAttack = true;
 
     public event Action OnPlayerAttack;
-    public event Action<PlayerCombat,PlayerCombat> OnPlayerDamage;
+    public event Action<PlayerCombat, PlayerCombat> OnPlayerDamage;
 
     private void Awake()
     {
         _treasureList = Resources.Load<TreasureList>("Treasure/TreasureList");
         _barrierModel.transform.localScale *= _barrierRadius;
+        _collider = GetComponent<CapsuleCollider>();
     }
     private void OnEnable()
     {
@@ -139,13 +145,13 @@ public class PlayerCombat : NetworkBehaviour
             else if (!_barrierBtnWaiting && _barrierCoroutine != null)
                 StartBarrier();
         }
-      
+
 
         HandleRotation();
     }
     private void LockOn(bool ispush)
     {
-        if(!_canLockOn||!ispush) return;
+        if (!_canLockOn || !ispush) return;
 
         //距離が優先、次は角
         Collider[] nearPlayers = Physics.OverlapSphere(transform.position, _lockOnRange + _barrierRadius);
@@ -191,7 +197,7 @@ public class PlayerCombat : NetworkBehaviour
         return _lockTarget != null;
 
     }
-    private void UntargetDamagedPlayer(PlayerCombat damaged,PlayerCombat attacker)
+    private void UntargetDamagedPlayer(PlayerCombat damaged, PlayerCombat attacker)
     {
         if (_lockTarget && _lockTarget == damaged)
             ChangeLockTarget(null);
@@ -223,9 +229,10 @@ public class PlayerCombat : NetworkBehaviour
             attacker.RpcBarrierEffect(this);
             return;
         }
-        OnPlayerDamage?.Invoke(this,attacker);
+        OnPlayerDamage?.Invoke(this, attacker);
         LoseTreasure();
         StunPlayer();
+        DamageAnimation(attacker._playerCenter);
         Knockback((transform.position - attacker.transform.position).normalized);
         StartCoroutine(StartImmunity());
     }
@@ -273,6 +280,19 @@ public class PlayerCombat : NetworkBehaviour
     {
         _stunAnim.gameObject.SetActive(visible);
     }
+    private void DamageAnimation(Vector3 attackerCenter)
+    {
+        Debug.DrawLine(attackerCenter, _playerCenter);
+        Physics.Raycast(attackerCenter, (_playerCenter - attackerCenter).normalized, out RaycastHit hitInfo, float.MaxValue, LayerMask.GetMask("Player"));
+        Vector3 spawnPos = hitInfo.point;
+        Vector3 spawnDir = (_playerCenter - Camera.main.transform.position).normalized;
+        RpcSpawnDamageAnim(spawnPos, Quaternion.LookRotation(spawnDir), this);
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RpcSpawnDamageAnim(Vector3 spawnPos, Quaternion spawnDir, PlayerCombat spawnParent)
+    {
+        Instantiate(_damageAnimPrefab, spawnPos, spawnDir, spawnParent.transform);
+    }
     private IEnumerator StartImmunity()
     {
         _immune = true;
@@ -313,18 +333,18 @@ public class PlayerCombat : NetworkBehaviour
         //アニメーション後に _isAttacking オフにする
         _isAttacking = false;
 
-        if(!_attackTarget._immune)
+        if (!_attackTarget._immune)
         {
             _attackTarget.RpcTakeDamage(this);
         }
-        
+
 
         return true;
     }
 
     private void Barrier(bool ispush)
     {
-        if(ispush)
+        if (ispush)
         {
             _barrierPressed = true;
         }
