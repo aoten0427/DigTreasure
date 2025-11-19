@@ -1,32 +1,32 @@
-using DG.Tweening;
+ï»¿using DG.Tweening;
 using UnityEngine;
 
 namespace Mukouyama
 {
     public class UI_Move_TEST : MonoBehaviour
     {
-        /**/// ŠeƒvƒŒƒCƒ„[‚ÌUI
+        /**/// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®UI
         [SerializeField] private Canvas m_P1_Canvas;
         [SerializeField] private Canvas m_P2_Canvas;
         [SerializeField] private Canvas m_P3_Canvas;
         [SerializeField] private Canvas m_P4_Canvas;
 
-        /**/// ŠeƒvƒŒƒCƒ„[‚ÌUI‚Ì‹““®ƒXƒe[ƒg
+        /**/// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®UIã®æŒ™å‹•ã‚¹ãƒ†ãƒ¼ãƒˆ
         public enum UI_MOVE_TYPE
         {
-            MOVING,     // ˆÚ“®’†
-            STANDBY,    // ‘Ò‹@’†
+            MOVING,     // ç§»å‹•ä¸­
+            STANDBY,    // å¾…æ©Ÿä¸­
         }
 
-        /**/// ƒvƒŒƒCƒ„[‚Ìî•ñƒNƒ‰ƒX
+        /**/// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æƒ…å ±ã‚¯ãƒ©ã‚¹
         public class UI_Info
         {
-            public int UI_ID;                   // UI‚ÌID
-            public int UI_VariablePosition;     // UI‚ÌŒ»İ’n
-            public RectTransform UI_Position;   // UI‚ÌÀ•W
-            public UI_MOVE_TYPE UI_MoveType;    // UI‚Ì‹““®ƒXƒe[ƒg
+            public int UI_ID;                   // UIã®ID
+            public int UI_VariablePosition;     // UIã®ç¾åœ¨åœ°
+            public RectTransform UI_Position;   // UIã®åº§æ¨™
+            public UI_MOVE_TYPE UI_MoveType;    // UIã®æŒ™å‹•ã‚¹ãƒ†ãƒ¼ãƒˆ
 
-            // ƒvƒŒƒCƒ„[‚Ìî•ñİ’è
+            // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æƒ…å ±è¨­å®š
             public UI_Info(
                 int _UI_ID,
                 int _UI_VariablePosition,
@@ -39,7 +39,7 @@ namespace Mukouyama
                 UI_MoveType = _UI_MoveType;
             }
         }
-        /**/// UIî•ñ”z—ñ‚Ì—Œ`
+        /**/// UIæƒ…å ±é…åˆ—ã®é››å½¢
         public UI_Info[] m_UI_InfoArray = new UI_Info[]{
         new(1, 1,null, UI_MOVE_TYPE.STANDBY),
         new(2, 2,null, UI_MOVE_TYPE.STANDBY),
@@ -47,16 +47,16 @@ namespace Mukouyama
         new(4, 4,null, UI_MOVE_TYPE.STANDBY)
     };
 
-        /**/// ƒvƒŒƒCƒ„[UI‚ª‡ˆÊ‚É‚æ‚Á‚Äƒ\[ƒg‚³‚ê‚Ä‚¢‚é‚©Šm”F‚·‚éƒtƒ‰ƒO
+        /**/// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼UIãŒé †ä½ã«ã‚ˆã£ã¦ã‚½ãƒ¼ãƒˆã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã™ã‚‹ãƒ•ãƒ©ã‚°
         private bool m_RankSortedFlag = true;
 
-        /**/// Še‡ˆÊ‚ÌÀ•W
+        /**/// å„é †ä½ã®åº§æ¨™
         static Vector3 m_Pos_1stPlace = new(820, -140, 0);
         static Vector3 m_Pos_2ndPlace = new(820, -250, 0);
         static Vector3 m_Pos_3rdPlace = new(820, -360, 0);
         static Vector3 m_Pos_4thPlace = new(820, -470, 0);
 
-        /**/// Še‡ˆÊ‚És‚­Û‚Ì’†ŠÔ’n“_
+        /**/// å„é †ä½ã«è¡Œãéš›ã®ä¸­é–“åœ°ç‚¹
         static Vector3 m_Pos_CheckPoint_2to1 = new(870, -195, 0);
         static Vector3 m_Pos_CheckPoint_3to1 = new(890, -250, 0);
         static Vector3 m_Pos_CheckPoint_3to2 = new(870, -305, 0);
@@ -64,7 +64,7 @@ namespace Mukouyama
         static Vector3 m_Pos_CheckPoint_4to2 = new(890, -360, 0);
         static Vector3 m_Pos_CheckPoint_4to3 = new(870, -415, 0);
 
-        /**/// ‡ˆÊ‚ªã‚ª‚éê‡‚Ì’†Œp’n“_‚ğ‚Ü‚Æ‚ß‚½”z—ñ
+        /**/// é †ä½ãŒä¸ŠãŒã‚‹å ´åˆã®ä¸­ç¶™åœ°ç‚¹ã‚’ã¾ã¨ã‚ãŸé…åˆ—
             // 2 > 1
         Vector3[] m_Array_Route_2to1 = new[] {
             m_Pos_2ndPlace,
@@ -102,27 +102,27 @@ namespace Mukouyama
             m_Pos_1stPlace
         };
 
-        /**/// UI‚ª–Ú“I’n‚É“’…‚·‚é‚Ü‚Å‚É‚©‚©‚éŠÔ
+        /**/// UIãŒç›®çš„åœ°ã«åˆ°ç€ã™ã‚‹ã¾ã§ã«ã‹ã‹ã‚‹æ™‚é–“
         [SerializeField] float m_arrivalTime;
 
         /*********************************
         * 
-        * ƒvƒƒOƒ‰ƒ€ŠJnˆ—
+        * ãƒ—ãƒ­ã‚°ãƒ©ãƒ é–‹å§‹æ™‚å‡¦ç†
         *
         **********************************/
         private void Start()
         {
-            // UIî•ñ‚Ì‰Šú‰»
+            // UIæƒ…å ±ã®åˆæœŸåŒ–
             Initialize_UI_InfoArray();
         }
 
         /*********************************
         * 
-        * UIî•ñİ’èA•ÏXˆ—
+        * UIæƒ…å ±è¨­å®šã€å¤‰æ›´å‡¦ç†
         *
         **********************************/
 
-        /**/// ŠeUI‚Ìî•ñ‚ğ‰Šú‰»‚·‚é     
+        /**/// å„UIã®æƒ…å ±ã‚’åˆæœŸåŒ–ã™ã‚‹     
         public void Initialize_UI_InfoArray()
         {
             m_UI_InfoArray = new UI_Info[]{
@@ -139,41 +139,41 @@ namespace Mukouyama
 
         /*********************************
         * 
-        * ‘S‘ÌXVˆ—
+        * å…¨ä½“æ›´æ–°å‡¦ç†
         *
         **********************************/
         private void Update()
         {
-            // ‡ˆÊ•ÏXˆ—(ƒvƒŒƒCƒ„[‚Ì‡ˆÊ‚É‚æ‚Á‚ÄUI‚ğˆÚ“®‚³‚¹‚éˆ—)
+            // é †ä½å¤‰æ›´å‡¦ç†(ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®é †ä½ã«ã‚ˆã£ã¦UIã‚’ç§»å‹•ã•ã›ã‚‹å‡¦ç†)
             MoveRank(m_UI_InfoArray, PlayersData.instance.m_PlayerInfoArray);
         }
 
         /**********************************
         * 
-        * ‡ˆÊ‚É‚æ‚Á‚ÄUI‚ğˆÚ“®‚³‚¹‚éˆ—
+        * é †ä½ã«ã‚ˆã£ã¦UIã‚’ç§»å‹•ã•ã›ã‚‹å‡¦ç†
         *
         **********************************/
 
-        /**/// ŠeƒvƒŒƒCƒ„[‚Ì‡ˆÊ‚ÌˆÚ“®
+        /**/// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®é †ä½ã®ç§»å‹•
         private void MoveRank(UI_Info[] UI_Data_Array, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            // UI‚ÌUI‚ÌŒ»İ’n‚ª‡ˆÊ’Ê‚è‚É®—ñ‚µ‚Ä‚¢‚é‚©‚ğƒ`ƒFƒbƒN
+            // UIã®UIã®ç¾åœ¨åœ°ãŒé †ä½é€šã‚Šã«æ•´åˆ—ã—ã¦ã„ã‚‹ã‹ã‚’ãƒã‚§ãƒƒã‚¯
             if (CheckRankSorted(UI_Data_Array, PlayersDataArray) == true) return;
 
-            // ƒqƒGƒ‰ƒ‹ƒL[‚Ì‡˜‚ğ•ÏX
+            // ãƒ’ã‚¨ãƒ©ãƒ«ã‚­ãƒ¼ã®é †åºã‚’å¤‰æ›´
             UpdateUI_LayerPlace(PlayersDataArray);
 
-            // UI‚ğ“®‚©‚·
+            // UIã‚’å‹•ã‹ã™
             MovePlayerRankUI(UI_Data_Array, PlayersDataArray);
         }
 
         /*********************************
         * 
-        * ‡ˆÊ•ÏXˆ—(”’lî•ñ‚Ì‚İ)
+        * é †ä½å¤‰æ›´å‡¦ç†(æ•°å€¤æƒ…å ±ã®ã¿)
         *
         **********************************/
 
-        /**/// UI‚ÌŒ»İ’n‚ª‡ˆÊ’Ê‚è‚É®—ñ‚µ‚Ä‚¢‚é‚©‚ğƒ`ƒFƒbƒN
+        /**/// UIã®ç¾åœ¨åœ°ãŒé †ä½é€šã‚Šã«æ•´åˆ—ã—ã¦ã„ã‚‹ã‹ã‚’ãƒã‚§ãƒƒã‚¯
         private bool CheckRankSorted(UI_Info[] UI_Data_Array, PlayersData.PlayerInfo[] PlayersDataArray)
         {
             m_RankSortedFlag = true;
@@ -194,16 +194,16 @@ namespace Mukouyama
 
         /*********************************
         * 
-        * UIˆÚ“®ŠÖ”
+        * UIç§»å‹•é–¢æ•°
         *
         **********************************/
 
-        /**/// ŠeUI‚ÌƒqƒGƒ‰ƒ‹ƒL[‚ğXV
+        /**/// å„UIã®ãƒ’ã‚¨ãƒ©ãƒ«ã‚­ãƒ¼ã‚’æ›´æ–°
         private void UpdateUI_LayerPlace(PlayersData.PlayerInfo[] PlayerDataArray)
         {
             for (int i = 0; i < 4; i++)
             {
-                // ƒvƒŒƒCƒ„[ID‚ğ‚à‚Æ‚ÉAƒvƒŒƒCƒ„[‚ÌUI‚Ì•\¦‡‚ğ•ÏX
+                // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼IDã‚’ã‚‚ã¨ã«ã€ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®UIã®è¡¨ç¤ºé †ã‚’å¤‰æ›´
                 switch (PlayerDataArray[i].Player_ID)
                 {
                     case 1:
@@ -225,71 +225,71 @@ namespace Mukouyama
             }
         }
 
-        /**/// ŠeƒvƒŒƒCƒ„[UI‚ğ“®‚©‚·
+        /**/// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼UIã‚’å‹•ã‹ã™
         private void MovePlayerRankUI(UI_Info[] UI_DataArray, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            // ŠeƒvƒŒƒCƒ„[UI‚Ìó‘Ô‚ğƒ`ƒFƒbƒN‚µA“®‚©‚¹‚éğŒ‚É‡‚Á‚Ä‚¢‚ê‚Î“®‚©‚·
+            // å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼UIã®çŠ¶æ…‹ã‚’ãƒã‚§ãƒƒã‚¯ã—ã€å‹•ã‹ã›ã‚‹æ¡ä»¶ã«åˆã£ã¦ã„ã‚Œã°å‹•ã‹ã™
             for (int i = 0; i < 4; i++) { CheckPlayerRankAndMove(UI_DataArray[i], PlayersDataArray); }
         }
 
-        /**/// UI‚Ìó‘Ô‚ğƒ`ƒFƒbƒN‚µA“®‚©‚¹‚éğŒ‚É‡‚Á‚Ä‚¢‚ê‚Î“®‚©‚·
+        /**/// UIã®çŠ¶æ…‹ã‚’ãƒã‚§ãƒƒã‚¯ã—ã€å‹•ã‹ã›ã‚‹æ¡ä»¶ã«åˆã£ã¦ã„ã‚Œã°å‹•ã‹ã™
         private void CheckPlayerRankAndMove(UI_Info UI, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            // UI‚ªˆÚ“®’†‚È‚çŠÖ”ˆ—I—¹
+            // UIãŒç§»å‹•ä¸­ãªã‚‰é–¢æ•°å‡¦ç†çµ‚äº†
             if (CheckUI_Moving(UI)) return;
 
-            // UI‚ğ“®‚©‚·
+            // UIã‚’å‹•ã‹ã™
             MoveUI(UI, PlayersDataArray);
         }
 
-        /**/// UI‚ªˆÚ“®’†‚©‚ğ”»’è‚·‚é
+        /**/// UIãŒç§»å‹•ä¸­ã‹ã‚’åˆ¤å®šã™ã‚‹
         private bool CheckUI_Moving(UI_Info UI)
         {
-            // •Ô‚è’l—pƒtƒ‰ƒO
+            // è¿”ã‚Šå€¤ç”¨ãƒ•ãƒ©ã‚°
             bool checkFlag = false;
 
-            // ˆÚ“®’†‚©ƒ`ƒFƒbƒN‚µAˆÚ“®’†‚È‚çtrue‚É‚·‚é
+            // ç§»å‹•ä¸­ã‹ãƒã‚§ãƒƒã‚¯ã—ã€ç§»å‹•ä¸­ãªã‚‰trueã«ã™ã‚‹
             if (UI.UI_MoveType == UI_MOVE_TYPE.MOVING) checkFlag = true;
 
-            // ƒtƒ‰ƒO‚ğ•Ô‚·
+            // ãƒ•ãƒ©ã‚°ã‚’è¿”ã™
             return checkFlag;
         }
 
-        /**/// UI‚ğ“®‚©‚·
+        /**/// UIã‚’å‹•ã‹ã™
         private void MoveUI(UI_Info UI, PlayersData.PlayerInfo[] PlayersDataArray)
         {
-            //‚ß‚àFƒvƒŒƒCƒ„[ƒf[ƒ^QÆ
+            //ã‚ã‚‚ï¼šãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãƒ‡ãƒ¼ã‚¿å‚ç…§
             int rankUPorDOWN = 0;
 
             for (int i = 0; i < 4; i++)
             {
-                // ID‚ªˆê’v‚µ‚Ä‚¢‚é‚©‚ğƒ`ƒFƒbƒN
+                // IDãŒä¸€è‡´ã—ã¦ã„ã‚‹ã‹ã‚’ãƒã‚§ãƒƒã‚¯
                 if (UI.UI_ID != PlayersDataArray[i].Player_ID) continue;
 
-                // Œ»İ‡ˆÊ‚ÆUI‚ÌˆÊ’u‚Ì·‚ğƒ`ƒFƒbƒN
+                // ç¾åœ¨é †ä½ã¨UIã®ä½ç½®ã®å·®ã‚’ãƒã‚§ãƒƒã‚¯
                 rankUPorDOWN = UI.UI_VariablePosition - PlayersDataArray[i].Player_CurrentPlace;
 
-                // UI‚ªŒ»İ‡ˆÊ‚æ‚è‰º‚ÌˆÊ’u‚É‚ ‚é
+                // UIãŒç¾åœ¨é †ä½ã‚ˆã‚Šä¸‹ã®ä½ç½®ã«ã‚ã‚‹æ™‚
                 if (rankUPorDOWN > 0)
                 {
-                    // ˆÚ“®‘O‚Ì‡ˆÊ‚É‡‚í‚¹‚ÄˆÚ“®‚Ìd•û‚ğ•ÏX
+                    // ç§»å‹•å‰ã®é †ä½ã«åˆã‚ã›ã¦ç§»å‹•ã®ä»•æ–¹ã‚’å¤‰æ›´
                     switch (UI.UI_VariablePosition)
                     {
                         case 2:
-                            // UI‚ÌˆÊ’u‚ª‚QˆÊ‚ÌÀ•W‚Ìê‡
-                            // ‚QˆÊ‚©‚ç‚PˆÊ‚ÖˆÚ“®
+                            // UIã®ä½ç½®ãŒï¼’ä½ã®åº§æ¨™ã®å ´åˆ
+                            // ï¼’ä½ã‹ã‚‰ï¼‘ä½ã¸ç§»å‹•
                             MoveUpward(UI, m_Array_Route_2to1, 1);
                             break;
                         case 3:
-                            // UI‚ÌˆÊ’u‚ª‚RˆÊ‚ÌÀ•W‚Ìê‡
+                            // UIã®ä½ç½®ãŒï¼“ä½ã®åº§æ¨™ã®å ´åˆ
                             switch (PlayersDataArray[i].Player_CurrentPlace)
                             {
                                 case 1:
-                                    // ‚RˆÊ‚©‚ç‚PˆÊ‚ÖˆÚ“®
+                                    // ï¼“ä½ã‹ã‚‰ï¼‘ä½ã¸ç§»å‹•
                                     MoveUpward(UI, m_Array_Route_3to1, 1);
                                     break;
                                 case 2:
-                                    // ‚RˆÊ‚©‚ç‚QˆÊ‚ÖˆÚ“®
+                                    // ï¼“ä½ã‹ã‚‰ï¼’ä½ã¸ç§»å‹•
                                     MoveUpward(UI, m_Array_Route_3to2, 2);
                                     break;
                                 default:
@@ -298,20 +298,20 @@ namespace Mukouyama
                             }
                             break;
                         case 4:
-                            // UI‚ÌˆÊ’u‚ª‚SˆÊ‚ÌÀ•W‚Ìê‡
-                            // ƒvƒŒƒCƒ„[‚Ì‡ˆÊ‚ğŠm”F‚µ‚Ä
+                            // UIã®ä½ç½®ãŒï¼”ä½ã®åº§æ¨™ã®å ´åˆ
+                            // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®é †ä½ã‚’ç¢ºèªã—ã¦
                             switch (PlayersDataArray[i].Player_CurrentPlace)
                             {
                                 case 1:
-                                    // ‚SˆÊ‚©‚ç‚PˆÊ‚ÖˆÚ“®
+                                    // ï¼”ä½ã‹ã‚‰ï¼‘ä½ã¸ç§»å‹•
                                     MoveUpward(UI, m_Array_Route_4to1, 1);
                                     break;
                                 case 2:
-                                    // ‚SˆÊ‚©‚ç‚QˆÊ‚ÖˆÚ“®
+                                    // ï¼”ä½ã‹ã‚‰ï¼’ä½ã¸ç§»å‹•
                                     MoveUpward(UI, m_Array_Route_4to2, 2);
                                     break;
                                 case 3:
-                                    // ‚SˆÊ‚©‚ç‚RˆÊ‚ÖˆÚ“®
+                                    // ï¼”ä½ã‹ã‚‰ï¼“ä½ã¸ç§»å‹•
                                     MoveUpward(UI, m_Array_Route_4to3, 3);
                                     break;
                                 default:
@@ -324,22 +324,22 @@ namespace Mukouyama
                             break;
                     }
                 }
-                // UI‚ªŒ»İ‡ˆÊ‚æ‚èã‚ÌˆÊ’u‚É‚ ‚é
+                // UIãŒç¾åœ¨é †ä½ã‚ˆã‚Šä¸Šã®ä½ç½®ã«ã‚ã‚‹æ™‚
                 else if (rankUPorDOWN < 0)
                 {
-                    // ˆÚ“®‘O‚Ì‡ˆÊ‚É‡‚í‚¹‚ÄˆÚ“®‚Ìd•û‚ğ•ÏX
+                    // ç§»å‹•å‰ã®é †ä½ã«åˆã‚ã›ã¦ç§»å‹•ã®ä»•æ–¹ã‚’å¤‰æ›´
                     switch (UI.UI_VariablePosition)
                     {
                         case 1:
-                            // ‚PˆÊ‚©‚ç‚QˆÊ‚ÖˆÚ“®
+                            // ï¼‘ä½ã‹ã‚‰ï¼’ä½ã¸ç§»å‹•
                             MoveDownward(UI, m_Pos_2ndPlace, 2);
                             break;
                         case 2:
-                            // ‚QˆÊ‚©‚ç‚RˆÊ‚ÖˆÚ“®
+                            // ï¼’ä½ã‹ã‚‰ï¼“ä½ã¸ç§»å‹•
                             MoveDownward(UI, m_Pos_3rdPlace, 3);
                             break;
                         case 3:
-                            // ‚RˆÊ‚©‚ç‚SˆÊ‚ÖˆÚ“®
+                            // ï¼“ä½ã‹ã‚‰ï¼”ä½ã¸ç§»å‹•
                             MoveDownward(UI, m_Pos_4thPlace, 4);
                             break;
                         default:
@@ -349,68 +349,68 @@ namespace Mukouyama
                 }
                 else
                 {
-                    // ‡ˆÊ•Ï“®‚µ‚Ä‚¢‚È‚¢‚Ì‚ÅAˆ—I—¹
+                    // é †ä½å¤‰å‹•ã—ã¦ã„ãªã„ã®ã§ã€å‡¦ç†çµ‚äº†
                     return;
                 }
                 break;
             }
         }
 
-        /**/// ‡ˆÊ‚ªã‚ª‚éê‡
+        /**/// é †ä½ãŒä¸ŠãŒã‚‹å ´åˆ
         private void MoveUpward(UI_Info UI, Vector3[] ArrivalPath, int ArrivalPos)
         {
-            // ˆÚ“®’n“_‚ğ‹È‚ª‚è‚È‚ª‚çˆÚ“®
+            // ç§»å‹•åœ°ç‚¹ã‚’æ›²ãŒã‚ŠãªãŒã‚‰ç§»å‹•
             UI.UI_Position.transform.DOLocalPath(ArrivalPath, m_arrivalTime, PathType.CatmullRom)
             .OnComplete(() =>
             {
-                // Š®—¹‚ÉŒÄ‚Î‚ê‚é
+                // å®Œäº†æ™‚ã«å‘¼ã°ã‚Œã‚‹
                 UpdateArrivalUIParam(UI, ArrivalPos);
             });
 
-            // UI‚Ìƒpƒ‰ƒ[ƒ^‚ğXV
+            // UIã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’æ›´æ–°
             UpdateMovingUI_Param(UI);
         }
 
-        // DoTween‚ÅŠe‡ˆÊ‚ÌÀ•W‚Ö“®‚©‚·
-        /**/// ‡ˆÊ‚ª‰º‚ª‚éê‡
+        // DoTweenã§å„é †ä½ã®åº§æ¨™ã¸å‹•ã‹ã™
+        /**/// é †ä½ãŒä¸‹ãŒã‚‹å ´åˆ
         private void MoveDownward(UI_Info UI, Vector3 ArrivalPath, int ArrivalPos)
         {
-            // ‰º‚ÉˆÚ“®
+            // ä¸‹ã«ç§»å‹•
             UI.UI_Position.transform.DOLocalMove(ArrivalPath, m_arrivalTime)
             .OnComplete(() =>
             {
-                // Š®—¹‚ÉŒÄ‚Î‚ê‚é
+                // å®Œäº†æ™‚ã«å‘¼ã°ã‚Œã‚‹
                 UpdateArrivalUIParam(UI, ArrivalPos);
             });
 
-            // UI‚Ìƒpƒ‰ƒ[ƒ^‚ğXV
+            // UIã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’æ›´æ–°
             UpdateMovingUI_Param(UI);
         }
 
-        /**/// ˆÚ“®‚³‚¹‚éUI‚Ì–Ú“I’nA‹““®ƒXƒe[ƒg‚ğXV
+        /**/// ç§»å‹•ã•ã›ã‚‹UIã®ç›®çš„åœ°ã€æŒ™å‹•ã‚¹ãƒ†ãƒ¼ãƒˆã‚’æ›´æ–°
         private void UpdateMovingUI_Param(UI_Info UI)
         {
-            // ˆÚ“®’†ƒXƒe[ƒg‚É•ÏX
+            // ç§»å‹•ä¸­ã‚¹ãƒ†ãƒ¼ãƒˆã«å¤‰æ›´
             UI.UI_MoveType = UI_MOVE_TYPE.MOVING;
         }
 
-        /**/// UI‚ª“’…‚µ‚½ê‡‚Éƒpƒ‰ƒ[ƒ^‚ğ•ÏX‚³‚¹‚é
+        /**/// UIãŒåˆ°ç€ã—ãŸå ´åˆã«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’å¤‰æ›´ã•ã›ã‚‹
         private void UpdateArrivalUIParam(UI_Info UI, int ArrivalPos)
         {
-            // Œ»İˆÊ’u‚ğ–Ú“I’n‚Ì‡ˆÊ‚É•ÏX
+            // ç¾åœ¨ä½ç½®ã‚’ç›®çš„åœ°ã®é †ä½ã«å¤‰æ›´
             UI.UI_VariablePosition = ArrivalPos;
 
-            // ‘Ò‹@’†ƒXƒe[ƒg‚É•ÏX
+            // å¾…æ©Ÿä¸­ã‚¹ãƒ†ãƒ¼ãƒˆã«å¤‰æ›´
             UI.UI_MoveType = UI_MOVE_TYPE.STANDBY;
         }
 
         /*********************************
         * 
-        * ƒfƒoƒbƒO—pŠÖ”
+        * ãƒ‡ãƒãƒƒã‚°ç”¨é–¢æ•°
         *
         **********************************/
 
-        /**/// ŠeUI‚ÌŒ»İ‚Ìƒpƒ‰ƒ[ƒ^‚ğƒ`ƒFƒbƒN(ƒfƒoƒbƒO•\¦)
+        /**/// å„UIã®ç¾åœ¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’ãƒã‚§ãƒƒã‚¯(ãƒ‡ãƒãƒƒã‚°è¡¨ç¤º)
         private void CheckUI_Data()
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -418,21 +418,21 @@ namespace Mukouyama
                 for (int i = 0; i < 4; i++)
                 {
                     Debug.Log("\n" +
-                        "UI‚ÌŒ»İ’n :" + m_UI_InfoArray[i].UI_VariablePosition + "\n" +
-                        "UI‚ÌÀ•W :" + m_UI_InfoArray[i].UI_Position.localPosition + "\n" +
-                        "UI‚Ì‹““®ƒXƒe[ƒg :" + m_UI_InfoArray[i].UI_MoveType
+                        "UIã®ç¾åœ¨åœ° :" + m_UI_InfoArray[i].UI_VariablePosition + "\n" +
+                        "UIã®åº§æ¨™ :" + m_UI_InfoArray[i].UI_Position.localPosition + "\n" +
+                        "UIã®æŒ™å‹•ã‚¹ãƒ†ãƒ¼ãƒˆ :" + m_UI_InfoArray[i].UI_MoveType
                         );
                 }
             }
         }
 
-        /*// ƒQ[ƒ€‹­§I—¹
+        /*// ã‚²ãƒ¼ãƒ å¼·åˆ¶çµ‚äº†
         private void EndGame()
         {
     #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;//ƒQ[ƒ€ƒvƒŒƒCI—¹
+            UnityEditor.EditorApplication.isPlaying = false;//ã‚²ãƒ¼ãƒ ãƒ—ãƒ¬ã‚¤çµ‚äº†
     #else
-        Application.Quit();//ƒQ[ƒ€ƒvƒŒƒCI—¹
+        Application.Quit();//ã‚²ãƒ¼ãƒ ãƒ—ãƒ¬ã‚¤çµ‚äº†
     #endif
         }*/
     } 

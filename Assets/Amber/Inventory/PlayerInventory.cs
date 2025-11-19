@@ -11,6 +11,9 @@ public class PlayerInventory : NetworkBehaviour
     private TreasureList _treasureList;
     private List<Treasure> _pickupBlacklist = new();
 
+    //宝石の変更を通知(ポイント、宝石の数)
+    public event Action<int, int> OnUpdateTreasure;
+
     public override void Spawned()
     {
         base.Spawned();
@@ -28,10 +31,12 @@ public class PlayerInventory : NetworkBehaviour
     public void AddTreasure(TreasureSO type, int amt)
     {
         _treasures.Set(Key(type), _treasures[Key(type)] + amt);
+        PointCalculation();
     }
     public void RemoveTreasure(TreasureSO type, int amt)
     {
         _treasures.Set(Key(type), Math.Max(0, _treasures[Key(type)] - 1));
+        PointCalculation();
     }
     public bool HasTreasureOfType(TreasureSO type)
     {
@@ -94,5 +99,20 @@ public class PlayerInventory : NetworkBehaviour
             yield return null;
         if (_pickupBlacklist.Contains(treasure))
             _pickupBlacklist.Remove(treasure);
+    }
+
+    public void PointCalculation()
+    {
+        int score = 0;
+        int num = 0;
+        foreach(var trasure in _treasures)
+        {
+            int point = _treasureList.allTreasure[trasure.Key].point;
+            score += point * trasure.Value;
+            num += trasure.Value;
+        }
+        //Debug.Log($"ポイント{score}");
+        //更新を通知
+        OnUpdateTreasure?.Invoke(score, num);
     }
 }

@@ -65,6 +65,7 @@ public class PlayerProto : NetworkBehaviour
         }
 
         //入力処理削除
+        if (Object.HasStateAuthority)
         {
             var inputmanager = GameInputManager.Instance;
             inputmanager.Move -= Move;
@@ -97,6 +98,7 @@ public class PlayerProto : NetworkBehaviour
         }
 
         //入力処理初期化
+        if(Object.HasStateAuthority)
         {
             var inputmanager = GameInputManager.Instance;
             inputmanager.Move += Move;

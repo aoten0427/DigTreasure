@@ -8,15 +8,13 @@ using UnityEngine;
 public class ScorePresenter : MonoBehaviour,IPlayInitialize
 {
     NetWork.GameLauncher m_gameLauncher;
-    [SerializeField]Mukouyama.ScoreManager m_scoreManager;
+    [SerializeField]ScoreUIData m_scoreUIData;
 
     public InitializationPriority Priority => InitializationPriority.UI;
 
     public string Name => "ScorePresenter";
 
-    //スコア変更記録のためのデータ
-    Dictionary<PlayerRef, NetWork.NetworkUserData> m_oldDatas = new Dictionary<PlayerRef, NetworkUserData> ();
-
+    
     /// <summary>
     /// ユーザーネーム変更
     /// </summary>
@@ -24,7 +22,7 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
     /// <param name="name"></param>
     public void ChangeUserName(int id, string name)
     {
-        Mukouyama.PlayersData.instance.ChangePlayerName(id - 1, name);
+        
     }
 
     /// <summary>
@@ -34,7 +32,7 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
     /// <param name="socre"></param>
     public void AddSocre(int id,int socre)
     {
-        m_scoreManager.AddPlayerScore(id, socre);
+        
     }
 
     /// <summary>
@@ -48,12 +46,11 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
         m_gameLauncher = GameLauncher.Instance;
         
 
-        //ユーザーデータを取得して名前を反映
+        ////ユーザーデータを取得して名前を反映
         var userdatas = m_gameLauncher.GetAllUserData();
-        foreach(var userdata in userdatas)
+        foreach (var userdata in userdatas.Values)
         {
-            ChangeUserName(userdata.Value.m_id, userdata.Value.m_name.ToString());
-            m_oldDatas.Add(userdata.Key, userdata.Value);
+            m_scoreUIData.AddUser(userdata.m_id,userdata.m_name.ToString());
         }
 
         m_gameLauncher.AddOnUserDataChange(ChangeData);
@@ -67,17 +64,9 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
     /// <param name="userdatas"></param>
     private void ChangeData(IReadOnlyDictionary<PlayerRef, NetworkUserData> userdatas)
     {
-        foreach(var userdata in userdatas)
+         foreach(var userdata in userdatas.Values)
         {
-            if(m_oldDatas.ContainsKey(userdata.Key))
-            {
-                if (m_oldDatas[userdata.Key].m_treasurePoint == userdata.Value.m_treasurePoint) continue;
-                int addscore = userdata.Value.m_treasurePoint - m_oldDatas[userdata.Key].m_treasurePoint;
-                AddSocre(m_oldDatas[userdata.Key].m_id, addscore);
-
-                //データ更新
-                m_oldDatas[(userdata.Key)] = userdata.Value;
-            }
+            m_scoreUIData.UpdatePoint(userdata.m_id, userdata.m_treasurePoint);
         }
     }
 

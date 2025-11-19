@@ -1,32 +1,32 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 namespace Mukouyama
 {
     /*********************************
 * 
-* ƒvƒŒƒCƒ„[î•ñƒNƒ‰ƒX(‰¼)
+* ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æƒ…å ±ã‚¯ãƒ©ã‚¹(ä»®)
 *
 **********************************/
     public class PlayersData : MonoBehaviour
     {
-        // ƒCƒ“ƒXƒ^ƒ“ƒX‚Ì’è‹`
+        // ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®å®šç¾©
         public static PlayersData instance;
 
-        /**/// ƒvƒŒƒCƒ„[‚Ìî•ñƒNƒ‰ƒX
+        /**/// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æƒ…å ±ã‚¯ãƒ©ã‚¹
         public class PlayerInfo : IComparable
         {
 
-            public int Player_ID;               // ƒvƒŒƒCƒ„[ID
-            public string Player_Name;          // ƒvƒŒƒCƒ„[–¼
-            public int Player_BeforeScore;      // ƒvƒŒƒCƒ„[‚Ì•Ï“®‘OƒXƒRƒA
-            public int Player_VariableScore;    // ƒvƒŒƒCƒ„[‚Ì•Ï“®’†ƒXƒRƒA
-            public int Player_AfterScore;       // ƒvƒŒƒCƒ„[‚Ì•Ï“®ŒãƒXƒRƒA
-            public int Player_CurrentScore;     // ƒvƒŒƒCƒ„[‚ÌŒ»İŠl“¾ƒXƒRƒA
-            public bool Player_IsTweeningScore; // ƒvƒŒƒCƒ„[‚ÌƒXƒRƒA‚ª•Ï“®’†‚©
-            public int Player_CurrentPlace;     // ƒvƒŒƒCƒ„[‚ÌŒ»İ‡ˆÊ
+            public int Player_ID;               // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ID
+            public string Player_Name;          // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å
+            public int Player_BeforeScore;      // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¤‰å‹•å‰ã‚¹ã‚³ã‚¢
+            public int Player_VariableScore;    // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¤‰å‹•ä¸­ã‚¹ã‚³ã‚¢
+            public int Player_AfterScore;       // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¤‰å‹•å¾Œã‚¹ã‚³ã‚¢
+            public int Player_CurrentScore;     // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ç¾åœ¨ç²å¾—ã‚¹ã‚³ã‚¢
+            public bool Player_IsTweeningScore; // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ã‚¹ã‚³ã‚¢ãŒå¤‰å‹•ä¸­ã‹
+            public int Player_CurrentPlace;     // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ç¾åœ¨é †ä½
 
-            // ƒvƒŒƒCƒ„[‚Ìî•ñİ’è
+            // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æƒ…å ±è¨­å®š
             public PlayerInfo(
                 int _Player_ID,
                 string _Player_Name,
@@ -46,19 +46,19 @@ namespace Mukouyama
                 this.Player_CurrentPlace = _Player_CurrentPlace;
             }
 
-            // ƒvƒŒƒCƒ„[‚ÌƒXƒRƒA‚ğ”äŠr‚·‚éF‡ˆÊ‚Ìƒ\[ƒg—p
+            // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ã‚¹ã‚³ã‚¢ã‚’æ¯”è¼ƒã™ã‚‹ï¼šé †ä½ã®ã‚½ãƒ¼ãƒˆç”¨
             public int CompareTo(object obj)
             {
                 PlayerInfo i = obj as PlayerInfo;
                 return i.Player_CurrentScore.CompareTo(this.Player_CurrentScore);
             }
         }
-        /**/// ƒvƒŒƒCƒ„[î•ñ”z—ñ‚Ì—Œ`
+        /**/// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æƒ…å ±é…åˆ—ã®é››å½¢
         public PlayerInfo[] m_PlayerInfoArray = new PlayerInfo[]{
-        new(1,"ƒAƒAƒA", 0, 0, 0, 0, 1),
-        new(2,"ƒCƒCƒC", 0, 0, 0, 0, 2),
-        new(3,"ƒEƒEƒE", 0, 0, 0, 0, 3),
-        new(4,"ƒGƒGƒG", 0, 0, 0, 0, 4)
+        new(1,"ã‚¢ã‚¢ã‚¢", 0, 0, 0, 0, 1),
+        new(2,"ã‚¤ã‚¤ã‚¤", 0, 0, 0, 0, 2),
+        new(3,"ã‚¦ã‚¦ã‚¦", 0, 0, 0, 0, 3),
+        new(4,"ã‚¨ã‚¨ã‚¨", 0, 0, 0, 0, 4)
     };
 
         [SerializeField]
@@ -66,75 +66,75 @@ namespace Mukouyama
 
         /*********************************
         * 
-        * ƒvƒƒOƒ‰ƒ€ŠJnˆ—
+        * ãƒ—ãƒ­ã‚°ãƒ©ãƒ é–‹å§‹æ™‚å‡¦ç†
         *
         **********************************/
 
-        // ƒVƒ“ƒOƒ‹ƒgƒ“‰»‚·‚é
+        // ã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³åŒ–ã™ã‚‹
         private void Awake()
         {
             if (instance == null)
             {
-                // ©g‚ğƒCƒ“ƒXƒ^ƒ“ƒX‚Æ‚·‚é
+                // è‡ªèº«ã‚’ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã¨ã™ã‚‹
                 instance = this;
-                // ƒV[ƒ“‚ğ‚Ü‚½‚¢‚Å‚àÁ‹‚³‚ê‚È‚¢‚æ‚¤‚É‚·‚é
+                // ã‚·ãƒ¼ãƒ³ã‚’ã¾ãŸã„ã§ã‚‚æ¶ˆå»ã•ã‚Œãªã„ã‚ˆã†ã«ã™ã‚‹
                 //DontDestroyOnLoad(gameObject);
             }
             else
             {
-                // ƒCƒ“ƒXƒ^ƒ“ƒX‚ª•¡”‘¶İ‚µ‚È‚¢‚æ‚¤‚ÉAŠù‚É‘¶İ‚µ‚Ä‚¢‚½‚ç©g‚ğÁ‹‚·‚é
+                // ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãŒè¤‡æ•°å­˜åœ¨ã—ãªã„ã‚ˆã†ã«ã€æ—¢ã«å­˜åœ¨ã—ã¦ã„ãŸã‚‰è‡ªèº«ã‚’æ¶ˆå»ã™ã‚‹
                 Destroy(gameObject);
             }
         }
         private void Start()
         {
-            // ƒvƒŒƒCƒ„[î•ñ‚Ì‰Šú‰»
+            // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æƒ…å ±ã®åˆæœŸåŒ–
             InitializePleyerInfo();
         }
 
         /*********************************
         * 
-        * ‘S‘ÌXVˆ—
+        * å…¨ä½“æ›´æ–°å‡¦ç†
         *
         **********************************/
         private void Update()
         {
-            // ‡ˆÊ•ÏXˆ—(”’lî•ñ‚Ì‚İ)
+            // é †ä½å¤‰æ›´å‡¦ç†(æ•°å€¤æƒ…å ±ã®ã¿)
             UpdatePlace(m_PlayerInfoArray);
 
-            // ”’lŠm”F(ƒfƒoƒbƒO)
+            // æ•°å€¤ç¢ºèª(ãƒ‡ãƒãƒƒã‚°)
             CheckPlayerData();
         }
 
         /**********************************
         * 
-        * ‡ˆÊ•ÏXˆ—
+        * é †ä½å¤‰æ›´å‡¦ç†
         *
         **********************************/
 
-        /**/// ŠeƒvƒŒƒCƒ„[‚Ì‡ˆÊ‚ÌXV
+        /**/// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®é †ä½ã®æ›´æ–°
         private void UpdatePlace(PlayerInfo[] PlayerArray)
         {
-            // list‚ğƒ\[ƒg
+            // listã‚’ã‚½ãƒ¼ãƒˆ
             Array.Sort(PlayerArray);
-            // ƒ\[ƒgŒã‚Ì”z—ñ‚ğ‚à‚Æ‚ÉƒvƒŒƒCƒ„[‚Ì‡ˆÊ(ƒf[ƒ^ã)‚ğ•ÏX
+            // ã‚½ãƒ¼ãƒˆå¾Œã®é…åˆ—ã‚’ã‚‚ã¨ã«ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®é †ä½(ãƒ‡ãƒ¼ã‚¿ä¸Š)ã‚’å¤‰æ›´
             for (int i = 0; i < 4; i++) { PlayerArray[i].Player_CurrentPlace = i + 1; }
         }
 
         /*********************************
         * 
-        * ƒvƒŒƒCƒ„[î•ñİ’èA•ÏXˆ—
+        * ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æƒ…å ±è¨­å®šã€å¤‰æ›´å‡¦ç†
         *
         **********************************/
 
-        /**/// ŠeƒvƒŒƒCƒ„[‚Ìî•ñ‚ğ‰Šú‰»‚·‚é
+        /**/// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æƒ…å ±ã‚’åˆæœŸåŒ–ã™ã‚‹
         public void InitializePleyerInfo()
         {
             m_PlayerInfoArray = new PlayerInfo[]{
-                new(1,"ƒAƒAƒA",  0, 0, 0, 0, 1),
-                new(2,"ƒCƒCƒC",  0, 0, 0, 0, 2),
-                new(3,"ƒEƒEƒE",  0, 0, 0, 0, 3),
-                new(4,"ƒGƒGƒG",  0, 0, 0, 0, 4)
+                new(1,"ã‚¢ã‚¢ã‚¢",  0, 0, 0, 0, 1),
+                new(2,"ã‚¤ã‚¤ã‚¤",  0, 0, 0, 0, 2),
+                new(3,"ã‚¦ã‚¦ã‚¦",  0, 0, 0, 0, 3),
+                new(4,"ã‚¨ã‚¨ã‚¨",  0, 0, 0, 0, 4)
         };
             for (int i = 0; i < 4; i++)
             {
@@ -169,10 +169,10 @@ namespace Mukouyama
 
         /*********************************
         * 
-        * ƒfƒoƒbƒO—pŠÖ”
+        * ãƒ‡ãƒãƒƒã‚°ç”¨é–¢æ•°
         *
         **********************************/
-        /**/// ŠeƒvƒŒƒCƒ„[‚ÌŒ»İ‚Ìƒpƒ‰ƒ[ƒ^‚ğƒ`ƒFƒbƒN(ƒfƒoƒbƒO•\¦)
+        /**/// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ç¾åœ¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’ãƒã‚§ãƒƒã‚¯(ãƒ‡ãƒãƒƒã‚°è¡¨ç¤º)
         private void CheckPlayerData()
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -180,13 +180,13 @@ namespace Mukouyama
                 for (int i = 0; i < 4; i++)
                 {
                     Debug.Log("\n" +
-                        "ƒvƒŒƒCƒ„[ID :" + m_PlayerInfoArray[i].Player_ID + "\n" +
-                        "ƒvƒŒƒCƒ„[‚Ì•Ï“®‘OƒXƒRƒA" + m_PlayerInfoArray[i].Player_BeforeScore + "\n" +
-                        "ƒvƒŒƒCƒ„[‚Ì•Ï“®’†ƒXƒRƒA" + m_PlayerInfoArray[i].Player_VariableScore + "\n" +
-                        "ƒvƒŒƒCƒ„[‚Ì•Ï“®ŒãƒXƒRƒA" + m_PlayerInfoArray[i].Player_AfterScore + "\n" +
-                        "ƒvƒŒƒCƒ„[‚ÌŠl“¾ƒXƒRƒA :" + m_PlayerInfoArray[i].Player_CurrentScore + "\n" +
-                        "ƒvƒŒƒCƒ„[‚ÌƒXƒRƒA‚ª•Ï“®’†‚©" + m_PlayerInfoArray[i].Player_IsTweeningScore + "\n" +
-                        "ƒvƒŒƒCƒ„[‚ÌŒ»İ‡ˆÊ :" + m_PlayerInfoArray[i].Player_CurrentPlace + "ˆÊF"
+                        "ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ID :" + m_PlayerInfoArray[i].Player_ID + "\n" +
+                        "ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¤‰å‹•å‰ã‚¹ã‚³ã‚¢" + m_PlayerInfoArray[i].Player_BeforeScore + "\n" +
+                        "ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¤‰å‹•ä¸­ã‚¹ã‚³ã‚¢" + m_PlayerInfoArray[i].Player_VariableScore + "\n" +
+                        "ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¤‰å‹•å¾Œã‚¹ã‚³ã‚¢" + m_PlayerInfoArray[i].Player_AfterScore + "\n" +
+                        "ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ç²å¾—ã‚¹ã‚³ã‚¢ :" + m_PlayerInfoArray[i].Player_CurrentScore + "\n" +
+                        "ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ã‚¹ã‚³ã‚¢ãŒå¤‰å‹•ä¸­ã‹" + m_PlayerInfoArray[i].Player_IsTweeningScore + "\n" +
+                        "ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ç¾åœ¨é †ä½ :" + m_PlayerInfoArray[i].Player_CurrentPlace + "ä½ï¼š"
                         );
                 }
             }

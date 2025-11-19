@@ -84,6 +84,8 @@ public class PlayerCombat : NetworkBehaviour
         OnPlayerBarrierStart += DisableLockOn;
         OnPlayerBarrierEnd += EnableAttack;
         OnPlayerBarrierEnd += EnableLockOn;
+        OnPlayerStunStart += DisableAttack;
+        OnPlayerStunEnd += EnableAttack;
         OnPlayerDamage += UntargetDamagedPlayer;
     }
     private void OnDisable()
@@ -92,9 +94,12 @@ public class PlayerCombat : NetworkBehaviour
         OnPlayerBarrierStart -= DisableLockOn;
         OnPlayerBarrierEnd -= EnableAttack;
         OnPlayerBarrierEnd -= EnableLockOn;
+        OnPlayerStunStart -= DisableAttack;
+        OnPlayerStunEnd -= EnableAttack;
         OnPlayerDamage -= UntargetDamagedPlayer;
 
         //入力処理削除
+        if(Object.HasStateAuthority)
         {
             var inputmanager = GameInputManager.Instance;
             inputmanager.LookOn -= LockOn;
@@ -115,6 +120,7 @@ public class PlayerCombat : NetworkBehaviour
             RpcToggleBarrierModel(false);
 
             //入力処理初期化
+            if (Object.HasStateAuthority)
             {
                 var inputmanager = GameInputManager.Instance;
                 inputmanager.LookOn += LockOn;
@@ -288,10 +294,10 @@ public class PlayerCombat : NetworkBehaviour
         Vector3 spawnDir = (_playerCenter - Camera.main.transform.position).normalized;
         RpcSpawnDamageAnim(spawnPos, Quaternion.LookRotation(spawnDir), this);
     }
-    [Rpc(RpcSources.All, RpcTargets.All)]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RpcSpawnDamageAnim(Vector3 spawnPos, Quaternion spawnDir, PlayerCombat spawnParent)
     {
-        Instantiate(_damageAnimPrefab, spawnPos, spawnDir, spawnParent.transform);
+        Instantiate(_damageAnimPrefab, spawnPos, spawnDir);
     }
     private IEnumerator StartImmunity()
     {

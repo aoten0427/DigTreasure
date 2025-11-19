@@ -240,8 +240,9 @@ Shader "Universal Render Pipeline/Voxel/Standard"
             
             #pragma vertex ShadowPassVertex
             #pragma fragment ShadowPassFragment
-            
+
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             
             struct AttributesShadow
             {
@@ -254,9 +255,12 @@ Shader "Universal Render Pipeline/Voxel/Standard"
             struct VaryingsShadow
             {
                 float4 positionCS : SV_POSITION;
+                float4 voxelColor : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
+            
+            float3 _LightDirection; // シャドウキャスターパスで自動的に設定されるライト方向変数
             
             VaryingsShadow ShadowPassVertex(AttributesShadow input)
             {
@@ -265,13 +269,35 @@ Shader "Universal Render Pipeline/Voxel/Standard"
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 
+              
                 float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
-                output.positionCS = TransformWorldToHClip(positionWS);
+                
+              
+                float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+                
+              
+                output.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+                
+               
+                #if UNITY_REVERSED_Z
+                    output.positionCS.z = min(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+                #else
+                    output.positionCS.z = max(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+                #endif
+                
+              
+                output.voxelColor = input.color;
                 return output;
             }
             
             float4 ShadowPassFragment(VaryingsShadow input) : SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(input);
+                
+                #ifdef _ALPHATEST_ON
+                 
+                #endif
+
                 return 0;
             }
             ENDHLSL
