@@ -71,7 +71,7 @@ namespace VoxelWorld
             ReactiveProperty<float> progressProperty = null,
             Action<int> onComplete = null)
         {
-            EnablePerformanceLogging = true;
+            //EnablePerformanceLogging = true;
             Stopwatch totalStopwatch = null;
             if (EnablePerformanceLogging)
             {

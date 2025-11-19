@@ -24,7 +24,7 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
     /// <param name="name"></param>
     public void ChangeUserName(int id, string name)
     {
-        //Mukouyama.PlayersData.instance.ChangePlayerName(id - 1, name);
+        Mukouyama.PlayersData.instance.ChangePlayerName(id - 1, name);
     }
 
     /// <summary>

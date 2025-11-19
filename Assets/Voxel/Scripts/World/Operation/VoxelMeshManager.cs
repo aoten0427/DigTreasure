@@ -138,13 +138,13 @@ namespace VoxelWorld
             if (lastFrameMs > DYNAMIC_ADJUST_TARGET_MS * 1.5f) 
             {
                 int adjusted = Math.Max(DYNAMIC_ADJUST_MIN_CHUNKS, (int)(current * (1.0f - DYNAMIC_ADJUST_RATE)));
-                Debug.Log($"[Performance] Adjusting mesh rate: {current} -> {adjusted} chunks/frame (last frame: {lastFrameMs}ms)");
+                //Debug.Log($"[Performance] Adjusting mesh rate: {current} -> {adjusted} chunks/frame (last frame: {lastFrameMs}ms)");
                 return adjusted;
             }
             else if (lastFrameMs < DYNAMIC_ADJUST_TARGET_MS * 0.5f)
             {
                 int adjusted = Math.Min(DYNAMIC_ADJUST_MAX_CHUNKS, (int)(current * (1.0f + DYNAMIC_ADJUST_RATE)));
-                Debug.Log($"[Performance] Adjusting mesh rate: {current} -> {adjusted} chunks/frame (last frame: {lastFrameMs}ms)");
+                //Debug.Log($"[Performance] Adjusting mesh rate: {current} -> {adjusted} chunks/frame (last frame: {lastFrameMs}ms)");
                 return adjusted;
             }
             return current; 
@@ -233,7 +233,7 @@ namespace VoxelWorld
                 totalChunksProcessed += jobDataList.Count;
                 frameStopwatch.Stop();
                 long frameMs = frameStopwatch.ElapsedMilliseconds;
-                Debug.Log($"[Performance] MeshUpdateQueue Frame {frameCount}: {jobDataList.Count} chunks (rate: {dynamicMeshUpdatesPerFrame}) in {frameMs}ms (Queue remaining: {m_meshUpdateQueue.Count})");
+                //Debug.Log($"[Performance] MeshUpdateQueue Frame {frameCount}: {jobDataList.Count} chunks (rate: {dynamicMeshUpdatesPerFrame}) in {frameMs}ms (Queue remaining: {m_meshUpdateQueue.Count})");
 
                 // 動的調整
                 dynamicMeshUpdatesPerFrame = AdjustProcessingRate(dynamicMeshUpdatesPerFrame, frameMs);
@@ -242,7 +242,7 @@ namespace VoxelWorld
             }
 
             totalStopwatch.Stop();
-            Debug.Log($"[Performance] MeshUpdateQueue completed: {totalChunksProcessed} chunks in {totalStopwatch.ElapsedMilliseconds}ms ({frameCount} frames, avg {totalStopwatch.ElapsedMilliseconds / frameCount}ms/frame)");
+            //Debug.Log($"[Performance] MeshUpdateQueue completed: {totalChunksProcessed} chunks in {totalStopwatch.ElapsedMilliseconds}ms ({frameCount} frames, avg {totalStopwatch.ElapsedMilliseconds / frameCount}ms/frame)");
 
             m_isMeshUpdateRunning = false;
         }
