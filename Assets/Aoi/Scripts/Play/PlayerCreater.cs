@@ -18,6 +18,8 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
 {
     NetWork.GameLauncher m_gameLauncher;
     //ユーザーの生成場所データ
+    //[SerializeField]
+    
     [SerializeField]
     PlayerSpownData[] m_spownDatas = new PlayerSpownData[4];
     //生成場所の管理
@@ -28,6 +30,7 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
 
     //プレイヤープレハブ
     [SerializeField] private NetworkPrefabRef playerPrefab;
+    [SerializeField] private Mesh[] m_playerMeshs = new Mesh[4];
     [SerializeField] private GameObject m_camera;
     //生成優先度
     public InitializationPriority Priority => InitializationPriority.PlayerCreate;
@@ -106,8 +109,12 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
                 player.SetPlayManager(m_playManager);
                 networkObject.gameObject.name = Runner.LocalPlayer.ToString();
             }
-            
+
+            var playerview = networkObject.GetComponent<PlayerView>();
+            playerview.MeshFilter.mesh = m_playerMeshs[userData.m_meshID];
         });
+
+       
 
         Debug.Log("プレイヤー生成");
 

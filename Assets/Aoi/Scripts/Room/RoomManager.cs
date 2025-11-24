@@ -222,6 +222,10 @@ namespace NetWork
                 if (index >= 0 && index < m_players.Length)
                 {
                     m_player = m_players[index];
+                    //使うメッシュIDを更新
+                    var userdata = m_gameLauncher.UserData;
+                    userdata.m_meshID = index;
+                    m_gameLauncher.UserData = userdata;
                 }
             }
 

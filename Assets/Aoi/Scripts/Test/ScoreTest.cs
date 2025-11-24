@@ -16,7 +16,7 @@ public class ScoreTest : MonoBehaviour
         {
             m_scoredata.AddUser(0, "user1");
             m_scoredata.AddUser(1, "user2");
-            m_scoredata.AddUser(2, "user3");
+            //m_scoredata.AddUser(2, "user3");
             m_scoredata.AddUser(3, "user4");
         }
 

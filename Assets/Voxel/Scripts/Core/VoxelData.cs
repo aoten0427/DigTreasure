@@ -24,7 +24,7 @@ namespace VoxelWorld
         //硬度
         [SerializeField, Range(0.1f, 100f)] private float m_hardness = 1.0f;
         //最大耐久度
-        [SerializeField, Range(1f, 1000f)] private short m_maxDurability = 100;
+        [SerializeField, Range(1, 1000)] private short m_maxDurability = 100;
         //破壊可能かどうか
         [SerializeField] private bool m_isDestructible = true;
 

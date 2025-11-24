@@ -34,9 +34,6 @@ public class RankUIView : MonoBehaviour
         public Tween currentTween = null; // 実行中のTween
     }
 
-    /*********************************
-     * 初期化処理
-     *********************************/
 
     /// <summary>
     /// PlayerScoreUI配列とScoreUIDataを設定して初期化
@@ -55,7 +52,7 @@ public class RankUIView : MonoBehaviour
     {
         if (m_playerScoreUIArray == null || m_playerScoreUIArray.Length < 2)
         {
-            Debug.LogWarning("RankUIView: 最低2つのPlayerScoreUIが必要です");
+            Debug.LogWarning("[RankUIView]最低2つのPlayerScoreUIが必要です");
             return;
         }
 
@@ -66,12 +63,9 @@ public class RankUIView : MonoBehaviour
         Vector3 secondPlacePos = m_playerScoreUIArray[1].m_rankUITransform.localPosition;
         m_rankSpacing = Mathf.Abs(m_firstPlacePosition.y - secondPlacePos.y);
 
-        Debug.Log($"RankUIView: 1位座標={m_firstPlacePosition}, 順位間隔={m_rankSpacing}");
+        Debug.Log($"[RankUIView]1位座標={m_firstPlacePosition}, 順位間隔={m_rankSpacing}");
     }
 
-    /*********************************
-     * データ更新処理（ScoreUIViewから呼ばれる）
-     *********************************/
 
     /// <summary>
     /// データ更新時の処理（ScoreUIViewから呼ばれる）
@@ -106,9 +100,6 @@ public class RankUIView : MonoBehaviour
         }
     }
 
-    /*********************************
-     * ユーザースロット管理
-     *********************************/
 
     /// <summary>
     /// ユーザーを空きスロットに割り当て
@@ -121,7 +112,6 @@ public class RankUIView : MonoBehaviour
         // 配列サイズを超える場合は警告
         if (m_nextAvailableIndex >= m_playerScoreUIArray.Length)
         {
-            Debug.LogWarning($"RankUIView: User {userId} exceeds max display slots");
             return;
         }
 
@@ -140,13 +130,8 @@ public class RankUIView : MonoBehaviour
         // 初期位置設定（アニメーションなし）
         Vector3 initialPos = GetRankPosition(initialRank);
         m_playerScoreUIArray[arrayIndex].m_rankUITransform.localPosition = initialPos;
-
-        Debug.Log($"RankUIView: User {userId} assigned to slot {arrayIndex}, rank {initialRank}");
     }
 
-    /*********************************
-     * ランク位置更新処理
-     *********************************/
 
     /// <summary>
     /// ランク位置を更新（現在位置から目標ランクへ移動）
@@ -186,7 +171,7 @@ public class RankUIView : MonoBehaviour
         // 移動中フラグを立てる
         animState.isMoving = true;
 
-        // 既存のTweenをキャンセル（OnDataUpdated()で既にキャンセル済みだが念のため）
+        // 既存のTweenをキャンセル
         if (animState.currentTween != null)
         {
             animState.currentTween.Kill();
@@ -219,7 +204,6 @@ public class RankUIView : MonoBehaviour
                 .OnComplete(() => OnMoveComplete(userId, targetRank));
         }
 
-        Debug.Log($"RankUIView: User {userId} moving from Y={currentPos.y:F0} to rank {targetRank} (Y={targetPos.y:F0})");
     }
 
     /// <summary>
@@ -234,12 +218,8 @@ public class RankUIView : MonoBehaviour
         animState.isMoving = false;
         animState.currentTween = null;
 
-        // 注: OnDataUpdated()が来たら全員が再配置されるため、ここでの再チェックは不要
     }
 
-    /*********************************
-     * Canvas sortingOrder更新
-     *********************************/
 
     /// <summary>
     /// Canvas sortingOrderを更新（順位が高いほど手前に表示）
@@ -257,9 +237,6 @@ public class RankUIView : MonoBehaviour
         }
     }
 
-    /*********************************
-     * 座標計算処理
-     *********************************/
 
     /// <summary>
     /// 指定順位の座標を取得

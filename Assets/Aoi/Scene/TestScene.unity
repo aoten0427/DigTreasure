@@ -4279,6 +4279,15 @@ MonoBehaviour:
   - {fileID: 1706248961}
   m_rankUIView: {fileID: 1837751869}
   m_animationDuration: 1
+  m_uiSets:
+  - rank: {fileID: 230890967}
+    data: {fileID: 3039531}
+  - rank: {fileID: 347634741}
+    data: {fileID: 1895870171}
+  - rank: {fileID: 1236445280}
+    data: {fileID: 2104464881}
+  - rank: {fileID: 459926089}
+    data: {fileID: 1706248960}
 --- !u!114 &1837751864
 MonoBehaviour:
   m_ObjectHideFlags: 0

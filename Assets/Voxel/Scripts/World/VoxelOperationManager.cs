@@ -262,12 +262,21 @@ namespace VoxelWorld
                     {
                         Voxel currentVoxel = chunk.GetVoxelFromWorldPosition(position);
 
-                        if (!currentVoxel.IsEmpty && currentVoxel.CanBeDestroyed(attackPower))
+                        if (!currentVoxel.IsEmpty)
                         {
-                            if (destroyVoxelID == -1) destroyVoxelID = currentVoxel.VoxelId;
-                            voxelUpdates.Add(new VoxelUpdate { WorldPosition = position, VoxelID = Voxel.Empty });
-                            actualDestroyedPositions.Add(position);
-
+                            if (currentVoxel.TakeDamage(attackPower, out Voxel damagedVoxel))
+                            {
+                                // 破壊された
+                                if (destroyVoxelID == -1) destroyVoxelID = currentVoxel.VoxelId;
+                                voxelUpdates.Add(new VoxelUpdate { WorldPosition = position, VoxelID = Voxel.Empty });
+                                actualDestroyedPositions.Add(position);
+                            }
+                            else if (damagedVoxel.Durability != currentVoxel.Durability)
+                            {
+                                // 破壊されていないが耐久度が減少した → チャンクに直接書き込み
+                                chunk.SetVoxelFromWorldPosition(position, damagedVoxel);
+                                //Debug.Log($"耐久度減少: Position={position}, 残り耐久度={damagedVoxel.Durability}");
+                            }
                         }
                     }
                     affectedChunks.Add(kvp.Key);

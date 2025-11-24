@@ -12,17 +12,20 @@ using UnityEngine.UI;
 /// </summary>
 public class ScoreUIView : MonoBehaviour
 {
-    /// <summary>
-    /// 1プレイヤー分のUI要素
-    /// </summary>
-    
+    [System.Serializable]
+    struct UISet
+    {
+        public GameObject rank;
+        public GameObject data;
+    }
+
 
     // データ参照
     [SerializeField] private ScoreUIData m_scoreUIData;
 
     // UI要素
     [SerializeField] private Sprite[] m_scoreSprits = new Sprite[11];  // 0-9 + 空白(index 10)
-    [SerializeField] private PlayerScoreUI[] m_playerScoreArray;       // 最大人数分（固定サイズ）
+    [SerializeField] private PlayerScoreUI[] m_playerScoreArray;       
 
     // ランクUI参照
     [SerializeField] private RankUIView m_rankUIView;
@@ -35,6 +38,9 @@ public class ScoreUIView : MonoBehaviour
     private Dictionary<int, PlayerScoreAnimationState> m_animationStates = new Dictionary<int, PlayerScoreAnimationState>();
     private int m_nextAvailableIndex = 0;
 
+    [SerializeField]
+    UISet[] m_uiSets = new UISet[4];
+
     /// <summary>
     /// プレイヤーのスコアアニメーション状態
     /// </summary>
@@ -44,9 +50,6 @@ public class ScoreUIView : MonoBehaviour
         public Tween currentTween = null;
     }
 
-    /*********************************
-     * 初期化処理
-     *********************************/
 
     private void Start()
     {
@@ -56,6 +59,12 @@ public class ScoreUIView : MonoBehaviour
         if (m_rankUIView != null)
         {
             m_rankUIView.Initialize(m_playerScoreArray, m_scoreUIData);
+        }
+
+        for(int i = 0; i < m_uiSets.Length; i++)
+        {
+            m_uiSets[i].rank.SetActive(false);
+            m_uiSets[i].data.SetActive(false);
         }
     }
 
@@ -70,9 +79,6 @@ public class ScoreUIView : MonoBehaviour
         }
     }
 
-    /*********************************
-     * イベント処理
-     *********************************/
 
     private void OnEnable()
     {
@@ -110,9 +116,6 @@ public class ScoreUIView : MonoBehaviour
         }
     }
 
-    /*********************************
-     * ユーザースロット管理
-     *********************************/
 
     /// <summary>
     /// ユーザーを空きスロットに割り当て
@@ -120,16 +123,21 @@ public class ScoreUIView : MonoBehaviour
     private void AssignUserToSlot(int userId, string userName)
     {
         // 配列サイズを超える場合は警告
-        if (m_nextAvailableIndex >= m_playerScoreArray.Length)
+        if (m_nextAvailableIndex >= m_playerScoreArray.Length|| m_nextAvailableIndex >= m_uiSets.Length)
         {
-            Debug.LogWarning($"User {userId} exceeds max display slots");
+            
             return;
         }
+
+        m_uiSets[m_nextAvailableIndex].rank.SetActive(true);
+        m_uiSets[m_nextAvailableIndex].data.SetActive(true);
 
         // インデックス割り当て
         int arrayIndex = m_nextAvailableIndex;
         m_userIdToArrayIndex[userId] = arrayIndex;
         m_nextAvailableIndex++;
+
+        
 
         // アニメーション状態初期化
         m_animationStates[userId] = new PlayerScoreAnimationState();
@@ -143,9 +151,6 @@ public class ScoreUIView : MonoBehaviour
         Debug.Log($"User {userId} ({userName}) assigned to slot {arrayIndex}");
     }
 
-    /*********************************
-     * スコアアニメーション処理
-     *********************************/
 
     /// <summary>
     /// スコアアニメーションを開始/上書き（案B実装）
@@ -186,9 +191,6 @@ public class ScoreUIView : MonoBehaviour
         });
     }
 
-    /*********************************
-     * スコア表示処理
-     *********************************/
 
     /// <summary>
     /// スコアを4桁の画像で表示
