@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 namespace Mukouyama
 {
     public class PlayerMove : MonoBehaviour
@@ -7,63 +7,63 @@ namespace Mukouyama
         [SerializeField] GameObject ScoreManager;
         /*********************************
         * 
-        * ‘S‘ÌXVˆ—
+        * å…¨ä½“æ›´æ–°å‡¦ç†
         *
         **********************************/
         void Update()
         {
-            // I—¹ˆ—
+            // çµ‚äº†å‡¦ç†
             EndGame();
 
-            // “¾“_‰ÁZ
+            // å¾—ç‚¹åŠ ç®—
             AddScores();
 
-            // ƒvƒŒƒCƒ„[ˆÚ“®
+            // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ç§»å‹•
             PlayerControll();
         }
 
-        // ƒQ[ƒ€I—¹
+        // ã‚²ãƒ¼ãƒ çµ‚äº†
         private void EndGame()
         {
-            //Esc‚ª‰Ÿ‚³‚ê‚½
+            //EscãŒæŠ¼ã•ã‚ŒãŸæ™‚
             if (Input.GetKey(KeyCode.Escape))
             {
 
 #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;//ƒQ[ƒ€ƒvƒŒƒCI—¹
+                UnityEditor.EditorApplication.isPlaying = false;//ã‚²ãƒ¼ãƒ ãƒ—ãƒ¬ã‚¤çµ‚äº†
 #else
-    Application.Quit();//ƒQ[ƒ€ƒvƒŒƒCI—¹
+    Application.Quit();//ã‚²ãƒ¼ãƒ ãƒ—ãƒ¬ã‚¤çµ‚äº†
 #endif
             }
         }
 
-        // (ƒfƒoƒbƒO)ƒvƒŒƒCƒ„[‚ÌƒXƒRƒA‚ğ‘‰Á‚³‚¹‚é
+        // (ãƒ‡ãƒãƒƒã‚°)ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ã‚¹ã‚³ã‚¢ã‚’å¢—åŠ ã•ã›ã‚‹
         private void AddScores()
         {
-            // ”šƒL[‚ÅŠeƒvƒŒƒCƒ„[‚Ì“¾“_‚ğ‘‚â‚·B
-            // ‚P`‚SƒL[F100“_‘‚â‚·
+            // æ•°å­—ã‚­ãƒ¼ã§å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¾—ç‚¹ã‚’å¢—ã‚„ã™ã€‚
+            // ï¼‘ï½ï¼”ã‚­ãƒ¼ï¼š100ç‚¹å¢—ã‚„ã™
             if (Input.GetKeyDown(KeyCode.Alpha1)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(1, 100);
             else if (Input.GetKeyDown(KeyCode.Alpha2)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(2, 100);
             else if (Input.GetKeyDown(KeyCode.Alpha3)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(3, 100);
             else if (Input.GetKeyDown(KeyCode.Alpha4)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(4, 100);
-            // ‚T`‚WƒL[F300“_‘‚â‚·
+            // ï¼•ï½ï¼˜ã‚­ãƒ¼ï¼š300ç‚¹å¢—ã‚„ã™
             else if (Input.GetKeyDown(KeyCode.Alpha5)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(1, 300);
             else if (Input.GetKeyDown(KeyCode.Alpha6)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(2, 300);
             else if (Input.GetKeyDown(KeyCode.Alpha7)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(3, 300);
             else if (Input.GetKeyDown(KeyCode.Alpha8)) ScoreManager.GetComponent<ScoreManager>().AddPlayerScore(4, 300);
         }
 
-        // ƒvƒŒƒCƒ„[‚ª‘OŒã¶‰E‚ÉˆÚ“®
+        // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒå‰å¾Œå·¦å³ã«ç§»å‹•
         private void PlayerControll()
         {
-            // ƒfƒoƒbƒO
+            // ãƒ‡ãƒãƒƒã‚°
             //if (Input.anyKey) Debug.Log("Move!");
 
-            // ‘OŒãˆÚ“®
+            // å‰å¾Œç§»å‹•
             if (Input.GetKey(KeyCode.UpArrow)) transform.Translate(0, 0, 0.1f);
             else if (Input.GetKey(KeyCode.DownArrow)) transform.Translate(0, 0, -0.1f);
 
-            // ¶‰EˆÚ“®
+            // å·¦å³ç§»å‹•
             if (Input.GetKey(KeyCode.LeftArrow)) transform.Translate(-0.1f, 0, 0);
             else if (Input.GetKey(KeyCode.RightArrow)) transform.Translate(0.1f, 0, 0);
         }

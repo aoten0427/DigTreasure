@@ -18,6 +18,8 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
 {
     NetWork.GameLauncher m_gameLauncher;
     //ユーザーの生成場所データ
+    //[SerializeField]
+    
     [SerializeField]
     PlayerSpownData[] m_spownDatas = new PlayerSpownData[4];
     //生成場所の管理
@@ -106,8 +108,12 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
                 player.SetPlayManager(m_playManager);
                 networkObject.gameObject.name = Runner.LocalPlayer.ToString();
             }
-            
+
+            var playerview = networkObject.GetComponent<PlayerView>();
+            playerview.RPC_ChngeMesh(userData.m_meshID);
         });
+
+       
 
         Debug.Log("プレイヤー生成");
 

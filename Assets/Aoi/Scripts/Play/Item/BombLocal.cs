@@ -16,6 +16,14 @@ public class BombLocal : VoxelWorld.BaseAttack
     [SerializeField] Material m_blink;
 
     [SerializeField] Explosion m_explosion;
+
+    PlayerCombat m_attacker;
+    public PlayerCombat Attacker { get { return m_attacker; } set {  m_attacker = value; } }
+
+    //ボクセルの破壊を行うか
+    private bool m_isDestroyd = false;
+    public bool IsDestroyd { get {  return m_isDestroyd; } set {  m_isDestroyd = value; } }
+
     private void Update()
     {
         if (Input.GetKeyUp(KeyCode.B))
@@ -27,7 +35,7 @@ public class BombLocal : VoxelWorld.BaseAttack
     /// <summary>
     /// 点火開始
     /// </summary>
-    public void IgnitionStart(bool isdestroy = false)
+    public void IgnitionStart(bool isautoExprosion = false)
     {
         if (m_ignitionTween != null && m_ignitionTween.IsActive())
             return;
@@ -53,7 +61,7 @@ public class BombLocal : VoxelWorld.BaseAttack
             .OnComplete(() =>
             {
                 StopBlink();
-                Explosion(isdestroy);
+                Explosion();
             });
 
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -107,11 +115,27 @@ public class BombLocal : VoxelWorld.BaseAttack
     /// <summary>
     /// 爆発
     /// </summary>
-    void Explosion(bool isdestroy)
+    public void Explosion()
     {
-        if(isdestroy)AttackAtPosition(transform.position);
+        Collider[] hits = Physics.OverlapSphere(transform.position, AttackRadius,LayerMask.GetMask("Player"));
+        foreach (Collider hit in hits)
+        {
+            var target = hit.GetComponent<PlayerCombat>();
+            if(target != null)
+            {
+                Debug.Log($"{target.gameObject}を見つけました");
+                PlayerDamage damage = new PlayerDamage(m_attacker,target,100.0f,10.0f,
+                    (target.transform.position - transform.position).normalized,false);
+                target.RpcTakeDamage(damage);
+            }
+        }
+
+        if (m_isDestroyd) AttackAtPosition(transform.position);
+
+
         m_renderer.enabled = false;
-        m_explosion.PlayAnimation(() => Destroy(gameObject));
+        m_explosion.PlayAnimation();
+        Destroy(gameObject);
     }
 
     /// <summary>

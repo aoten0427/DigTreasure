@@ -1,18 +1,23 @@
 using System.Collections;
 using UnityEngine;
 
-public class Dig : VoxelWorld.BaseAttack
+public class Dig : VoxelWorld.BaseAttack,IPlayerAttack
 {
     [SerializeField] GameObject m_holder;
     [SerializeField] float m_colliderAppearanceTime = 0.5f;
+    [SerializeField] PlayerProto m_player;
+    [SerializeField] PlayerCombat m_attacker;
+
+    public PlayerProto Player => m_player;
+    public PlayerCombat Attacker => m_attacker;
 
     public void DigPoint(Vector3 position,Vector3 direction)
     {
         direction.Normalize();
 
-        ColliderAppearance();
+        StartCoroutine(ColliderAppearance());
 
-        AttackAtPosition(position,direction,false);
+        AttackAtPosition(position,direction);
     }
 
     IEnumerator ColliderAppearance()

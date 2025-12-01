@@ -2,51 +2,27 @@ using UnityEngine;
 using Fusion;
 using System.Collections;
 
-public class LockOnIcon : NetworkBehaviour
+public class LockOnIcon : MonoBehaviour
 {
-    [SerializeField] private float _immuneDuration;
-    private IEnumerator _immuneCoroutine = null;
-    private SpriteRenderer _renderer;
+    private Camera m_camera;
+    Vector3 m_initialPosition;
+    [SerializeField] float m_offset = 2.0f;
 
-    public override void Spawned()
+    void Start()
     {
-        base.Spawned();
-        if (HasStateAuthority)
-        {
-            _renderer = GetComponent<SpriteRenderer>();
-            Debug.Log("------------RENDERER: " + (_renderer != null));
-        }
+        m_camera = Camera.main;
+        m_initialPosition = transform.position;
     }
-    private void StartImmunity()
+
+    void Update()
     {
-        //remove icon etc
-        if (_immuneCoroutine != null)
-            return;
-        _immuneCoroutine = MakeImmune();
-        StartCoroutine(_immuneCoroutine);
-    }
-    private void Update()
-    {
-        if(HasStateAuthority)
-            RpcToggleIcon(false, this, true);
-    }
-    private IEnumerator MakeImmune()
-    {
-        yield return new WaitForSeconds(_immuneDuration);
-        _immuneCoroutine = null;
-    }
-    public void ToggleIcon(bool visible, bool init = false)
-    {
-        RpcToggleIcon(visible, this, init);
-    }
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RpcToggleIcon(bool visible, LockOnIcon playerWithLock, bool init = false)
-    {
-        if (playerWithLock._renderer.enabled && !init)
-        {
-            //untarget combat
-            Debug.Log("Should untarget");
-        }
-        _renderer.enabled = visible;
+        // ƒJƒƒ‰‚Ì•ûŒü‚ğŒü‚­
+        transform.forward = m_camera.transform.forward;
+
+        // ‰ŠúˆÊ’u ¨ ƒJƒƒ‰•ûŒü
+        Vector3 dirToCamera = (m_camera.transform.position - m_initialPosition).normalized;
+
+        // ‚»‚Ì•ûŒü‚É offset •ª‚¾‚¯ˆÚ“®
+        transform.position = m_initialPosition + dirToCamera * m_offset;
     }
 }

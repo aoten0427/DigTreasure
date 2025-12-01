@@ -1,6 +1,10 @@
 ﻿using Fusion;
+using NetWork;
+using System.Collections;
 using System.Globalization;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XInput;
 
 public class PlayerProto : NetworkBehaviour
 {
@@ -12,34 +16,19 @@ public class PlayerProto : NetworkBehaviour
 
     //リジッドボディ
     private Rigidbody rb;
-    //コライダー
-    private Collider playerCollider;
-    //移動可能か
-    private bool canMove = true;
-
 
     [SerializeField] Dig[] m_digs = new Dig[3];
     //掘り可能か
     private bool canDig = true;
 
-    [Header("リジッドボディセッティング")]
-    [SerializeField] private float moveSpeed = 5f;//移動速度
-    [SerializeField] private float maxSpeed = 10f; //最大速度
-    [SerializeField] private float jumpForce = 5f;//ジャンプ力
-    [SerializeField] private float groundCheckDistance = 1.5f;//床の当たり判定
-    [SerializeField] private LayerMask groundLayer;//地面レイヤー
-    [SerializeField] private float drag = 5f;
-
     private bool isJump = false;//ジャンプフラグ
-    private bool isGrounded;//地面についているか
     private Vector2 m_moveInput;//移動量
 
-    //ロックオン
-    private bool needLockOnRot = false;
-    private Quaternion lockOnRot;
-
+    [SerializeField] PlayerMovement m_movement;
     [SerializeField] PlayerCombat m_combat;
     [SerializeField] SurroundingsDig m_surroundingsDig;
+
+    GameLauncher m_gameLauncher;
 
     private void OnEnable()
     {
@@ -65,13 +54,18 @@ public class PlayerProto : NetworkBehaviour
         }
 
         //入力処理削除
+        if (HasStateAuthority)
         {
             var inputmanager = GameInputManager.Instance;
-            inputmanager.Move -= Move;
-            inputmanager.Jump -= Jump;
-            inputmanager.DigUp -= DigUp;
-            inputmanager.DigDown -= DigDown;
-            inputmanager.Attack -= DigAttack;
+            if(inputmanager != null)
+            {
+                inputmanager.Move -= Move;
+                inputmanager.Jump -= Jump;
+                inputmanager.DigUp -= DigUp;
+                inputmanager.DigDown -= DigDown;
+                inputmanager.Attack -= DigAttack;
+            }
+           
         }
     }
     public override void Spawned()
@@ -82,7 +76,11 @@ public class PlayerProto : NetworkBehaviour
             rb.freezeRotation = true; // プレイヤーが倒れないように
         }
 
-        playerCollider = GetComponent<Collider>();
+        // PlayerMovement の初期化
+        if (m_movement != null)
+        {
+            m_movement.Initialize(rb, GetComponent<Collider>());
+        }
 
         var view = GetComponent<PlayerViewProto>();
         view.SetNickName(NickName.Value);
@@ -96,15 +94,27 @@ public class PlayerProto : NetworkBehaviour
             m_combat.OnPlayerDamage += Blownaway;
         }
 
-        //入力処理初期化
+
+        if(Object.HasStateAuthority)
         {
+            //入力処理初期化
             var inputmanager = GameInputManager.Instance;
             inputmanager.Move += Move;
             inputmanager.Jump += Jump;
             inputmanager.DigUp += DigUp;
             inputmanager.DigDown += DigDown;
             inputmanager.Attack += DigAttack;
+
+
+            m_digs[0].OnDestroyAction(DigUpdate);
+            m_digs[1].OnDestroyAction(DigUpdate);
+            m_digs[2].OnDestroyAction(DigUpdate);
         }
+
+
+
+
+        m_gameLauncher = GameLauncher.Instance;
     }
 
     public void Move(Vector2 move)
@@ -114,7 +124,7 @@ public class PlayerProto : NetworkBehaviour
 
     public void Jump(bool ispush)
     {
-        if (ispush&&isGrounded && !isJump && m_isAction)
+        if (ispush && m_movement != null && m_movement.IsGrounded && !isJump && m_isAction)
         {
             isJump = true;
         }
@@ -149,7 +159,10 @@ public class PlayerProto : NetworkBehaviour
         if (!m_isAction) return;
 
         // 地面判定
-        CheckGrounded();
+        if (m_movement != null)
+        {
+            m_movement.CheckGrounded();
+        }
 
         //// TODO: コントローラー対応
         //// Jキーで掘る(テスト用にキーボード対応)
@@ -157,7 +170,7 @@ public class PlayerProto : NetworkBehaviour
         //{
         //    Dig(m_digs[0], m_digs[0].transform.position);
         //}
-        //if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isJump)
+        //if (Input.GetKeyDown(KeyCode.Space) && m_movement.IsGrounded && !isJump)
         //{
         //    isJump = true;
         //}
@@ -168,114 +181,16 @@ public class PlayerProto : NetworkBehaviour
         if (rb == null) return;
         if (!HasStateAuthority) return;
         if (!m_isAction) return;
-
-        //Debug.Log("入力受付");
-
-
+        if (m_movement == null) return;
 
         var cameraRotation = Quaternion.Euler(0f, Camera.main.transform.rotation.eulerAngles.y, 0f);
 
-        if (canMove)
-        {
-            // 移動入力
-            var inputDirection = new Vector3(m_moveInput.x, 0f, m_moveInput.y);
-            Vector3 moveDirection = cameraRotation * inputDirection;
+        // 移動処理を PlayerMovement に委譲
+        m_movement.ProcessMovement(m_moveInput, cameraRotation, Runner.DeltaTime);
 
-            // 現在の水平速度を取得
-            Vector3 currentVelocity = rb.linearVelocity;
-            Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
-
-            // 水平移動
-            if (moveDirection.magnitude > 0.1f)
-            {
-                // 最大速度化
-                if (horizontalVelocity.magnitude < maxSpeed)
-                {
-                    Vector3 force = moveDirection.normalized * moveSpeed;
-                    rb.AddForce(force, ForceMode.Force);
-                }
-            }
-            else
-            {
-                // 摩擦
-                Vector3 dragForce = -horizontalVelocity * drag;
-                rb.AddForce(dragForce, ForceMode.Force);
-            }
-
-            // 回転 - Rigidbodyで制御
-            if (needLockOnRot)
-            {
-                rb.MoveRotation(lockOnRot);
-            }
-            else if (moveDirection.magnitude > 0.1f)
-            {
-                // 移動方向を向く
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                Quaternion newRotation = Quaternion.Slerp(rb.rotation, targetRotation, Runner.DeltaTime * 10f);
-                rb.MoveRotation(newRotation);
-            }
-
-            // ジャンプ
-            if (isJump)
-            {
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-                isJump = false;
-            }
-        }
-        else
-        {
-            // スタン中は速度を減衰
-            Vector3 velocity = rb.linearVelocity;
-            velocity.x *= 0.9f;
-            velocity.z *= 0.9f;
-            rb.linearVelocity = velocity;
-            Debug.Log("Stunned");
-        }
-    }
-
-    private void CheckGrounded()
-    {
-        if (playerCollider == null)
-        {
-            isGrounded = false;
-            return;
-        }
-
-        // Colliderの底の中心位置
-        Vector3 boundsBottom = playerCollider.bounds.center - new Vector3(0, playerCollider.bounds.extents.y, 0);
-        boundsBottom.y += 0.3f;
-
-        // Colliderのサイズから適切なオフセット距離を計算（端より少し内側）
-        float horizontalOffset = playerCollider.bounds.extents.x * 0.8f;
-        float forwardOffset = playerCollider.bounds.extents.z * 0.8f;
-
-        // 5箇所のRaycast開始位置
-        Vector3[] rayPositions = new Vector3[5]
-        {
-                boundsBottom,                                              // 中央
-                boundsBottom + transform.forward * forwardOffset,          // 前
-                boundsBottom - transform.forward * forwardOffset,          // 後
-                boundsBottom + transform.right * horizontalOffset,         // 右
-                boundsBottom - transform.right * horizontalOffset          // 左
-        };
-
-        // いずれか1つでも地面に接していればtrue
-        isGrounded = false;
-        RaycastHit hit;
-
-        for (int i = 0; i < rayPositions.Length; i++)
-        {
-            bool hitGround = Physics.Raycast(rayPositions[i], Vector3.down, out hit, groundCheckDistance, groundLayer);
-
-            // デバッグ用の視覚化
-            Debug.DrawRay(rayPositions[i], Vector3.down * groundCheckDistance, hitGround ? Color.green : Color.red);
-
-            if (hitGround)
-            {
-                isGrounded = true;
-                break;
-            }
-        }
+        // ジャンプ処理を PlayerMovement に委譲
+        m_movement.ProcessJump(isJump);
+        isJump = false;
     }
 
     private void Dig(Dig dig,Vector3 point)
@@ -283,17 +198,22 @@ public class PlayerProto : NetworkBehaviour
         if (dig == null) return;
         dig.DigPoint(point, transform.position - point + new Vector3(0, 1, 0));
 
-        // pointが掘る位置(プレイヤーの前方、高さは足元)になってる
     }
 
     //機能オン・オッフ
     private void DisableMove()
     {
-        canMove = false;
+        if (m_movement != null)
+        {
+            m_movement.DisableMovement();
+        }
     }
     private void EnableMove()
     {
-        canMove = true;
+        if (m_movement != null)
+        {
+            m_movement.EnableMovement();
+        }
     }
     private void DisableDig()
     {
@@ -307,12 +227,46 @@ public class PlayerProto : NetworkBehaviour
     //ロックオン
     public void SetRotateTarget(bool lockOn, Quaternion targetRot)
     {
-        needLockOnRot = lockOn;
-        lockOnRot = targetRot;
+        if (m_movement != null)
+        {
+            m_movement.SetLockOnRotation(lockOn, targetRot);
+        }
     }
 
     private void Blownaway(PlayerCombat damaged,PlayerCombat attacker)
     {
         //m_surroundingsDig.Blownaway(damaged, attacker);
+    }
+
+    public void DigUpdate(int digCount)
+    {
+        var userdata = m_gameLauncher.UserData;
+        userdata.m_digPoint += digCount;
+        m_gameLauncher.UserData = userdata;
+
+        Debug.Log(userdata.m_digPoint);
+
+        if(digCount >= 1000)
+        {
+            float low = Mathf.Min(((float)digCount / (float)1500), 0.2f);
+            float high = Mathf.Min(((float)digCount / (float)2500), 0.8f);
+            float duration = Mathf.Min(0.5f, Mathf.Max((float)digCount / (float)2000), 0.1f);
+            StartCoroutine(Rumble(low, high, 0.1f));
+        }
+
+       
+        
+
+    }
+
+    IEnumerator Rumble(float low,float high,float duration)
+    {
+        var gamepad = Gamepad.current as XInputController;
+        if (gamepad == null) yield break;
+       
+        gamepad.SetMotorSpeeds(low, high);
+        yield return new WaitForSeconds(duration);
+        gamepad.SetMotorSpeeds(0, 0);
+        
     }
 }

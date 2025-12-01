@@ -82,6 +82,7 @@ namespace VoxelWorld
 
             // チャンク用のGameObjectを作成
             GameObject chunkObject = CreateChunkGameObject(chunkPosition);
+            chunkObject.tag = "Field";
             m_chunkGameObjects[chunkPosition] = chunkObject;
             
             // コライダー生成

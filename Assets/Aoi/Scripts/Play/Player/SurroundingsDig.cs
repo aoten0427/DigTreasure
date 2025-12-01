@@ -104,13 +104,13 @@ public class SurroundingsDig : VoxelWorld.BaseAttack
             Vector3 digPosition = transform.position + direction * distance;
 
             // 即時更新を使用（コライダーが即座に更新される）
-            AttackAtPosition(digPosition, default, immediate: true);
+            AttackAtPosition(digPosition, default);
 
             Debug.Log($"[SurroundingsDig] 破壊位置 {i}/{m_digSteps}: {digPosition} (距離: {distance}m)");
         }
 
         // 中心のオフセット位置も破壊
-        AttackAtPosition(transform.position + m_offset, default, immediate: true);
+        AttackAtPosition(transform.position + m_offset, default);
     }
 
     public void Dig()
@@ -123,10 +123,10 @@ public class SurroundingsDig : VoxelWorld.BaseAttack
         Debug.Log("破壊");
 
         // 即時更新を使用（コライダーが即座に更新される）
-        AttackAtPosition(transform.position + dire, default, immediate: true);
-        AttackAtPosition(transform.position + dire * 2f, default, immediate: true);
-        AttackAtPosition(transform.position + dire * 3f, default, immediate: true);
-        AttackAtPosition(transform.position + m_offset, default, immediate: true);
+        AttackAtPosition(transform.position + dire, default);
+        AttackAtPosition(transform.position + dire * 2f, default);
+        AttackAtPosition(transform.position + dire * 3f, default);
+        AttackAtPosition(transform.position + m_offset, default);
     }
 
     // �I�u�W�F�N�g�j�����̈��S���m��

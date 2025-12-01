@@ -12,7 +12,8 @@ namespace VoxelWorld
         // キャッシュストレージ
         private static Dictionary<SphereKey, Vector3[]> s_sphereCache = new Dictionary<SphereKey, Vector3[]>();
         private static Dictionary<BoxKey, Vector3[]> s_boxCache = new Dictionary<BoxKey, Vector3[]>();
-        
+        private static Dictionary<EllipsoidKey, Vector3[]> s_ellipsoidCache = new Dictionary<EllipsoidKey, Vector3[]>();
+
         // キャッシュ管理設定
         private const int MAX_CACHE_SIZE = 50;
         
@@ -88,7 +89,43 @@ namespace VoxelWorld
             }
         }
 
-        
+        /// <summary>
+        /// 楕円体キャッシュキー
+        /// </summary>
+        private struct EllipsoidKey
+        {
+            public Vector3Int gridCenter; // グリッド座標での中心位置
+            public Vector3 radii; // X, Y, Z軸の半径
+
+            public EllipsoidKey(Vector3 center, Vector3 radii)
+            {
+                this.gridCenter = new Vector3Int(
+                    Mathf.RoundToInt(center.x / VoxelConstants.VOXEL_SIZE),
+                    Mathf.RoundToInt(center.y / VoxelConstants.VOXEL_SIZE),
+                    Mathf.RoundToInt(center.z / VoxelConstants.VOXEL_SIZE)
+                );
+                this.radii = radii;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is EllipsoidKey other &&
+                       gridCenter.Equals(other.gridCenter) &&
+                       radii.Equals(other.radii);
+            }
+
+            public override int GetHashCode()
+            {
+                return gridCenter.GetHashCode() ^ radii.GetHashCode();
+            }
+
+            public override string ToString()
+            {
+                return $"EllipsoidKey(center:{gridCenter}, radii:{radii})";
+            }
+        }
+
+
         /// <summary>
         /// キャッシュされた球体座標を取得、存在しない場合は計算して追加
         /// </summary>
@@ -240,8 +277,89 @@ namespace VoxelWorld
 
             return positions.ToArray();
         }
-        
-        
+
+        /// <summary>
+        /// キャッシュされた楕円体座標を取得、存在しない場合は計算して追加
+        /// </summary>
+        /// <param name="center">楕円体の中心座標</param>
+        /// <param name="radii">各軸の半径 (X, Y, Z)</param>
+        /// <returns>楕円体内の座標配列</returns>
+        public static Vector3[] GetCachedEllipsoidPositions(Vector3 center, Vector3 radii)
+        {
+            var key = new EllipsoidKey(center, radii);
+
+            if (s_ellipsoidCache.TryGetValue(key, out Vector3[] cachedPositions))
+            {
+                return cachedPositions;
+            }
+
+            // キャッシュミス: 新規計算
+            Vector3[] newPositions = CalculateEllipsoidPositions(center, radii);
+
+            // キャッシュサイズ管理
+            if (s_ellipsoidCache.Count >= MAX_CACHE_SIZE)
+            {
+                CleanupEllipsoidCache();
+            }
+
+            s_ellipsoidCache[key] = newPositions;
+
+            return newPositions;
+        }
+
+        /// <summary>
+        /// 楕円体内の座標を計算
+        /// 楕円体の式: (x-cx)²/rx² + (y-cy)²/ry² + (z-cz)²/rz² ≤ 1
+        /// </summary>
+        /// <param name="center">中心座標</param>
+        /// <param name="radii">各軸の半径 (X, Y, Z)</param>
+        /// <returns>楕円体内の座標配列</returns>
+        private static Vector3[] CalculateEllipsoidPositions(Vector3 center, Vector3 radii)
+        {
+            var positions = new List<Vector3>();
+
+            // ボクセルグリッド単位での範囲計算（各軸で異なる範囲）
+            int rangeX = Mathf.CeilToInt(radii.x / VoxelConstants.VOXEL_SIZE);
+            int rangeY = Mathf.CeilToInt(radii.y / VoxelConstants.VOXEL_SIZE);
+            int rangeZ = Mathf.CeilToInt(radii.z / VoxelConstants.VOXEL_SIZE);
+
+            // 中心のボクセル座標を取得
+            int centerX = Mathf.RoundToInt(center.x / VoxelConstants.VOXEL_SIZE);
+            int centerY = Mathf.RoundToInt(center.y / VoxelConstants.VOXEL_SIZE);
+            int centerZ = Mathf.RoundToInt(center.z / VoxelConstants.VOXEL_SIZE);
+
+            for (int x = centerX - rangeX; x <= centerX + rangeX; x++)
+            {
+                for (int y = centerY - rangeY; y <= centerY + rangeY; y++)
+                {
+                    for (int z = centerZ - rangeZ; z <= centerZ + rangeZ; z++)
+                    {
+                        // ボクセルグリッド座標をワールド座標に変換
+                        Vector3 worldPos = new Vector3(
+                            x * VoxelConstants.VOXEL_SIZE,
+                            y * VoxelConstants.VOXEL_SIZE,
+                            z * VoxelConstants.VOXEL_SIZE
+                        );
+
+                        // 楕円体の式でチェック: (dx/rx)² + (dy/ry)² + (dz/rz)² ≤ 1
+                        Vector3 diff = worldPos - center;
+                        float normalizedDist =
+                            (diff.x * diff.x) / (radii.x * radii.x) +
+                            (diff.y * diff.y) / (radii.y * radii.y) +
+                            (diff.z * diff.z) / (radii.z * radii.z);
+
+                        if (normalizedDist <= 1.0f)
+                        {
+                            positions.Add(worldPos);
+                        }
+                    }
+                }
+            }
+
+            return positions.ToArray();
+        }
+
+
         /// <summary>
         /// 球体キャッシュのクリーンアップ
         /// </summary>
@@ -266,17 +384,34 @@ namespace VoxelWorld
         private static void CleanupBoxCache()
         {
             if (s_boxCache.Count <= MAX_CACHE_SIZE) return;
-            
+
             // 最も古いエントリの半分を削除
             int removeCount = s_boxCache.Count - MAX_CACHE_SIZE + 10;
             var keysToRemove = s_boxCache.Keys.Take(removeCount).ToArray();
-            
+
             foreach (var key in keysToRemove)
             {
                 s_boxCache.Remove(key);
             }
         }
-        
+
+        /// <summary>
+        /// 楕円体キャッシュのクリーンアップ
+        /// </summary>
+        private static void CleanupEllipsoidCache()
+        {
+            if (s_ellipsoidCache.Count <= MAX_CACHE_SIZE) return;
+
+            // 最も古いエントリの半分を削除
+            int removeCount = s_ellipsoidCache.Count - MAX_CACHE_SIZE + 10;
+            var keysToRemove = s_ellipsoidCache.Keys.Take(removeCount).ToArray();
+
+            foreach (var key in keysToRemove)
+            {
+                s_ellipsoidCache.Remove(key);
+            }
+        }
+
         /// <summary>
         /// 全キャッシュクリア
         /// </summary>
@@ -284,7 +419,8 @@ namespace VoxelWorld
         {
             s_sphereCache.Clear();
             s_boxCache.Clear();
-            
+            s_ellipsoidCache.Clear();
+
             Debug.Log("[DestructionShapeCache] 全キャッシュクリア完了");
         }
 

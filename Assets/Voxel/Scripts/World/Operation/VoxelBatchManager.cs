@@ -71,7 +71,7 @@ namespace VoxelWorld
             ReactiveProperty<float> progressProperty = null,
             Action<int> onComplete = null)
         {
-            EnablePerformanceLogging = true;
+            //EnablePerformanceLogging = true;
             Stopwatch totalStopwatch = null;
             if (EnablePerformanceLogging)
             {
@@ -82,8 +82,9 @@ namespace VoxelWorld
             //データ妥当性チェック
             if (!ValidateVoxelUpdates(voxelUpdates, progressProperty, onComplete))yield break;
 
-            // ボクセルをチャンクごとにグループ化
-            var chunkGroups = GroupVoxelUpdatesByChunk(voxelUpdates);
+            // ボクセルをチャンクごとにグループ化（フレーム分散）
+            Dictionary<Vector3Int, List<VoxelUpdate>> chunkGroups = null;
+            yield return GroupVoxelUpdatesByChunkAsync(voxelUpdates, result => chunkGroups = result);
 
             // ボクセルデータを設定
             var result = new VoxelSetResult();
@@ -108,73 +109,6 @@ namespace VoxelWorld
             }
         }
 
-        /// <summary>
-        /// 複数のボクセルを即時同期的に一括設定（吹き飛ばしなど緊急時専用）
-        /// 注意: フレームレートに影響するため、大量の更新には使用しないこと
-        /// </summary>
-        /// <param name="voxelUpdates">更新するボクセルのリスト</param>
-        /// <param name="isSender">送信者かどうか</param>
-        /// <returns>更新結果</returns>
-        public VoxelSetResult SetVoxelsImmediate(List<VoxelUpdate> voxelUpdates, bool isSender = false)
-        {
-            Stopwatch totalStopwatch = null;
-            if (EnablePerformanceLogging)
-            {
-                totalStopwatch = Stopwatch.StartNew();
-                UnityEngine.Debug.Log($"[Performance] SetVoxelsImmediate started: {voxelUpdates.Count} voxels");
-            }
-
-            var result = new VoxelSetResult();
-
-            // データ妥当性チェック
-            if (voxelUpdates == null || voxelUpdates.Count == 0)
-            {
-                return result;
-            }
-
-            // ボクセルをチャンクごとにグループ化
-            var chunkGroups = GroupVoxelUpdatesByChunk(voxelUpdates);
-
-            // ボクセルデータを即座に更新
-            foreach (var kvp in chunkGroups)
-            {
-                Vector3Int chunkPos = kvp.Key;
-                List<VoxelUpdate> updates = kvp.Value;
-
-                Chunk chunk = m_chunkManager.GetChunk(chunkPos);
-                if (chunk != null)
-                {
-                    ApplyVoxelUpdatesToChunk(chunk, chunkPos, updates, result);
-                    result.AffectedChunks.Add(chunkPos);
-                }
-            }
-
-            // イベント発火
-            FireVoxelChangedEvent(result.AppliedChanges, isSender);
-
-            // コライダーを即座に更新
-            if (result.SuccessCount > 0)
-            {
-                UpdateCollidersImmediate(result.AffectedChunks);
-            }
-
-            // ビジュアルメッシュは非同期で更新（遅延許容）
-            if (m_enableAutoMeshUpdate && result.SuccessCount > 0)
-            {
-                foreach (var chunkPos in result.AffectedChunks)
-                {
-                    m_meshManager.NotifyVoxelChanged(chunkPos);
-                }
-            }
-
-            if (EnablePerformanceLogging && totalStopwatch != null)
-            {
-                totalStopwatch.Stop();
-                UnityEngine.Debug.Log($"[Performance] SetVoxelsImmediate completed: {totalStopwatch.ElapsedMilliseconds}ms (Success: {result.SuccessCount}/{voxelUpdates.Count}, {result.AffectedChunks.Count} chunks)");
-            }
-
-            return result;
-        }
 
         /// <summary>
         /// 影響を受けたチャンクのコライダーを即座に更新
@@ -256,34 +190,50 @@ namespace VoxelWorld
         }
 
         /// <summary>
-        /// ボクセル更新をチャンクごとにグループ化
+        /// ボクセル更新をチャンクごとにグループ化（非同期・フレーム分散）
         /// </summary>
-        private Dictionary<Vector3Int, List<VoxelUpdate>> GroupVoxelUpdatesByChunk(List<VoxelUpdate> voxelUpdates)
+        private IEnumerator GroupVoxelUpdatesByChunkAsync(
+            List<VoxelUpdate> voxelUpdates,
+            System.Action<Dictionary<Vector3Int, List<VoxelUpdate>>> onComplete,
+            int voxelsPerFrame = 100000)
         {
             if (EnablePerformanceLogging) m_performanceStopwatch.Restart();
 
-            
             var chunkGroups = new Dictionary<Vector3Int, List<VoxelUpdate>>(5000);
+            int processedCount = 0;
+            int frameCount = 0;
 
             foreach (var update in voxelUpdates)
             {
                 Vector3Int chunkPos = VoxelConstants.WorldToChunkPosition(update.WorldPosition);
                 if (!chunkGroups.TryGetValue(chunkPos, out var list))
                 {
-                    
                     list = new List<VoxelUpdate>(4096);
                     chunkGroups[chunkPos] = list;
                 }
                 list.Add(update);
+
+                processedCount++;
+
+                // フレーム分散
+                if (processedCount % voxelsPerFrame == 0)
+                {
+                    frameCount++;
+                    if (EnablePerformanceLogging)
+                    {
+                        UnityEngine.Debug.Log($"[Performance] GroupVoxelUpdatesByChunk Frame {frameCount}: {processedCount}/{voxelUpdates.Count} voxels, {chunkGroups.Count} chunks");
+                    }
+                    yield return null;
+                }
             }
 
             if (EnablePerformanceLogging)
             {
                 m_performanceStopwatch.Stop();
-                UnityEngine.Debug.Log($"[Performance] GroupVoxelUpdatesByChunk: {m_performanceStopwatch.ElapsedMilliseconds}ms ({voxelUpdates.Count} voxels, {chunkGroups.Count} chunks)");
+                UnityEngine.Debug.Log($"[Performance] GroupVoxelUpdatesByChunk completed: {m_performanceStopwatch.ElapsedMilliseconds}ms ({voxelUpdates.Count} voxels, {chunkGroups.Count} chunks, {frameCount} frames)");
             }
 
-            return chunkGroups;
+            onComplete?.Invoke(chunkGroups);
         }
 
         /// <summary>

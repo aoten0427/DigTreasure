@@ -62,6 +62,9 @@ public class PlayerCombat : NetworkBehaviour
     private CapsuleCollider _collider;
     private Vector3 _playerCenter => transform.TransformPoint(_collider.center);
 
+    //攻撃データ
+    PlayerDamage _damageData;
+
     //他
     private PlayerCombat _attackTarget = null;
     private PlayerProto _playerProto;
@@ -72,11 +75,14 @@ public class PlayerCombat : NetworkBehaviour
     public event Action OnPlayerAttack;
     public event Action<PlayerCombat, PlayerCombat> OnPlayerDamage;
 
+
+
     private void Awake()
     {
         _treasureList = Resources.Load<TreasureList>("Treasure/TreasureList");
         _barrierModel.transform.localScale *= _barrierRadius;
         _collider = GetComponent<CapsuleCollider>();
+        
     }
     private void OnEnable()
     {
@@ -84,17 +90,23 @@ public class PlayerCombat : NetworkBehaviour
         OnPlayerBarrierStart += DisableLockOn;
         OnPlayerBarrierEnd += EnableAttack;
         OnPlayerBarrierEnd += EnableLockOn;
+        OnPlayerStunStart += DisableAttack;
+        OnPlayerStunEnd += EnableAttack;
         OnPlayerDamage += UntargetDamagedPlayer;
     }
+
     private void OnDisable()
     {
         OnPlayerBarrierStart -= DisableAttack;
         OnPlayerBarrierStart -= DisableLockOn;
         OnPlayerBarrierEnd -= EnableAttack;
         OnPlayerBarrierEnd -= EnableLockOn;
+        OnPlayerStunStart -= DisableAttack;
+        OnPlayerStunEnd -= EnableAttack;
         OnPlayerDamage -= UntargetDamagedPlayer;
 
         //入力処理削除
+        if (HasStateAuthority)
         {
             var inputmanager = GameInputManager.Instance;
             inputmanager.LookOn -= LockOn;
@@ -102,11 +114,19 @@ public class PlayerCombat : NetworkBehaviour
             inputmanager.Barrier -= Barrier;
         }
     }
+
     public override void Spawned()
     {
         base.Spawned();
         if (HasStateAuthority)
         {
+            //攻撃データ作成
+            _damageData = new PlayerDamage();
+            _damageData.SetAttacker(this);
+            _damageData.KnockBackForce = _knockbackForce;
+            _damageData.StunDuration = _stunDuration;
+            _damageData.IsDirect = true;
+
             _playerProto = GetComponent<PlayerProto>();
             _rb = GetComponent<Rigidbody>();
             _inventory = GetComponent<PlayerInventory>();
@@ -115,16 +135,23 @@ public class PlayerCombat : NetworkBehaviour
             RpcToggleBarrierModel(false);
 
             //入力処理初期化
+            if (Object.HasStateAuthority)
             {
                 var inputmanager = GameInputManager.Instance;
-                inputmanager.LookOn += LockOn;
-                inputmanager.Attack += Attack;
-                inputmanager.Barrier += Barrier;
+                if(inputmanager != null)
+                {
+                    inputmanager.LookOn += LockOn;
+                    inputmanager.Attack += Attack;
+                    inputmanager.Barrier += Barrier;
+                }
+                
             }
         }
 
 
     }
+
+
     private void Update()
     {
         if (!HasStateAuthority)
@@ -220,11 +247,17 @@ public class PlayerCombat : NetworkBehaviour
         _playerProto.SetRotateTarget(needRot, targetRot);
     }
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RpcTakeDamage(PlayerCombat attacker)
+    public void RpcTakeDamage(PlayerDamage damage)
     {
+        PlayerCombat attacker = damage.GetAttacker(Runner);
         if (!attacker)
+        {
+            Debug.LogWarning("アタッカーがいません");
             return;
-        if (_barrierActive)
+        }
+            
+        //バリアを貼っていて直接攻撃ならアタッカーをはじく
+        if (_barrierActive&&damage.IsDirect)
         {
             attacker.RpcBarrierEffect(this);
             return;
@@ -233,18 +266,19 @@ public class PlayerCombat : NetworkBehaviour
         LoseTreasure();
         StunPlayer();
         DamageAnimation(attacker._playerCenter);
-        Knockback((transform.position - attacker.transform.position).normalized);
+        Knockback(damage.Direction,damage.KnockBackForce);
         StartCoroutine(StartImmunity());
     }
 
-    private void Knockback(Vector3 dir)
+    private void Knockback(Vector3 dir,float force)
     {
         if (_rb != null)
         {
+            Debug.Log("ノックバック");
             // 瞬間的な力を加える
             _rb.linearVelocity = Vector3.zero;
             _rb.angularVelocity = Vector3.zero;
-            _rb.AddForce(dir * _knockbackForce, ForceMode.Impulse);
+            _rb.AddForce(dir * force, ForceMode.Impulse);
         }
     }
     private void StunPlayer()
@@ -288,10 +322,10 @@ public class PlayerCombat : NetworkBehaviour
         Vector3 spawnDir = (_playerCenter - Camera.main.transform.position).normalized;
         RpcSpawnDamageAnim(spawnPos, Quaternion.LookRotation(spawnDir), this);
     }
-    [Rpc(RpcSources.All, RpcTargets.All)]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RpcSpawnDamageAnim(Vector3 spawnPos, Quaternion spawnDir, PlayerCombat spawnParent)
     {
-        Instantiate(_damageAnimPrefab, spawnPos, spawnDir, spawnParent.transform);
+        Instantiate(_damageAnimPrefab, spawnPos, spawnDir);
     }
     private IEnumerator StartImmunity()
     {
@@ -302,13 +336,14 @@ public class PlayerCombat : NetworkBehaviour
     private void LoseTreasure()
     {
         int amtLost = (int)(_treasureLostPercent * (float)(_inventory.AmountOfTreasure()));
+        Debug.Log($"パーセント:{_treasureLostPercent},全個数:{_inventory.AmountOfTreasure()},落ちる個数:{amtLost}");
         List<TreasureSO> treasureLost = _inventory.GetRandomTreasures(amtLost);
         float spawnHeight = transform.position.y + _treasureHeight;
         for (int i = 0; i < treasureLost.Count; i++)
         {
             Vector3 spawnPos = UnityEngine.Random.insideUnitSphere * UnityEngine.Random.Range(_treasureDropRadiusRange.x, _treasureDropRadiusRange.y) + transform.position;
             spawnPos.y = spawnHeight;
-            _treasureSpawner.SpawnTreasure(spawnPos, treasureLost[i].point, _treasureList.allTreasure.IndexOf(treasureLost[i]));
+            _treasureSpawner.DropTreasure(transform.position + new Vector3(0,2,0), treasureLost[i].point, _treasureList.allTreasure.IndexOf(treasureLost[i]));
             _inventory.RemoveTreasure(treasureLost[i], 1);
         }
     }
@@ -333,10 +368,16 @@ public class PlayerCombat : NetworkBehaviour
         //アニメーション後に _isAttacking オフにする
         _isAttacking = false;
 
+        _damageData.SetTarget(_attackTarget);
+        _damageData.Direction = (_attackTarget.transform.position - transform.position).normalized;
+
         if (!_attackTarget._immune)
         {
-            _attackTarget.RpcTakeDamage(this);
+            _attackTarget.RpcTakeDamage(_damageData);
         }
+
+        _damageData.SetTarget(null);
+        
 
 
         return true;
@@ -391,7 +432,7 @@ public class PlayerCombat : NetworkBehaviour
     {
         if (!barrierPlayer)
             return;
-        Knockback((transform.position - barrierPlayer.transform.position).normalized);
+        Knockback((transform.position - barrierPlayer.transform.position).normalized,_knockbackForce);
     }
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RpcToggleBarrierModel(bool visible)

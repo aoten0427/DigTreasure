@@ -137,7 +137,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 2d0c402f20b8d9f449f18d5b21c0c096, type: 3}
       propertyPath: m_Name
-      value: Treasure1
+      value: Treasure
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 2d0c402f20b8d9f449f18d5b21c0c096, type: 3}
       propertyPath: m_TagString
@@ -158,10 +158,13 @@ PrefabInstance:
       addedObject: {fileID: 6239018595790337556}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2d0c402f20b8d9f449f18d5b21c0c096, type: 3}
       insertIndex: -1
-      addedObject: {fileID: -786511542807665245}
+      addedObject: {fileID: 2112732965617674505}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2d0c402f20b8d9f449f18d5b21c0c096, type: 3}
       insertIndex: -1
-      addedObject: {fileID: -2939664910704381908}
+      addedObject: {fileID: 4108019686934943673}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2d0c402f20b8d9f449f18d5b21c0c096, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5352509997234797910}
   m_SourcePrefab: {fileID: 100100000, guid: 2d0c402f20b8d9f449f18d5b21c0c096, type: 3}
 --- !u!1 &8535385517403206234 stripped
 GameObject:
@@ -203,7 +206,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _ScorePoint: 1
   _MeshIndex: 0
---- !u!114 &-786511542807665245
+--- !u!114 &2112732965617674505
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -215,15 +218,42 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 888239581
+  SortKey: 3464378241
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 6239018595790337556}
-  - {fileID: -2939664910704381908}
+  - {fileID: 5352509997234797910}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &-2939664910704381908
+--- !u!54 &4108019686934943673
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8535385517403206234}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 112
+  m_CollisionDetection: 0
+--- !u!114 &5352509997234797910
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -232,14 +262,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 8535385517403206234}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Script: {fileID: 11500000, guid: 0a591d221a634417e9827eb58e17de84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _stateAuthorityChangeErrorCorrectionDelta: 0
   SyncScale: 0
-  SyncParent: 0
-  _autoAOIOverride: 1
-  DisableSharedModeInterpolation: 0
+  SyncParent: 1
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 0
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01
 --- !u!4 &9022987465457445088 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2d0c402f20b8d9f449f18d5b21c0c096, type: 3}

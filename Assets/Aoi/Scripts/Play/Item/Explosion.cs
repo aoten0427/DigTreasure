@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Explosion : MonoBehaviour
 {
@@ -36,6 +35,7 @@ public class Explosion : MonoBehaviour
     public void PlayAnimation(Action onComplete = null)
     {
         if (m_isPlaying) return;
+        transform.parent = null;
 
         if (m_sprites == null || m_sprites.Count == 0)
         {

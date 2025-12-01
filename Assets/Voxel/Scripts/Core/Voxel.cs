@@ -7,7 +7,7 @@ namespace VoxelWorld
     /// VoxelDataとの連携によりボクセルの状態を管理
     /// </summary>
     [System.Serializable]
-    public class Voxel
+    public struct Voxel
     {
         //識別ID
         [SerializeField] private byte m_voxelId;
@@ -23,7 +23,7 @@ namespace VoxelWorld
         public bool IsValid => !IsEmpty;
 
         /// <summary>
-        /// コンストラクタ
+        /// コンストラクタ（公開用）
         /// </summary>
         /// <param name="voxelId">ボクセルID</param>
         public Voxel(int voxelId)
@@ -33,6 +33,17 @@ namespace VoxelWorld
             // VoxelDataから最大耐久度を取得して初期化
             var voxelData = VoxelDataBase.GetVoxelDataStatic(voxelId);
             m_durability = voxelData != null ? voxelData.MaxDurability : VoxelConstants.DEFAULT_MAX_DURABILITY;
+        }
+
+        /// <summary>
+        /// コンストラクタ（内部用 - 耐久度を指定）
+        /// </summary>
+        /// <param name="voxelId">ボクセルID</param>
+        /// <param name="durability">耐久度</param>
+        private Voxel(byte voxelId, short durability)
+        {
+            m_voxelId = voxelId;
+            m_durability = durability;
         }
 
         /// <summary>
@@ -70,27 +81,49 @@ namespace VoxelWorld
 
 
         /// <summary>
-        /// 指定された攻撃力でボクセルが破壊可能かチェック
-        /// 攻撃力が硬度以上なら耐久度を減少させ、耐久度が0以下になったら破壊可能と判定
+        /// 指定された攻撃力でボクセルが破壊可能かチェック（硬度のみ）
         /// </summary>
         /// <param name="attackPower">攻撃力</param>
-        /// <param name="updatedVoxel">耐久度が更新されたVoxel（out parameter）</param>
-        /// <returns>耐久度が0以下になった場合true</returns>
+        /// <returns>硬度チェックをパスした場合true</returns>
         public bool CanBeDestroyed(float attackPower)
         {
-            // 硬度チェック：攻撃力が硬度未満なら何も起こらない
-            if (!VoxelDataBase.CanDestroyVoxelStatic(m_voxelId, attackPower))
+            // 硬度チェック：攻撃力が硬度未満なら破壊不可
+            return VoxelDataBase.CanDestroyVoxelStatic(m_voxelId, attackPower);
+        }
+
+        /// <summary>
+        /// ダメージを与えて破壊されるかチェック（硬度＋耐久度）
+        /// </summary>
+        /// <param name="attackPower">攻撃力</param>
+        /// <param name="damagedVoxel">ダメージを受けた後のVoxel（out parameter）</param>
+        /// <returns>破壊された（耐久度が0以下になった）場合true</returns>
+        public bool TakeDamage(float attackPower, out Voxel damagedVoxel)
+        {
+            // 硬度チェック：攻撃力が硬度未満ならダメージなし
+            if (!CanBeDestroyed(attackPower))
             {
+                damagedVoxel = this;  // 変更なし
                 return false;
             }
 
-            // 耐久度を減少
-            m_durability -= (short)attackPower;
+            // 耐久度を減少させた新しいVoxelを作成
+            damagedVoxel = ReduceDurability((short)attackPower);
 
-            Debug.Log($"耐久度: {m_durability}");
+            Debug.Log($"耐久度: {damagedVoxel.Durability}");
 
-            // 耐久度が0以下なら破壊可能
-            return m_durability <= 0.0f;
+            // 耐久度が0以下なら破壊
+            return damagedVoxel.Durability <= 0;
+        }
+
+        /// <summary>
+        /// 耐久度を減少させた新しいVoxelを返す
+        /// </summary>
+        /// <param name="damage">減少させる耐久度</param>
+        /// <returns>耐久度が減少した新しいVoxel</returns>
+        public Voxel ReduceDurability(short damage)
+        {
+            short newDurability = (short)(m_durability - damage);
+            return new Voxel(m_voxelId, newDurability);
         }
 
         /// <summary>
@@ -113,13 +146,13 @@ namespace VoxelWorld
         }
 
         /// <summary>
-        /// 等価比較
+        /// 等価比較（VoxelIDと耐久度の両方を比較）
         /// </summary>
         /// <param name="other">比較対象</param>
         /// <returns>等しい場合true</returns>
         public bool Equals(Voxel other)
         {
-            return m_voxelId == other.m_voxelId;
+            return m_voxelId == other.m_voxelId && m_durability == other.m_durability;
         }
 
 
