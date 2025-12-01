@@ -129,4 +129,44 @@ namespace VoxelWorld
             return DestructionShapeCache.GetCachedBoxPositions(m_center, m_size);
         }
     }
+
+    /// <summary>
+    /// 楕円体範囲破壊形状
+    /// 各軸に異なる半径を持つ楕円体（Y軸を短くして地面での爆発などに最適）
+    /// </summary>
+    public class EllipsoidDestruction : IDestructionShape
+    {
+        private Vector3 m_center;
+        private Vector3 m_radii; // X, Y, Z軸の半径
+
+
+        /// <summary>
+        /// コンストラクタ（上下非対称楕円体 - 爆発など地面接触時に最適）
+        /// </summary>
+        /// <param name="groundPosition">地面の接触位置（爆発地点など）</param>
+        /// <param name="radius">水平方向の半径（X/Z軸）</param>
+        /// <param name="radiusUp">上方向への半径</param>
+        /// <param name="radiusDown">下方向への半径</param>
+        public EllipsoidDestruction(Vector3 groundPosition, float radius, float radiusUp, float radiusDown)
+        {
+            // 楕円体の実際の中心を計算（上下の半径差の半分だけオフセット）
+            float centerOffset = (radiusUp - radiusDown) / 2f;
+            m_center = new Vector3(groundPosition.x, groundPosition.y + centerOffset, groundPosition.z);
+
+            // 楕円体の実際のY半径（上下の半径の平均）
+            float radiusY = (radiusUp + radiusDown) / 2f;
+            m_radii = new Vector3(radius, radiusY, radius);
+        }
+
+        public Vector3 GetDestractionPoint()
+        {
+            return m_center;
+        }
+
+        public IEnumerable<Vector3> GetDestructionPositions()
+        {
+            // キャッシュシステムを使用
+            return DestructionShapeCache.GetCachedEllipsoidPositions(m_center, m_radii);
+        }
+    }
 }

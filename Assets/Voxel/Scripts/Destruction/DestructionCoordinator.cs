@@ -84,7 +84,7 @@ namespace VoxelWorld
         /// <param name="immediate">即時更新するか（true: コライダー即座更新、false: 非同期更新）</param>
         /// <param name="onComplete">完了コールバック（破壊されたボクセル数を受け取る）</param>
         public void DestroyChunkVoxels(IDestructionShape shape, Vector3 worldCenter,
-            float attackPower = 1.0f, Vector3 direction = default, bool immediate = false, System.Action<int> onComplete = null)
+            float attackPower = 1.0f, Vector3 direction = default, System.Action<int> onComplete = null)
         {
             if (!ValidateDestruction(shape))
             {
@@ -93,7 +93,7 @@ namespace VoxelWorld
             }
 
             // 破壊実行（破壊数付きコールバック版を使用）
-            m_destructionManager.DestroyVoxels(shape, attackPower, direction, immediate, onComplete);
+            m_destructionManager.DestroyVoxels(shape, attackPower, direction, onComplete);
         }
         
         /// <summary>
@@ -131,7 +131,6 @@ namespace VoxelWorld
             Vector3 direction = default,
             bool targetChunks = true,
             bool targetSeparatedObjects = true,
-            bool immediate = false,
             Action<int> onComplete = null)
         {
             if (!ValidateDestruction(shape))
@@ -163,7 +162,7 @@ namespace VoxelWorld
             if (targetChunks && DestructionTargetFinder.HasValidChunkTarget(m_worldManager))
             {
                 int separatedObjectsDestroyed = totalDestroyed; // 分離オブジェクトの破壊数を保持
-                DestroyChunkVoxels(shape, worldCenter, attackPower, direction, immediate, (chunkDestroyed) =>
+                DestroyChunkVoxels(shape, worldCenter, attackPower, direction, (chunkDestroyed) =>
                 {
                     int grandTotal = separatedObjectsDestroyed + chunkDestroyed;
                     onComplete?.Invoke(grandTotal);

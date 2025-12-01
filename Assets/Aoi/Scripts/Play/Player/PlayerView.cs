@@ -1,11 +1,15 @@
+using Fusion;
 using UnityEngine;
 
-public class PlayerView : MonoBehaviour
+public class PlayerView : NetworkBehaviour
 {
     [SerializeField]
     MeshFilter m_meshFilter;
 
-    public MeshFilter MeshFilter { get { return m_meshFilter; } set { MeshFilter = value; } }
+    [SerializeField] Mesh[] m_playerMeshs = new Mesh[4];
+
+
+    public MeshFilter MeshFilter { get { return m_meshFilter; }}
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -16,5 +20,11 @@ public class PlayerView : MonoBehaviour
     void Update()
     {
         
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_ChngeMesh(int id)
+    {
+        m_meshFilter.mesh = m_playerMeshs[id];
     }
 }

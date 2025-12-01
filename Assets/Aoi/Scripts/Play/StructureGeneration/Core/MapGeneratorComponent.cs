@@ -28,6 +28,8 @@ namespace StructureGeneration
         public MapGenerator Generator => mapGenerator;
         public bool IsGenerating => isGenerating;
 
+
+
         public void SetManager(PlayManager manager)
         {
 
@@ -57,18 +59,12 @@ namespace StructureGeneration
 
             // マップ生成を実行
             isGenerating = true;
-            try
-            {
-                var result = await mapGenerator.GenerateMapAsync(progressProperty);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"マップ生成中にエラーが発生しました: {e.Message}\n{e.StackTrace}");
-            }
-            finally
-            {
-                isGenerating = false;
-            }
+           
+            await mapGenerator.GenerateMapAsync(progressProperty);
+           
+            
+            isGenerating = false;
+            
         }
     }
 }

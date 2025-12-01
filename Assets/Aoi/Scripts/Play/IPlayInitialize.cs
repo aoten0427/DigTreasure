@@ -7,7 +7,8 @@ public enum InitializationPriority
     Map = 0,
     PlayerCreate = 100,
     UI = 150,
-    TreasureCreate = 200
+    TreasureCreate = 200,
+    PlacementCreate = 300
 }
 
 

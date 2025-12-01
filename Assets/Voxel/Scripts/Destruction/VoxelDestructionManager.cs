@@ -83,7 +83,7 @@ namespace VoxelWorld
         /// <param name="immediate">即時更新するか（true: コライダー即座更新、false: 非同期更新）</param>
         /// <param name="onCompleteWithCount">完了時コールバック（破壊数を受け取る）</param>
         public void DestroyVoxels(IDestructionShape destructionShape, float attackPower, Vector3 direction,
-            bool immediate, System.Action<int> onCompleteWithCount)
+            System.Action<int> onCompleteWithCount)
         {
             if (destructionShape == null)
             {
@@ -97,7 +97,7 @@ namespace VoxelWorld
                 attackPower = m_defaultAttackPower;
             }
 
-            var request = new DestructionRequest(destructionShape, attackPower, direction, immediate, onCompleteWithCount);
+            var request = new DestructionRequest(destructionShape, attackPower, direction, onCompleteWithCount);
 
             m_destructionQueue.Enqueue(request);
             // 破壊処理が実行中でない場合は開始
@@ -172,7 +172,7 @@ namespace VoxelWorld
             {
                 // 破壊実行
                 int destroyedCount = m_voxelManager.DestroyVoxelsWithPower(positions, request.AttackPower,
-                    request.Shape.GetDestractionPoint(), request.EffectDirection, request.Immediate);
+                    request.Shape.GetDestractionPoint(), request.EffectDirection);
                 totalDestroyedCount += destroyedCount;
                 processedChunks++;
 

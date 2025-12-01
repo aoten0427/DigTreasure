@@ -32,7 +32,10 @@ public class Crown : NetworkBehaviour
          var max = updateData.OrderByDescending(kvp => kvp.Value.m_treasurePoint).FirstOrDefault();
         var userdata = updateData[Runner.LocalPlayer];
 
-        bool isCrown = (max.Key == Runner.LocalPlayer) || (max.Value.m_treasurePoint == userdata.m_treasurePoint);
+        //王冠保持条件　自身が一番ポイントを持っている(同数もカウント)かつポイントが0より上
+        bool isCrown = ((max.Key == Runner.LocalPlayer) || 
+            (max.Value.m_treasurePoint == userdata.m_treasurePoint))&&
+            (userdata.m_treasurePoint > 0);
 
         
 

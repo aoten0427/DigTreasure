@@ -1,3 +1,5 @@
+using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace VoxelWorld
@@ -11,8 +13,6 @@ namespace VoxelWorld
         [Header("攻撃設定")]
         [SerializeField] private float m_attackPower = 2.0f;
         [SerializeField] private float m_attackRadius = 3.0f;
-        
-
 
         [Header("破壊形状")]
         [SerializeField] private AttackShape m_attackShape = AttackShape.Sphere;
@@ -25,12 +25,16 @@ namespace VoxelWorld
         [Header("デバッグ")]
         [SerializeField] private bool m_enableLogging = false;
 
-        private VoxelDestructionManager m_destructionManager;
+
+        Action<int> m_onDestroyAction = null;
+        public void OnDestroyAction(Action<int> action) { m_onDestroyAction = action; }
+
         public enum AttackShape
         {
             Point,   // 単一ボクセル
             Sphere,  // 球体範囲
-            Box      // 矩形範囲
+            Box,      // 矩形範囲
+            Ellipsoid
         }
 
         // 攻撃力
@@ -56,9 +60,9 @@ namespace VoxelWorld
         /// <param name="worldPosition">攻撃位置（ワールド座標）</param>
         /// <param name="directio">エフェクト方向</param>
         /// <param name="immediate">即時更新するか（true: コライダー即座更新、false: 非同期更新）</param>
-        public void AttackAtPosition(Vector3 worldPosition, Vector3 directio = default, bool immediate = false)
+        public void AttackAtPosition(Vector3 worldPosition, Vector3 directio = default, Action<int> onComplete = null)
         {
-            ExecuteAttack(worldPosition, directio, immediate);
+            ExecuteAttack(worldPosition, directio,onComplete);
         }
 
         /// <summary>
@@ -68,7 +72,7 @@ namespace VoxelWorld
         /// <param name="attackPosition">攻撃位置</param>
         /// <param name="effectDirection">エフェクト方向</param>
         /// <param name="immediate">即時更新するか</param>
-        private void ExecuteAttack(Vector3 attackPosition, Vector3 effectDirection = default, bool immediate = false)
+        private void ExecuteAttack(Vector3 attackPosition, Vector3 effectDirection = default, Action<int> onComplete = null)
         {
             IDestructionShape destructionShape = CreateDestructionShape(attackPosition);
 
@@ -93,8 +97,7 @@ namespace VoxelWorld
                 effectDirection,
                 m_targetChunks,
                 m_targetSeparatedObjects,
-                immediate,
-                v => Debug.Log(v)
+                m_onDestroyAction
             );
 
         }
@@ -117,7 +120,8 @@ namespace VoxelWorld
 
                 case AttackShape.Box:
                     return new BoxDestruction(position, m_boxSize);
-
+                case AttackShape.Ellipsoid:
+                    return new EllipsoidDestruction(position, m_attackRadius, m_attackRadius * 0.7f, m_attackRadius * 0.4f);
                 default:
                     Debug.LogWarning($"[BaseAttack] 未対応の攻撃形状: {m_attackShape}");
                     return new PointListDestruction(position);

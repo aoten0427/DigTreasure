@@ -62,17 +62,20 @@ public class PlayerInventory : NetworkBehaviour
             returnVal += kvp.Value;
         return returnVal;
     }
+
     public List<TreasureSO> GetRandomTreasures(int amt)
     {
         List<TreasureSO> returnVal = new();
         foreach (var kvp in _treasures)
             returnVal.AddRange(Enumerable.Repeat(_treasureList.allTreasure[kvp.Key], kvp.Value));
-        if (amt <= 0)
-            return returnVal;
-        else if (amt >= _treasures.Count())
-            return returnVal;
+    
+        //Œ»İ‚ÌŒÂ”ˆÈã‚È‚ç‚±‚Ìê‚Å•Ô‚·
+        if (amt >= _treasures.Count())
+          return returnVal;
 
-        int iterations = _treasures.Count() - amt;
+        //—v‹•ªŒ¸‚ç‚·
+        int iterations = returnVal.Count() - amt;
+        Debug.Log($"{iterations}ŒÂŒ¸‚ç‚µ‚Ü‚·");
         for (int i = 0; i < iterations; i++)
         {
             returnVal.Remove(returnVal[UnityEngine.Random.Range(0, returnVal.Count)]);
@@ -86,6 +89,7 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (HasStateAuthority && other.TryGetComponent(out Treasure treasure))
         {
+            if (treasure.IsInvalid) return;
             AddTreasure(_treasureList.allTreasure[treasure.MeshIndex], 1);
             _pickupBlacklist.Add(treasure);
             treasure.RPC_RequestDespawn();

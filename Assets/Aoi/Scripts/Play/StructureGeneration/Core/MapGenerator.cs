@@ -15,6 +15,7 @@ namespace StructureGeneration
         private readonly MapGeneratorSettings m_settings;
         private readonly VoxelOperationManager m_operationManager;
         private readonly ConnectionManager m_connectionManager;
+        private readonly PlacementObjectManager m_placementObjectManager;
 
         // 各種ジェネレーター
         private readonly BoundaryWallGenerator m_boundaryWallGenerator;
@@ -27,6 +28,7 @@ namespace StructureGeneration
 
         public IReadOnlyList<IStructure> Structures => m_structures;
         public IReadOnlyList<ConnectionData> Connections => m_connectionManager.Connections;
+        public IReadOnlyList<PlacementObjectData> PlacementObjects => m_placementObjectManager.PlacementObjects;
 
         private bool m_isLog;
 
@@ -35,13 +37,14 @@ namespace StructureGeneration
             m_settings = settings;
             m_operationManager = operationManager;
             m_connectionManager = new ConnectionManager(settings.connectionSettings);
+            m_placementObjectManager = new PlacementObjectManager();
             m_structures = new List<IStructure>();
 
             // ジェネレーターの初期化
             m_boundaryWallGenerator = new BoundaryWallGenerator();
             m_surfaceTerrainGenerator = new SurfaceTerrainGenerator();
             m_voxelFillGenerator = new VoxelFillGenerator();
-            m_isLog = isLog; 
+            m_isLog = isLog;
 
         }
 
@@ -132,6 +135,9 @@ namespace StructureGeneration
             var connectionVoxels = await m_connectionManager.GenerateAllConnectionsAsync(m_currentSeed);
             progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_CONNECTION_VOXELS);
 
+            // 設置オブジェクト（爆弾、宝箱など）の配置位置を生成
+            m_placementObjectManager.GenerateAllPlacements(m_structures, m_connectionManager.Connections);
+
             //ワールドに一度に配置
             progressProperty?.SetValueAndForceNotify(MapGeneratorConstants.PROGRESS_VOXEL_PLACEMENT_START);
             await PlaceVoxelsInWorldAsync(fillVoxels, surfaceVoxels, structureVoxels, connectionVoxels, boundaryVoxels, progressProperty);
@@ -151,6 +157,7 @@ namespace StructureGeneration
             return new MapGenerationResult(
                 m_structures.ToList(),
                 m_connectionManager.Connections.ToList(),
+                m_placementObjectManager.PlacementObjects.ToList(),
                 m_currentSeed
             );
         }
@@ -250,7 +257,7 @@ namespace StructureGeneration
                 var sourcePoints = source.GetConnectionPoints();
                 if (sourcePoints == null || sourcePoints.Count == 0)
                 {
-                    Debug.LogWarning($"構造物 {source.Id} には接続点がありません");
+                    UnityEngine.Debug.LogWarning($"構造物 {source.Id} には接続点がありません");
                     continue;
                 }
 
@@ -302,7 +309,7 @@ namespace StructureGeneration
                     if (connection != null)
                     {
                         connectionsCreated++;
-                        Debug.Log($"接続作成: {source.Id} -> {target.Id} ({type})");
+                        UnityEngine.Debug.Log($"接続作成: {source.Id} -> {target.Id} ({type})");
                     }
                 }
             }
@@ -402,12 +409,18 @@ namespace StructureGeneration
     {
         public List<IStructure> Structures { get; }
         public List<ConnectionData> Connections { get; }
+        public List<PlacementObjectData> PlacementObjects { get; }
         public int Seed { get; }
 
-        public MapGenerationResult(List<IStructure> structures, List<ConnectionData> connections, int seed)
+        public MapGenerationResult(
+            List<IStructure> structures,
+            List<ConnectionData> connections,
+            List<PlacementObjectData> placementObjects,
+            int seed)
         {
             Structures = structures;
             Connections = connections;
+            PlacementObjects = placementObjects;
             Seed = seed;
         }
     }

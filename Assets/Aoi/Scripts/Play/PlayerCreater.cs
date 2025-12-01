@@ -30,7 +30,6 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
 
     //プレイヤープレハブ
     [SerializeField] private NetworkPrefabRef playerPrefab;
-    [SerializeField] private Mesh[] m_playerMeshs = new Mesh[4];
     [SerializeField] private GameObject m_camera;
     //生成優先度
     public InitializationPriority Priority => InitializationPriority.PlayerCreate;
@@ -111,7 +110,7 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
             }
 
             var playerview = networkObject.GetComponent<PlayerView>();
-            playerview.MeshFilter.mesh = m_playerMeshs[userData.m_meshID];
+            playerview.RPC_ChngeMesh(userData.m_meshID);
         });
 
        

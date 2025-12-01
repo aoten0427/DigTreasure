@@ -171,23 +171,8 @@ namespace VoxelWorld
                 return;
             }
 
-            // 即時更新モード
-            if (immediate)
-            {
-                var result = m_batchManager.SetVoxelsImmediate(voxelUpdates, isSender);
 
-                // 進捗を完了状態に
-                if (progressProperty != null)
-                {
-                    progressProperty.Value = 1.0f;
-                }
-
-                // コールバック実行
-                onComplete?.Invoke(result.SuccessCount);
-                return;
-            }
-
-            // 非同期更新モード（既存の動作）
+            // 非同期更新モード
             // coroutineRunnerのチェック
             if (m_coroutineRunner == null)
             {

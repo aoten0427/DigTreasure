@@ -149,6 +149,7 @@ GameObject:
   - component: {fileID: 2042402407581751884}
   - component: {fileID: 3935482446425342854}
   - component: {fileID: 4806763249994281846}
+  - component: {fileID: 1588214086640059498}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -204,6 +205,7 @@ MonoBehaviour:
   - {fileID: -826859247713308971}
   - {fileID: 3535405035700938168}
   - {fileID: 3930071487365287354}
+  - {fileID: 3935482446425342854}
   - {fileID: 4806763249994281846}
   - {fileID: 8030993949806194676}
   ForceRemoteRenderTimeframe: 0
@@ -227,14 +229,7 @@ MonoBehaviour:
   - {fileID: 5461328843765262330}
   - {fileID: 5660668167369758031}
   - {fileID: 8671307646532858658}
-  moveSpeed: 20
-  maxSpeed: 10
-  jumpForce: 5
-  groundCheckDistance: 0.8
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  drag: 5
+  m_movement: {fileID: 1588214086640059498}
   m_combat: {fileID: -826859247713308971}
   m_surroundingsDig: {fileID: 2042402407581751884}
 --- !u!114 &2577929764043462476
@@ -284,7 +279,7 @@ MonoBehaviour:
   _knockbackForce: 100
   _stunDuration: 6
   _stunAnim: {fileID: 4692581572788086549}
-  _treasureLostPercent: 0.3
+  _treasureLostPercent: 0.2
   _treasureDropRadiusRange: {x: 4, y: 9}
   _treasurePrefab: {fileID: 6239018595790337556, guid: 62e8e7473b695ee42ab3f7dc135bcf5e, type: 3}
   _barrierRadius: 2
@@ -416,6 +411,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_meshFilter: {fileID: 6611637279511913639}
+  m_playerMeshs:
+  - {fileID: -2432090755550338912, guid: 3a9fff26618a9e34b8c48846c1f387da, type: 3}
+  - {fileID: -2432090755550338912, guid: edc1b3ae4ab99b04891fdce1111cb9a1, type: 3}
+  - {fileID: -2432090755550338912, guid: 687b340907fe0e742b7ea65462250473, type: 3}
+  - {fileID: -2432090755550338912, guid: 66554a6998aba3649aad8d9ec338ef39, type: 3}
 --- !u!114 &4806763249994281846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -429,6 +429,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_crown: {fileID: 7878380622311420390}
+--- !u!114 &1588214086640059498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781207854068622435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e87955e2516249c46b6c39b0feb7adce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 4
+  maxSpeed: 8
+  acceleration: 10
+  deceleration: 40
+  drag: 10
+  rotationSpeed: 10
+  airControl: 0.2
+  jumpForce: 5.8
+  groundCheckDistance: 0.8
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maxStepHeight: 1
+  stepUpForce: 2.2
+  stepCheckDistance: 1
+  stepUpCooldown: 0.3
+  additionalGravity: 20
+  maxFallSpeed: -20
 --- !u!1 &4193331265326495694
 GameObject:
   m_ObjectHideFlags: 0
@@ -760,6 +790,8 @@ MonoBehaviour:
   m_enableLogging: 0
   m_holder: {fileID: 1781207854068622435}
   m_colliderAppearanceTime: 0.5
+  m_player: {fileID: 184781443713877058}
+  m_attacker: {fileID: -826859247713308971}
 --- !u!1 &4677915432225903430
 GameObject:
   m_ObjectHideFlags: 0
@@ -789,8 +821,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4677915432225903430}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.021112697, y: 0.8772419, z: 0.03874541, w: -0.47801644}
-  m_LocalPosition: {x: 8.370262, y: -0.88162655, z: 5.4001346}
+  m_LocalRotation: {x: -0.057018913, y: 0.75342757, z: 0.06591637, w: 0.65172917}
+  m_LocalPosition: {x: -9.745443, y: -1.7364815, z: 1.4180831}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -874,7 +906,7 @@ MonoBehaviour:
     SplineCurvature: 0.5
   RecenteringTarget: 2
   HorizontalAxis:
-    Value: -122.82837
+    Value: 98.279144
     Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
@@ -884,7 +916,7 @@ MonoBehaviour:
       Time: 2
     Restrictions: 0
   VerticalAxis:
-    Value: -5.0579143
+    Value: -10
     Center: 17.5
     Range: {x: -10, y: 45}
     Wrap: 0
@@ -1082,6 +1114,8 @@ MonoBehaviour:
   m_enableLogging: 0
   m_holder: {fileID: 1781207854068622435}
   m_colliderAppearanceTime: 0.5
+  m_player: {fileID: 184781443713877058}
+  m_attacker: {fileID: -826859247713308971}
 --- !u!1 &8004692802691961467
 GameObject:
   m_ObjectHideFlags: 0
@@ -1236,6 +1270,8 @@ MonoBehaviour:
   m_enableLogging: 0
   m_holder: {fileID: 1781207854068622435}
   m_colliderAppearanceTime: 0.5
+  m_player: {fileID: 184781443713877058}
+  m_attacker: {fileID: -826859247713308971}
 --- !u!1 &9151491585089870581
 GameObject:
   m_ObjectHideFlags: 0
@@ -1333,27 +1369,27 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 6b84d808bce372a42acd21d97b09749c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.5459808
+      value: 1.1415058
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b84d808bce372a42acd21d97b09749c, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.2728024
+      value: 0.9397991
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b84d808bce372a42acd21d97b09749c, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.5459808
+      value: 1.1415058
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b84d808bce372a42acd21d97b09749c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.077987
+      value: 0.057763
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b84d808bce372a42acd21d97b09749c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.1818
+      value: 2.15
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b84d808bce372a42acd21d97b09749c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.13299
+      value: 0.11277
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b84d808bce372a42acd21d97b09749c, type: 3}
       propertyPath: m_LocalRotation.w

@@ -47,6 +47,8 @@ namespace VoxelWorld
         private float[] m_uvTableX;
         private float[] m_uvTableY;
 
+        private uint m_isfreameUpdate;
+
         void Start()
         {
             InitializePlane();
@@ -149,6 +151,9 @@ namespace VoxelWorld
         private bool ShouldUpdatePlane()
         {
             if (m_mainCamera == null) return false;
+
+            m_isfreameUpdate++;
+            if (m_isfreameUpdate % 10 == 0) return true;
 
             Vector3 currentPosition = m_mainCamera.transform.position;
             Vector3 currentForward = m_mainCamera.transform.forward;

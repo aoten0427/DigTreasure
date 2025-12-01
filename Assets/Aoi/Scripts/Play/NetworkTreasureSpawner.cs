@@ -11,18 +11,27 @@ public class NetworkTreasureSpawner : NetworkBehaviour
     [SerializeField] float _maxZ;
     [SerializeField] Treasure _treasurePrefab;
 
+
     private void Awake()
     {
         _treasureList = Resources.Load<TreasureList>("Treasure/TreasureList");
     }
 
-    public void SpawnTreasure(Vector3 spawnPosition, int scorePoint, int meshIndex)
+    public void DropTreasure(Vector3 spawnPosition, int scorePoint, int meshIndex)
     {
         Treasure newTreasure = Runner.Spawn(_treasurePrefab, spawnPosition, Quaternion.identity, onBeforeSpawned: (runner, obj) =>
         {
             Treasure treasure = obj.GetComponent<Treasure>();
             treasure.SetScorePoint(scorePoint);
             treasure.SetMeshIndex(meshIndex);
+
+            var rb = obj.GetComponent<Rigidbody>();
+            if (rb)
+            {
+                rb.isKinematic = false;
+                Vector3 dire = new Vector3(Random.Range(-6, 6), Random.Range(4, 6), Random.Range(-6, 6));
+                rb.AddForce(dire, ForceMode.Impulse);
+            }
         });
         //newTreasure.transform.parent = transform;
     }
@@ -39,6 +48,9 @@ public class NetworkTreasureSpawner : NetworkBehaviour
             Treasure treasure = obj.GetComponent<Treasure>();
             treasure.SetScorePoint(point);
             treasure.SetMeshIndex(selectindex);
+
+            
+
         });
     }
 

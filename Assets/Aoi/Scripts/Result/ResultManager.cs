@@ -62,6 +62,8 @@ public class ResultManager : NetworkBehaviour
         data.NickName = m_uesrData.m_name;
         data.TreasureScore = m_uesrData.m_treasurePoint;
         data.TreasureCount = m_uesrData.m_treasureCount;
+        data.DigScore = m_uesrData.m_digPoint;
+        Debug.Log($"堀ポイント{data.DigScore}");
 
         //状態権限を持つ人のみイベントを設定
         if(Object.HasStateAuthority)
