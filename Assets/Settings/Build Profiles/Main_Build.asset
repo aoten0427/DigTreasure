@@ -21,6 +21,8 @@ MonoBehaviour:
   m_OverrideGlobalSceneList: 1
   m_Scenes:
   - m_enabled: 1
+    m_path: Assets/Aoi/Scene/TestScene.unity
+  - m_enabled: 1
     m_path: Assets/Shared/Scene/0_Entrance.unity
   - m_enabled: 1
     m_path: Assets/Shared/Scene/1_Room.unity

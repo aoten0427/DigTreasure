@@ -272,6 +272,13 @@ public class PlayerCombat : NetworkBehaviour
 
     private void Knockback(Vector3 dir,float force)
     {
+        StartCoroutine(Delya(dir, force));
+    }
+
+    IEnumerator Delya(Vector3 dir, float force)
+    {
+
+        yield return new WaitForSeconds(0.1f);
         if (_rb != null)
         {
             Debug.Log("ノックバック");
@@ -281,6 +288,7 @@ public class PlayerCombat : NetworkBehaviour
             _rb.AddForce(dir * force, ForceMode.Impulse);
         }
     }
+
     private void StunPlayer()
     {
         _stunRemaining = _stunDuration;
