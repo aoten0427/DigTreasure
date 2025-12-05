@@ -109,8 +109,8 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
                 networkObject.gameObject.name = Runner.LocalPlayer.ToString();
             }
 
-            var playerview = networkObject.GetComponent<PlayerView>();
-            playerview.RPC_ChngeMesh(userData.m_meshID);
+            //var playerview = networkObject.GetComponent<PlayerView>();
+            //playerview.RPC_ChngeMesh(userData.m_meshID);
         });
 
        
@@ -125,9 +125,7 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
             Debug.Log("カメラを見つけました");
             m_camera.transform.position = Vector3.zero;
             camera.HorizontalAxis.Value = data.RotatinY;
-        }
-        
-            
+        }   
     }
 
     public void SetManager(PlayManager manager)
