@@ -12,7 +12,7 @@ public class PlayScoreCenter : MonoBehaviour
 
     GameLauncher m_gameLauncher;
     //宝石管理用のインベントリ
-    PlayerInventory m_inventory;
+    PlayerInventoryLogic m_inventory;
 
     public int m_treasurePoint;
     public int m_treasureNum;
@@ -20,7 +20,7 @@ public class PlayScoreCenter : MonoBehaviour
 
     private void Start()
     {
-         m_inventory = GetComponent<PlayerInventory>();
+         m_inventory = GetComponent<PlayerInventoryLogic>();
         if(m_inventory == null )
         {
             Destroy(this);

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UniRx;
 using VoxelWorld;
 using Unity.Cinemachine;
+using System.Collections.Generic;
 
 
 [System.Serializable]
@@ -40,6 +41,8 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
     bool m_isCreate = false;
 
     PlayManager m_playManager;
+
+   
 
     /// <summary>
     /// 初期化呼び出し
@@ -101,16 +104,23 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
 
         NetworkObject spawnedPlayer = Runner.Spawn(playerPrefab, spawnPosition, rotation, onBeforeSpawned: (_, networkObject) =>
         {
-            var player = networkObject.GetComponent<PlayerProto>();
-            if(player != null)
-            {
-                player.NickName = userData.m_name;
-                player.SetPlayManager(m_playManager);
-                networkObject.gameObject.name = Runner.LocalPlayer.ToString();
-            }
+            //var player = networkObject.GetComponent<PlayerProto>();
+            //if(player != null)
+            //{
+            //    player.NickName = userData.m_name;
+            //    player.SetPlayManager(m_playManager);
+            //    networkObject.gameObject.name = Runner.LocalPlayer.ToString();
+            //}
 
-            var playerview = networkObject.GetComponent<PlayerView>();
-            playerview.RPC_ChngeMesh(userData.m_meshID);
+            //var playerview = networkObject.GetComponent<PlayerView>();
+            //playerview.RPC_ChngeMesh(userData.m_colorID);
+
+            var view = networkObject.GetComponentInChildren<PlayerView>();
+            if (view)
+            {
+                view.SetMaterialID(userData.m_colorID);
+                view.SetPlayerName(userData.m_name.ToString());
+            }
         });
 
        
@@ -125,9 +135,7 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
             Debug.Log("カメラを見つけました");
             m_camera.transform.position = Vector3.zero;
             camera.HorizontalAxis.Value = data.RotatinY;
-        }
-        
-            
+        }   
     }
 
     public void SetManager(PlayManager manager)

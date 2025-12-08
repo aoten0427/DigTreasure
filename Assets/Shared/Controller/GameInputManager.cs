@@ -34,11 +34,12 @@ public class GameInputManager : MonoBehaviour
 
     public enum ActionType
     {
+        None,
         DigDown,
         DigUp,
         Jump,
         Attack,
-        Barrier,
+        Guard,
         LookOn
     }
 
@@ -94,7 +95,7 @@ public class GameInputManager : MonoBehaviour
             { ActionType.DigUp,   v => DigUp?.Invoke(v) },
             { ActionType.Jump,    v => Jump?.Invoke(v) },
             { ActionType.Attack,  v => Attack?.Invoke(v) },
-            { ActionType.Barrier, v => Barrier?.Invoke(v) },
+            { ActionType.Guard, v => Barrier?.Invoke(v) },
             { ActionType.LookOn,  v => LookOn?.Invoke(v) }
         };
     }
@@ -107,7 +108,7 @@ public class GameInputManager : MonoBehaviour
             { ButtonType.South,ActionType.DigDown},
             { ButtonType.East,ActionType.Jump},
             { ButtonType.West,ActionType.Attack},
-            { ButtonType.RShoulder,ActionType.Barrier},
+            { ButtonType.RShoulder,ActionType.Guard},
             { ButtonType.LShoulder,ActionType.LookOn},
         };
 

@@ -1,29 +1,39 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
-public class Dig : VoxelWorld.BaseAttack,IPlayerAttack
+/// <summary>
+/// 掘り攻撃クラス
+/// </summary>
+public class Dig : VoxelWorld.BaseAttack
 {
-    [SerializeField] GameObject m_holder;
-    [SerializeField] float m_colliderAppearanceTime = 0.5f;
-    [SerializeField] PlayerProto m_player;
-    [SerializeField] PlayerCombat m_attacker;
+    [SerializeField] private GameObject m_holder;
+    [SerializeField] private float m_colliderAppearanceTime = 0.5f;
+    [SerializeField] private PlayerManager m_manager;
+    [SerializeField] private PlayerCombatLogic m_combatLogic;
 
-    public PlayerProto Player => m_player;
-    public PlayerCombat Attacker => m_attacker;
+    public PlayerManager Manager => m_manager;
+    public PlayerCombatLogic CombatLogic => m_combatLogic;
 
-    public void DigPoint(Vector3 position,Vector3 direction)
+    /// <summary>
+    /// 掘り実行
+    /// </summary>
+    public void DigPoint(Vector3 position, Vector3 direction,Action<int> OnComplete = null)
     {
         direction.Normalize();
 
         StartCoroutine(ColliderAppearance());
 
-        AttackAtPosition(position,direction);
+        AttackAtPosition(position, direction,OnComplete);
     }
 
-    IEnumerator ColliderAppearance()
+    /// <summary>
+    /// コライダー表示コルーチン
+    /// </summary>
+    private IEnumerator ColliderAppearance()
     {
         Collider collider = GetComponent<Collider>();
-        if(collider == null)yield break;
+        if (collider == null) yield break;
 
         collider.enabled = true;
 

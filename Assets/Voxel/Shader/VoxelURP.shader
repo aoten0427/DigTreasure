@@ -205,8 +205,8 @@ Shader "Universal Render Pipeline/Voxel/Standard"
                 }
                 #endif
 
-                // アンビエント（GIが正しく計算されているので係数を下げる）
-                float3 ambient = bakedGI * albedo.rgb;
+                // アンビエント
+                float3 ambient = bakedGI * albedo.rgb * 0.1;
                 
                 // 最終色計算
                 float3 color = ambient + diffuse + specular;

@@ -698,7 +698,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.454
+    m_Strength: 0.721
     m_Bias: 0.05
     m_NormalBias: 0
     m_NearPlane: 0.2
@@ -2815,8 +2815,13 @@ MonoBehaviour:
   - Position: {x: 30, y: 5, z: -30}
     RotatinY: 315
   playerPrefab:
-    RawGuidValue: 52af324604c016341b990a8745d2b2f1
+    RawGuidValue: f4c8f5bd20125ec479c08fef705c30b6
   m_camera: {fileID: 961739749}
+  m_colors:
+  - {fileID: 2100000, guid: 24f4ce0ef9340894aaf17c9b2a8b0468, type: 2}
+  - {fileID: 2100000, guid: d517fa30b59a058479644b808ee2ccc8, type: 2}
+  - {fileID: 2100000, guid: 18c54aba897b9e84d90e908df1947809, type: 2}
+  - {fileID: 2100000, guid: 0079cd633f4ca4544a3207df72f7b699, type: 2}
 --- !u!114 &838352220
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2829,7 +2834,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af0082d28643e0a4f9decd472ceb4c15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settings: {fileID: 11400000, guid: ec011947d17c8e342aedc7bea48be338, type: 2}
+  settings: {fileID: 11400000, guid: e89bd184c056ab44193f02cfacd9e1a4, type: 2}
 --- !u!114 &838352221
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3493,8 +3498,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 961739749}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.04152004, y: -0.80603087, z: -0.056948386, w: 0.5876625}
-  m_LocalPosition: {x: 9.426193, y: -1.4060386, z: 3.0281918}
+  m_LocalRotation: {x: -0.083194084, y: 0.2969334, z: 0.02597831, w: 0.9509125}
+  m_LocalPosition: {x: -5.603926, y: -1.7364817, z: -8.098187}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

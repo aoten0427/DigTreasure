@@ -14,7 +14,7 @@ namespace NetWork
         public int m_treasureCount;//取ったお宝の数
         public int m_treasurePoint;//お宝のポイント
         public int m_digPoint;//掘ったポイント
-        public int m_meshID;
+        public int m_colorID;
 
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace NetWork
             m_treasureCount = 0;
             m_treasurePoint = 0;
             m_digPoint = 0;
-            m_meshID = 0;
+            m_colorID = 0;
         }
     }
 }
