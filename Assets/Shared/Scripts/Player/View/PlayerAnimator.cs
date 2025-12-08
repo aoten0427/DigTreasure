@@ -24,6 +24,9 @@ public class PlayerAnimator : MonoBehaviour
     private bool m_digAnimCheck;
     private int m_lastDigLoopCount;
 
+    //ヒットストップ関連
+    private Coroutine m_hitStopCoroutine;
+
 
     /// <summary>
     /// 初期化
@@ -52,6 +55,8 @@ public class PlayerAnimator : MonoBehaviour
             
             m_manager.Events.OnBarrierStart += OnBarrierStart;
             m_manager.Events.OnBarrierEnd += OnBarrierEnd;
+            m_manager.Events.OnHitStopStart += OnHitStopStart;
+            m_manager.Events.OnHitStopEnd += OnHitStopEnd;
         }
 
         //Dig変数初期化
@@ -75,6 +80,8 @@ public class PlayerAnimator : MonoBehaviour
             
             m_manager.Events.OnBarrierStart -= OnBarrierStart;
             m_manager.Events.OnBarrierEnd -= OnBarrierEnd;
+            m_manager.Events.OnHitStopStart -= OnHitStopStart;
+            m_manager.Events.OnHitStopEnd -= OnHitStopEnd;
         }
     }
 
@@ -367,6 +374,49 @@ public class PlayerAnimator : MonoBehaviour
             m_manager.NetworkState.HasStateAuthority)
         {
             m_manager.NetworkState.RpcSyncBarrierAnimation(isDefense);
+        }
+    }
+
+    /// <summary>
+    /// ヒットストップ開始イベント
+    /// </summary>
+    private void OnHitStopStart(float duration)
+    {
+        if (m_animator == null) return;
+
+        //既存のヒットストップを停止
+        if (m_hitStopCoroutine != null)
+        {
+            StopCoroutine(m_hitStopCoroutine);
+        }
+        m_hitStopCoroutine = StartCoroutine(HitStopCoroutine(duration));
+    }
+
+    /// <summary>
+    /// ヒットストップコルーチン
+    /// </summary>
+    private IEnumerator HitStopCoroutine(float duration)
+    {
+        m_animator.speed = 1.0f;
+        yield return new WaitForSecondsRealtime(duration);
+        m_animator.speed = 1f;
+        m_manager?.Events?.InvokeHitStopEnd();
+        m_hitStopCoroutine = null;
+    }
+
+    /// <summary>
+    /// ヒットストップ終了イベント
+    /// </summary>
+    private void OnHitStopEnd()
+    {
+        if (m_hitStopCoroutine != null)
+        {
+            StopCoroutine(m_hitStopCoroutine);
+            m_hitStopCoroutine = null;
+        }
+        if (m_animator != null)
+        {
+            m_animator.speed = 1f;
         }
     }
 

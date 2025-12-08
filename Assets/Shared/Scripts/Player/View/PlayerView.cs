@@ -1,5 +1,8 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
+using Unity.Cinemachine;
+using System.Xml;
 
 /// <summary>
 /// プレイヤー表示クラス
@@ -12,8 +15,8 @@ public class PlayerView : MonoBehaviour
     [SerializeField] private Vector3 m_cameraOffset = new Vector3(0, 2, -5);
 
     [Header("名前表示")]
-    [SerializeField] private TextMeshProUGUI m_nameText;
-    [SerializeField] private Canvas m_nameCanvas;
+    [SerializeField] private TextMeshPro m_nameText;
+    private string m_name;
 
     [Header("エフェクト")]
     [SerializeField] private GameObject m_stunEffect;
@@ -21,9 +24,7 @@ public class PlayerView : MonoBehaviour
     [SerializeField] private GameObject m_damageEffectPrefab;
     [SerializeField] private GameObject m_immunityEffect;
 
-    [Header("メッシュ")]
-    [SerializeField] private MeshFilter m_meshFilter;
-    [SerializeField] private Renderer m_renderer;
+
 
     //PlayerManager参照
     private PlayerManager m_manager;
@@ -34,6 +35,10 @@ public class PlayerView : MonoBehaviour
     //メインカメラ
     [SerializeField]private GameObject m_mainCamera;
 
+    int m_colorID = 0;
+
+    [SerializeField]List<MeshRenderer> m_meshRenderers = new List<MeshRenderer>();
+    [SerializeField] List<Material> m_colors = new List<Material>();
     /// <summary>
     /// 初期化
     /// </summary>
@@ -63,6 +68,14 @@ public class PlayerView : MonoBehaviour
         if (m_stunEffect != null) m_stunEffect.SetActive(false);
         if (m_barrierEffect != null) m_barrierEffect.SetActive(false);
         if (m_immunityEffect != null) m_immunityEffect.SetActive(false);
+
+        //見た目を変更
+        SetMaterial(m_colorID);
+        if (m_manager.NetworkStateAuthority)
+        {
+            m_manager?.NetworkState?.RPC_MaterialChange(m_colorID);
+            m_manager?.NetworkState?.RPC_NameChange(m_name);
+        }
     }
 
     private void OnDestroy()
@@ -81,14 +94,15 @@ public class PlayerView : MonoBehaviour
 
     private void LateUpdate()
     {
-        //名前キャンバスをカメラに向ける
-        if (m_nameCanvas != null && m_mainCamera != null)
-        {
-            m_nameCanvas.transform.LookAt(
-                m_nameCanvas.transform.position + m_mainCamera.transform.rotation * Vector3.forward,
-                m_mainCamera.transform.rotation * Vector3.up
-            );
-        }
+        m_nameText.transform.rotation = Camera.main.transform.rotation;
+        ////名前キャンバスをカメラに向ける
+        //if (m_nameCanvas != null && m_mainCamera != null)
+        //{
+        //    m_nameCanvas.transform.LookAt(
+        //        m_nameCanvas.transform.position + m_mainCamera.transform.rotation * Vector3.forward,
+        //        m_mainCamera.transform.rotation * Vector3.up
+        //    );
+        //}
     }
 
     /// <summary>
@@ -104,6 +118,7 @@ public class PlayerView : MonoBehaviour
     /// </summary>
     public void SetPlayerName(string name)
     {
+        m_name = name;
         if (m_nameText != null)
         {
             m_nameText.text = name;
@@ -192,43 +207,30 @@ public class PlayerView : MonoBehaviour
     /// </summary>
     public void PlayDamageEffect(Vector3 position, Quaternion rotation)
     {
+        Debug.Log("生成");
         if (m_damageEffectPrefab != null)
         {
+            Debug.Log("生成成功");
             var effect = Instantiate(m_damageEffectPrefab, position, rotation);
-            Destroy(effect, 2f);
+            //Destroy(effect, 2f);
         }
     }
 
-    /// <summary>
-    /// メッシュ変更
-    /// </summary>
-    public void SetMesh(Mesh mesh)
-    {
-        if (m_meshFilter != null)
-        {
-            m_meshFilter.mesh = mesh;
-        }
-    }
+
 
     /// <summary>
     /// マテリアル変更
     /// </summary>
-    public void SetMaterial(Material material)
+    public void SetMaterialID(int id)
     {
-        if (m_renderer != null)
-        {
-            m_renderer.material = material;
-        }
+        m_colorID = id;
     }
 
-    /// <summary>
-    /// 表示/非表示
-    /// </summary>
-    public void SetVisible(bool visible)
+    public void SetMaterial(int id)
     {
-        if (m_renderer != null)
+        foreach (var renderer in m_meshRenderers)
         {
-            m_renderer.enabled = visible;
+            renderer.material = m_colors[id];
         }
     }
 }

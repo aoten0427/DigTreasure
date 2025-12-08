@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -17,13 +18,13 @@ public class Dig : VoxelWorld.BaseAttack
     /// <summary>
     /// 掘り実行
     /// </summary>
-    public void DigPoint(Vector3 position, Vector3 direction)
+    public void DigPoint(Vector3 position, Vector3 direction,Action<int> OnComplete = null)
     {
         direction.Normalize();
 
         StartCoroutine(ColliderAppearance());
 
-        AttackAtPosition(position, direction);
+        AttackAtPosition(position, direction,OnComplete);
     }
 
     /// <summary>

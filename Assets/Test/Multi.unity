@@ -1475,7 +1475,7 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 2322296527
+  SortKey: 3775730963
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
@@ -1863,7 +1863,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2784048958037856484, guid: 8f54e054b8301c9428b14a324ee83919, type: 3}
       propertyPath: SortKey
-      value: 3834785589
+      value: 993252729
       objectReference: {fileID: 0}
     - target: {fileID: 5933480197350650916, guid: 8f54e054b8301c9428b14a324ee83919, type: 3}
       propertyPath: m_Name
@@ -2770,7 +2770,7 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 2020739141
+  SortKey: 3474173577
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
@@ -2815,13 +2815,8 @@ MonoBehaviour:
   - Position: {x: 30, y: 5, z: -30}
     RotatinY: 315
   playerPrefab:
-    RawGuidValue: f4c8f5bd20125ec479c08fef705c30b6
+    RawGuidValue: 195a6b7f153784c4b81d062ed8193b65
   m_camera: {fileID: 961739749}
-  m_colors:
-  - {fileID: 2100000, guid: 24f4ce0ef9340894aaf17c9b2a8b0468, type: 2}
-  - {fileID: 2100000, guid: d517fa30b59a058479644b808ee2ccc8, type: 2}
-  - {fileID: 2100000, guid: 18c54aba897b9e84d90e908df1947809, type: 2}
-  - {fileID: 2100000, guid: 0079cd633f4ca4544a3207df72f7b699, type: 2}
 --- !u!114 &838352220
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2880,7 +2875,7 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 646709915
+  SortKey: 2100144351
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
@@ -4871,7 +4866,7 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 1771907462
+  SortKey: 3225341898
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
@@ -5661,7 +5656,7 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 2190067797
+  SortKey: 3643502233
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []

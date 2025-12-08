@@ -27,6 +27,10 @@ public class PlayerNetworkState : NetworkBehaviour
     public bool IsBarrierActive => m_isBarrierActive;
     public bool IsImmune => m_isImmune;
 
+    public bool NetworkStateAuthority { get {
+            return Runner != null && Runner.IsRunning && HasStateAuthority;
+        } }
+
     public override void Spawned()
     {
         base.Spawned();
@@ -282,4 +286,30 @@ public class PlayerNetworkState : NetworkBehaviour
     }
 
     #endregion
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_MaterialChange(int id)
+    {
+        if(HasStateAuthority) return;
+        m_manager?.View?.SetMaterial(id);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_NameChange(string name)
+    {
+        if (HasStateAuthority) return;
+        m_manager?.View?.SetPlayerName(name);
+    }
+
+    /// <summary>
+    /// ヒットストップ同期RPC
+    /// </summary>
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RpcPlayHitStop(float duration)
+    {
+        //StateAuthorityはローカルイベントで処理済みなのでスキップ
+        if (HasStateAuthority) return;
+
+        m_manager?.Events?.InvokeHitStopStart(duration);
+    }
 }

@@ -39,6 +39,10 @@ public class PlayerEvents
     public event Action OnImmunityStart;
     public event Action OnImmunityEnd;
 
+    //ヒットストップ関連
+    public event Action<float> OnHitStopStart;
+    public event Action OnHitStopEnd;
+
     /// <summary>
     /// スタン開始を通知
     /// </summary>
@@ -168,6 +172,22 @@ public class PlayerEvents
     }
 
     /// <summary>
+    /// ヒットストップ開始を通知
+    /// </summary>
+    public void InvokeHitStopStart(float duration)
+    {
+        OnHitStopStart?.Invoke(duration);
+    }
+
+    /// <summary>
+    /// ヒットストップ終了を通知
+    /// </summary>
+    public void InvokeHitStopEnd()
+    {
+        OnHitStopEnd?.Invoke();
+    }
+
+    /// <summary>
     /// 全イベントをクリア
     /// </summary>
     public void ClearAllEvents()
@@ -188,5 +208,7 @@ public class PlayerEvents
         OnKnockback = null;
         OnImmunityStart = null;
         OnImmunityEnd = null;
+        OnHitStopStart = null;
+        OnHitStopEnd = null;
     }
 }

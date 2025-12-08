@@ -28,6 +28,9 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private PlayerView m_view;
     [SerializeField] private PlayerAnimator m_animator;
 
+    [Header("カメラ")]
+    [SerializeField] private PlayerCameraController m_cameraController;
+
     [Header("物理")]
     [SerializeField] private Rigidbody m_rigidbody;
     [SerializeField] private Collider m_collider;
@@ -48,9 +51,13 @@ public class PlayerManager : MonoBehaviour
     public PlayerDigLogic DigLogic => m_digLogic;
     public PlayerView View => m_view;
     public PlayerAnimator Animator => m_animator;
+    public PlayerCameraController CameraController => m_cameraController;
     public Rigidbody Rigidbody => m_rigidbody;
     public Collider Collider => m_collider;
 
+    public bool NetworkStateAuthority { get {
+            return IsOnlineMode && m_networkState != null && m_networkState.NetworkStateAuthority;
+        } }
 
     private void Awake()
     {
@@ -71,9 +78,10 @@ public class PlayerManager : MonoBehaviour
         if (!m_isOnlineMode && m_networkState != null)
         {
             m_networkState.enabled = false;
-            StartOffline();
         }
     }
+
+    
 
     /// <summary>
     /// 初期化（オンラインモードではSpawned後に呼ばれる）
@@ -116,6 +124,12 @@ public class PlayerManager : MonoBehaviour
         if (m_animator != null)
         {
             m_animator.Initialize(this);
+        }
+
+        //カメラ初期化
+        if (m_cameraController != null)
+        {
+            m_cameraController.Initialize(this, isLocalPlayer);
         }
     }
 

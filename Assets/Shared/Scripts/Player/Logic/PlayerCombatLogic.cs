@@ -21,6 +21,10 @@ public class PlayerCombatLogic : MonoBehaviour
     [Header("免疫")]
     [SerializeField] private float m_immunityDuration = 2f;
 
+    [Header("ヒットストップ")]
+    [SerializeField] private float m_attackerHitStopDuration = 0.1f;
+    [SerializeField] private float m_defenderHitStopDuration = 0.15f;
+
     //PlayerManager参照
     private PlayerManager m_manager;
 
@@ -237,6 +241,9 @@ public class PlayerCombatLogic : MonoBehaviour
                 );
                 Debug.Log("[Combat] Sending RpcTakeDamage");
                 targetManager.NetworkState.RpcTakeDamage(damageData);
+
+                //攻撃側ヒットストップ
+                m_manager.Events?.InvokeHitStopStart(m_attackerHitStopDuration);
             }
         }
         else
@@ -250,6 +257,9 @@ public class PlayerCombatLogic : MonoBehaviour
                 isDirect: true
             );
             attackTarget.ProcessDamage(damageData);
+
+            //攻撃側ヒットストップ
+            m_manager?.Events?.InvokeHitStopStart(m_attackerHitStopDuration);
         }
 
         Debug.Log("[Combat] Attack successful");
@@ -281,8 +291,36 @@ public class PlayerCombatLogic : MonoBehaviour
     /// </summary>
     public void ProcessDamage(PlayerDamageData damage)
     {
+        //被攻撃側ヒットストップ
+        m_manager?.Events?.InvokeHitStopStart(m_defenderHitStopDuration);
+
+        //ヒットストップをネットワーク同期
+        if (m_manager?.IsOnlineMode == true &&
+            m_manager.NetworkState != null &&
+            m_manager.NetworkState.HasStateAuthority)
+        {
+            m_manager.NetworkState.RpcPlayHitStop(m_defenderHitStopDuration);
+        }
+
         //イベント発火
         m_manager?.Events?.InvokeDamageReceived(damage.KnockbackForce);
+
+        //ダメージエフェクト同期
+        if (m_manager?.IsOnlineMode == true &&
+            m_manager.NetworkState != null &&
+            m_manager.NetworkState.HasStateAuthority)
+        {
+            Vector3 effectPos = transform.position + Vector3.up;
+            Quaternion effectRot = Quaternion.LookRotation(-damage.Direction);
+            m_manager.NetworkState.RpcPlayDamageEffect(effectPos, effectRot);
+        }
+        else
+        {
+            //オフラインモード
+            Vector3 effectPos = transform.position + Vector3.up;
+            Quaternion effectRot = Quaternion.LookRotation(-damage.Direction);
+            m_manager?.View?.PlayDamageEffect(effectPos, effectRot);
+        }
 
         //スタン
         if (m_manager?.NetworkState != null && m_manager.IsOnlineMode)
@@ -309,14 +347,6 @@ public class PlayerCombatLogic : MonoBehaviour
     /// </summary>
     public void ApplyKnockback(Vector3 direction, float force)
     {
-        StartCoroutine(KnockbackCoroutine(direction, force));
-        m_manager?.Events?.InvokeKnockback(direction, force);
-    }
-
-    private IEnumerator KnockbackCoroutine(Vector3 direction, float force)
-    {
-        yield return new WaitForSeconds(0.1f);
-
         var rb = m_manager?.Rigidbody;
         if (rb != null)
         {
@@ -324,6 +354,14 @@ public class PlayerCombatLogic : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
             rb.AddForce(direction * force, ForceMode.Impulse);
         }
+        m_manager?.Events?.InvokeKnockback(direction, force);
+    }
+
+    private IEnumerator KnockbackCoroutine(Vector3 direction, float force)
+    {
+        yield return new WaitForSeconds(0.1f);
+
+        
     }
 
     private IEnumerator StunCoroutine(float duration)

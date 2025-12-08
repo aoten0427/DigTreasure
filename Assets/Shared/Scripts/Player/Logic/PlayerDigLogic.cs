@@ -107,6 +107,9 @@ public class PlayerDigLogic : MonoBehaviour
         //インベントリに掘りポイント追加
         m_manager?.InventoryLogic?.AddDigPoints(digCount);
 
+        //カメラシェイク
+        m_manager?.CameraController?.PlayDigShake(digCount);
+
         //振動処理
         if (digCount >= 1000)
         {

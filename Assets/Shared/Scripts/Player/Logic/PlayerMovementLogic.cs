@@ -181,6 +181,9 @@ public class PlayerMovementLogic : MonoBehaviour
     /// <summary>
     /// 移動処理
     /// </summary>
+    /// <summary>
+    /// 移動処理
+    /// </summary>
     public void ProcessMovement(Vector2 moveInput, Quaternion cameraRotation, float deltaTime)
     {
         if (m_rigidbody == null) return;
@@ -193,18 +196,36 @@ public class PlayerMovementLogic : MonoBehaviour
             Vector3 currentVelocity = m_rigidbody.linearVelocity;
             Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
 
+            //水平方向の速度と入力方向
+            Vector3 horizontalMoveDirection = moveDirection.normalized; // 入力方向の水平成分
+            Vector3 horizontalVelocityNormalized = horizontalVelocity.normalized; // 現在速度の水平成分
+
             float controlMultiplier = m_isGrounded ? 1f : m_airControl;
 
             if (moveDirection.magnitude > 0.1f)
             {
+                
+                // 速度と入力方向の内積をチェック
+                float dotProduct = Vector3.Dot(horizontalVelocityNormalized, horizontalMoveDirection);
+
+                //逆方向への入力
+                if (m_isGrounded && horizontalVelocity.magnitude > 0.1f && dotProduct < -0.5f)
+                {
+                    // 逆方向への急ブレーキ/加速力
+                    Vector3 brakeForce = horizontalMoveDirection * m_acceleration * 2f; // 強めに加速
+                    m_rigidbody.AddForce(brakeForce, ForceMode.Force);
+                }
+
                 if (horizontalVelocity.magnitude < m_maxSpeed)
                 {
-                    Vector3 force = moveDirection.normalized * m_moveSpeed * m_acceleration * controlMultiplier;
+                    // 通常の加速
+                    Vector3 force = horizontalMoveDirection * m_moveSpeed * m_acceleration * controlMultiplier;
                     m_rigidbody.AddForce(force, ForceMode.Force);
                 }
             }
             else
             {
+                // 入力がない場合の減速・ドラッグ処理 
                 if (m_isGrounded)
                 {
                     Vector3 dragForce = -horizontalVelocity * m_deceleration;
@@ -226,6 +247,7 @@ public class PlayerMovementLogic : MonoBehaviour
 
             if (!m_isGrounded)
             {
+                //重力処理
                 m_rigidbody.AddForce(Vector3.down * m_additionalGravity, ForceMode.Force);
 
                 if (m_rigidbody.linearVelocity.y < m_maxFallSpeed)
@@ -240,6 +262,7 @@ public class PlayerMovementLogic : MonoBehaviour
         }
         else
         {
+            //移動無効時の処理 
             Vector3 velocity = m_rigidbody.linearVelocity;
             velocity.x *= 0.9f;
             velocity.z *= 0.9f;
