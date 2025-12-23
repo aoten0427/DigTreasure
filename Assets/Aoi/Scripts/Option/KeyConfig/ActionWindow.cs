@@ -30,7 +30,7 @@ public class ActionWindow : UIWindowBase
     [SerializeField]ActionWindowView m_view;
 
 
-    public void Initialize(InputGame input)
+    public override void Initialize(InputGame input)
     {
         if (m_actionDatas.Count == 0) return;
         m_currentData = m_actionDatas[0];
@@ -38,8 +38,8 @@ public class ActionWindow : UIWindowBase
         m_input = input;
         if(input != null)
         {
-            input.Normal.Up.started += ctx => InputDirection(UISelecterBase.SelectionDirection.Up);
-            input.Normal.Down.started += ctx => InputDirection(UISelecterBase.SelectionDirection.Down);
+            input.Normal.Up.started += ctx => InputDirection(SelectionDirection.Up);
+            input.Normal.Down.started += ctx => InputDirection(SelectionDirection.Down);
             input.Normal.Select.started += ctx => ButtonSelect();
         }
     }
@@ -76,7 +76,7 @@ public class ActionWindow : UIWindowBase
     public void Close()
     {
         m_isActive = false;
-        m_currentData.Deselect(null);
+        if(m_currentData)m_currentData.Deselect(null);
         m_view.Close();
     }
 
@@ -84,7 +84,7 @@ public class ActionWindow : UIWindowBase
     /// ëIëïœçX
     /// </summary>
     /// <param name="direction"></param>
-    private void InputDirection(UISelecterBase.SelectionDirection direction)
+    private void InputDirection(SelectionDirection direction)
     {
         if(m_currentData== null||!m_isActive) return;
         var next = m_currentData.SelectionGenerics(direction);

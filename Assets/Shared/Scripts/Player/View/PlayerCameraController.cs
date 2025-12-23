@@ -29,13 +29,11 @@ public class PlayerCameraController : MonoBehaviour
         m_manager = manager;
         m_isLocalPlayer = isLocalPlayer;
 
-        Debug.Log($"[CameraController] Initialize: isLocalPlayer={isLocalPlayer}, impulseSource={m_impulseSource}");
 
         //イベント購読
         if (m_manager?.Events != null)
         {
             m_manager.Events.OnHitStopStart += OnHitStopStart;
-            Debug.Log("[CameraController] OnHitStopStart イベント購読完了");
         }
     }
 
@@ -53,12 +51,10 @@ public class PlayerCameraController : MonoBehaviour
     /// </summary>
     private void OnHitStopStart(float duration)
     {
-        Debug.Log($"[CameraController] OnHitStopStart: duration={duration}, isLocalPlayer={m_isLocalPlayer}");
 
         //ローカルプレイヤーのみシェイク
         if (!m_isLocalPlayer)
         {
-            Debug.Log("[CameraController] ローカルプレイヤーではないためスキップ");
             return;
         }
 
@@ -76,16 +72,11 @@ public class PlayerCameraController : MonoBehaviour
     /// </summary>
     public void PlayShake(float force)
     {
-        Debug.Log($"[CameraController] PlayShake: force={force}, impulseSource={m_impulseSource}");
 
         if (m_impulseSource != null)
         {
             m_impulseSource.GenerateImpulseWithForce(force);
-            Debug.Log("[CameraController] GenerateImpulseWithForce 実行完了");
-        }
-        else
-        {
-            Debug.LogWarning("[CameraController] m_impulseSource が null です");
+           
         }
     }
 

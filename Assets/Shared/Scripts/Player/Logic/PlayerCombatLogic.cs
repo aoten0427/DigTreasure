@@ -10,6 +10,7 @@ public class PlayerCombatLogic : MonoBehaviour
     [Header("ロックオン")]
     [SerializeField] private float m_lockOnRange = 5f;
     [SerializeField] private float m_lookSpeed = 5f;
+    [SerializeField] private float m_lockOnIConRange = 15f;
     [SerializeField] private GameObject m_lockOnIcon;
 
     [Header("ノックバック")]
@@ -86,16 +87,11 @@ public class PlayerCombatLogic : MonoBehaviour
         if (m_lockTarget != null)
         {
             float distance = Vector3.Distance(transform.position, m_lockTarget.transform.position);
-            if (distance > m_lockOnRange)
+            if (distance > m_lockOnIConRange)
             {
                 ChangeLockTarget(null);
+                m_manager?.MovementLogic?.SetLockOnRotation(false,Quaternion.identity);
             }
-        }
-
-        if(Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            PlayerDamageData playerDamageData = new PlayerDamageData(m_manager.NetworkState,m_manager.NetworkState,0,5);
-            ProcessDamage(playerDamageData);
         }
 
 
@@ -103,17 +99,69 @@ public class PlayerCombatLogic : MonoBehaviour
         HandleRotation();
     }
 
+
+
+    public void LockOn()
+    {
+        if (!m_canLockOn) return;
+        
+        Collider[] nearPlayers = Physics.OverlapSphere(transform.position, m_lockOnIConRange);
+        if (nearPlayers.Length == 0)
+        {
+            ChangeLockTarget(null);
+            return;
+        }
+
+        float nearestDist = float.MaxValue;
+        float smallestAngle = float.MaxValue;
+        PlayerCombatLogic newLockTarget = m_lockTarget;
+
+        foreach (Collider coll in nearPlayers)
+        {
+            if (coll.gameObject == gameObject) continue;
+            if (m_lockTarget != null && coll.gameObject == m_lockTarget.gameObject) continue;
+
+            var targetCombat = coll.GetComponent<PlayerCombatLogic>();
+
+
+            if (targetCombat == null || targetCombat == m_manager.CombatLogic) continue;
+
+            Vector3 toTarget = targetCombat.transform.position - transform.position;
+            float dist = toTarget.magnitude;
+            if (dist > m_lockOnIConRange) continue;
+
+            float angle = Vector3.Angle(transform.forward, toTarget);
+
+            if (dist < nearestDist || (Mathf.Abs(dist - nearestDist) <= 0.02f && angle < smallestAngle))
+            {
+                newLockTarget = targetCombat;
+                nearestDist = dist;
+                smallestAngle = angle;
+            }
+        }
+        if (!newLockTarget) return;
+        if(!newLockTarget.m_lockOnIcon.activeSelf)
+        {
+            ChangeLockTarget(newLockTarget);
+        }
+        else
+        {
+            ChangeLockTarget(null);
+            m_manager?.MovementLogic?.SetLockOnRotation(false, Quaternion.identity);
+        }
+        
+    }
+
     /// <summary>
     /// ロックオン切り替え
     /// </summary>
     public void ToggleLockOn()
     {
-        Debug.Log($"[Combat] ToggleLockOn: canLockOn={m_canLockOn}, range={m_lockOnRange}");
 
         if (!m_canLockOn) return;
 
         Collider[] nearPlayers = Physics.OverlapSphere(transform.position, m_lockOnRange);
-        Debug.Log($"[Combat] Found {nearPlayers.Length} colliders in range");
+        
 
         if (nearPlayers.Length == 0)
         {
@@ -131,7 +179,7 @@ public class PlayerCombatLogic : MonoBehaviour
             if (m_lockTarget != null && coll.gameObject == m_lockTarget.gameObject) continue;
 
             var targetCombat = coll.GetComponent<PlayerCombatLogic>();
-            Debug.Log($"[Combat] Checking {coll.gameObject.name}: hasCombatLogic={targetCombat != null}");
+            
 
             if (targetCombat == null||targetCombat == m_manager.CombatLogic) continue;
 
@@ -149,7 +197,7 @@ public class PlayerCombatLogic : MonoBehaviour
             }
         }
 
-        Debug.Log($"[Combat] NewLockTarget={newLockTarget}");
+        
         ChangeLockTarget(newLockTarget);
     }
 
@@ -180,9 +228,12 @@ public class PlayerCombatLogic : MonoBehaviour
     {
         if (m_lockTarget == null || m_isAttacking) return;
 
+        Vector3 dir = m_lockTarget.transform.position - transform.position;
+        dir.y = 0f;
+
         Quaternion targetRot = Quaternion.Lerp(
             transform.rotation,
-            Quaternion.LookRotation((m_lockTarget.transform.position - transform.position).normalized, transform.up),
+            Quaternion.LookRotation(dir.normalized, Vector3.up),
             Time.deltaTime * m_lookSpeed
         );
 
@@ -194,27 +245,22 @@ public class PlayerCombatLogic : MonoBehaviour
     /// </summary>
     public bool Attack()
     {
-        Debug.Log($"[Combat] Attack() called: canAttack={m_canAttack}");
 
         if (!m_canAttack)
         {
-            Debug.Log("[Combat] Attack blocked: canAttack is false");
             return false;
         }
 
         //ターゲット決定
-        Debug.Log($"[Combat] LockTarget={m_lockTarget}");
         var attackTarget = m_lockTarget != null ? m_lockTarget : GetAttackTarget();
         if(attackTarget == m_manager.CombatLogic)
         {
-            Debug.Log($"ターゲットが自分です");
             return false;
         }
-        Debug.Log($"[Combat] AttackTarget={attackTarget}");
+        
 
         if (attackTarget == null)
         {
-            Debug.Log("[Combat] Attack failed: no target found");
             return false;
         }
 
@@ -222,13 +268,11 @@ public class PlayerCombatLogic : MonoBehaviour
         StartCoroutine(Delay(() => m_isAttacking = false));
         
 
-        Debug.Log($"[Combat] IsOnlineMode={m_manager?.IsOnlineMode}, NetworkState={m_manager?.NetworkState}");
 
         //オンラインモードでダメージ送信
         if (m_manager != null && m_manager.IsOnlineMode && m_manager.NetworkState != null)
         {
             var targetManager = attackTarget.m_manager;
-            Debug.Log($"[Combat] Online: targetManager={targetManager}, targetNetworkState={targetManager?.NetworkState}");
             if (targetManager?.NetworkState != null)
             {
                 var damageData = new PlayerDamageData(
@@ -239,7 +283,6 @@ public class PlayerCombatLogic : MonoBehaviour
                     direction: (attackTarget.transform.position - transform.position).normalized,
                     isDirect: true
                 );
-                Debug.Log("[Combat] Sending RpcTakeDamage");
                 targetManager.NetworkState.RpcTakeDamage(damageData);
 
                 //攻撃側ヒットストップ
@@ -249,7 +292,6 @@ public class PlayerCombatLogic : MonoBehaviour
         else
         {
             //オフラインモードでダメージ直接処理
-            Debug.Log("[Combat] Offline: ProcessDamage directly");
             var damageData = new PlayerDamageData(
                 knockbackForce: m_knockbackForce,
                 stunDuration: m_stunDuration,
@@ -262,7 +304,6 @@ public class PlayerCombatLogic : MonoBehaviour
             m_manager?.Events?.InvokeHitStopStart(m_attackerHitStopDuration);
         }
 
-        Debug.Log("[Combat] Attack successful");
         return true;
     }
 

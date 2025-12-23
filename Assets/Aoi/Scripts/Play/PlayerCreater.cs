@@ -51,7 +51,6 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
     /// <returns></returns>
     public async Task InitializeAsync(ReactiveProperty<float> task = null)
     {
-        
         m_gameLauncher = NetWork.GameLauncher.Instance;
         
 
@@ -104,16 +103,6 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
 
         NetworkObject spawnedPlayer = Runner.Spawn(playerPrefab, spawnPosition, rotation, onBeforeSpawned: (_, networkObject) =>
         {
-            //var player = networkObject.GetComponent<PlayerProto>();
-            //if(player != null)
-            //{
-            //    player.NickName = userData.m_name;
-            //    player.SetPlayManager(m_playManager);
-            //    networkObject.gameObject.name = Runner.LocalPlayer.ToString();
-            //}
-
-            //var playerview = networkObject.GetComponent<PlayerView>();
-            //playerview.RPC_ChngeMesh(userData.m_colorID);
 
             var view = networkObject.GetComponentInChildren<PlayerView>();
             if (view)
@@ -123,11 +112,8 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
             }
         });
 
-       
 
         Debug.Log("プレイヤー生成");
-
-
 
         var camera = FindFirstObjectByType<CinemachineOrbitalFollow>();
         if(camera != null)
@@ -135,7 +121,16 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
             Debug.Log("カメラを見つけました");
             m_camera.transform.position = Vector3.zero;
             camera.HorizontalAxis.Value = data.RotatinY;
-        }   
+        }  
+        
+        PlayerManager player = spawnedPlayer.GetComponent<PlayerManager>();
+        if(player)
+        {
+            m_playManager.OnGameStartAction += () =>
+            {
+                player.IsActive = true;
+            };
+        }
     }
 
     public void SetManager(PlayManager manager)

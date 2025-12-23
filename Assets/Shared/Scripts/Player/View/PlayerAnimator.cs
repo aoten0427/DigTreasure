@@ -27,7 +27,7 @@ public class PlayerAnimator : MonoBehaviour
     //ヒットストップ関連
     private Coroutine m_hitStopCoroutine;
 
-
+    [SerializeField] AudioSource m_digSound;
     /// <summary>
     /// 初期化
     /// </summary>
@@ -111,6 +111,7 @@ public class PlayerAnimator : MonoBehaviour
                 SyncDigAnimation(m_isDig);
                 m_isDig = false;
                 m_digAnimCheck = true;
+                if(m_digSound)m_digSound.Play();
             }
         }
         //Dig_Loop中の処理
@@ -128,6 +129,7 @@ public class PlayerAnimator : MonoBehaviour
                 SyncDigAnimation(m_isDig);
                 m_isDig = false;
                 m_digAnimCheck = true;
+                if (m_digSound) m_digSound.Play();
             }
             m_lastDigLoopCount = currentLoopCount;
         }
@@ -145,6 +147,7 @@ public class PlayerAnimator : MonoBehaviour
     /// </summary>
     private void OnMove(Vector2 moveInput)
     {
+        if (!m_manager.IsActive) return;
         if (m_animator == null) return;
         //移動しているか？
         bool isWalk = moveInput.magnitude > 0.1f;
@@ -194,7 +197,7 @@ public class PlayerAnimator : MonoBehaviour
     /// </summary>
     private void OnAttack()
     {
-        
+        if (!m_manager.IsActive) return;
         if (m_manager.CombatLogic != null)
         {
             if (!m_manager.CombatLogic.IsAttacking) return;
@@ -239,6 +242,7 @@ public class PlayerAnimator : MonoBehaviour
     /// </summary>
     private void OnDig(int direction)
     {
+        if (!m_manager.IsActive) return;
         if (m_animator == null) return;
         
         //攻撃中は掘り不可
@@ -259,6 +263,7 @@ public class PlayerAnimator : MonoBehaviour
         else if (!(stateInfo.IsName("Dig_Start") || stateInfo.IsName("Dig_Loop") || stateInfo.IsName("Dig_End")))
         {
             m_animator.SetBool("isDig", true);
+            if (m_digSound) m_digSound.Play();
             SyncDigAnimation(true);
         }
         
@@ -345,6 +350,7 @@ public class PlayerAnimator : MonoBehaviour
     /// </summary>
     private void OnBarrierStart()
     {
+        if (!m_manager.IsActive) return;
         if (m_animator != null)
         {
             m_animator.SetBool("isDefense", true);

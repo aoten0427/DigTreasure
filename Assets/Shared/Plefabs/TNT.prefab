@@ -229,6 +229,7 @@ MonoBehaviour:
   m_normal: {fileID: -8469494145858465668, guid: 327c24ff36b937447ae79c3c22e07e89, type: 3}
   m_blink: {fileID: 2100000, guid: f65ddb182dafe1a4ca9f6c013ddb01d6, type: 2}
   m_explosion: {fileID: 8012588921032048940}
+  m_network: {fileID: -5857957744819532848}
 --- !u!65 &7080870695840122237
 BoxCollider:
   m_ObjectHideFlags: 0

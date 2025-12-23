@@ -83,15 +83,29 @@ namespace VoxelWorld
         /// <returns>設定が成功した場合true</returns>
         public bool SetVoxel(int x, int y, int z, Voxel voxel)
         {
-            if (!IsValidVoxelPosition(x, y, z))
+            if (!IsWithinBounds(x, y, z))
             {
                 return false;
             }
 
+            // 差分計算でボクセル数を更新（O(n³)ループを回避）
+            bool wasEmpty = m_voxelData[x, y, z].IsEmpty;
+            bool willBeEmpty = voxel.IsEmpty;
+
             m_voxelData[x, y, z] = voxel;
-            UpdateVoxelCount();
+
+            // ボクセル数を差分で更新
+            if (wasEmpty && !willBeEmpty)
+            {
+                m_voxelCount++;
+            }
+            else if (!wasEmpty && willBeEmpty)
+            {
+                m_voxelCount--;
+            }
+
             CheckAutoDelete();
-            
+
             return true;
         }
         
@@ -104,7 +118,7 @@ namespace VoxelWorld
         /// <returns>ボクセルデータ</returns>
         public Voxel GetVoxel(int x, int y, int z)
         {
-            if (!IsValidVoxelPosition(x, y, z))
+            if (!IsWithinBounds(x, y, z))
             {
                 return Voxel.Empty;
             }
@@ -123,13 +137,13 @@ namespace VoxelWorld
         }
         
         /// <summary>
-        /// 指定インデックスが有効な範囲内かチェック
+        /// 指定インデックスが配列の範囲内かチェック
         /// </summary>
         /// <param name="index">チェックするインデックス</param>
-        /// <returns>有効な範囲内の場合true</returns>
-        public bool IsValidIndex(Vector3Int index)
+        /// <returns>範囲内の場合true</returns>
+        public bool IsWithinBounds(Vector3Int index)
         {
-            return IsValidVoxelPosition(index.x, index.y, index.z);
+            return IsWithinBounds(index.x, index.y, index.z);
         }
 
         /// <summary>
@@ -169,7 +183,7 @@ namespace VoxelWorld
             }
 
             // 範囲チェック付きで破壊
-            var validPositions = voxelPositions.Where(pos => IsValidIndex(pos)).ToList();
+            var validPositions = voxelPositions.Where(pos => IsWithinBounds(pos)).ToList();
             return ExecuteVoxelDestruction(validPositions);
         }
 
@@ -205,7 +219,7 @@ namespace VoxelWorld
                 );
 
                 // 範囲チェック
-                if (!IsValidIndex(localIndex))
+                if (!IsWithinBounds(localIndex))
                 {
                     continue;
                 }
@@ -247,7 +261,7 @@ namespace VoxelWorld
 
             foreach (var localIndex in targetPositions)
             {
-                if (IsValidIndex(localIndex) && !m_voxelData[localIndex.x, localIndex.y, localIndex.z].IsEmpty)
+                if (IsWithinBounds(localIndex) && !m_voxelData[localIndex.x, localIndex.y, localIndex.z].IsEmpty)
                 {
                     m_voxelData[localIndex.x, localIndex.y, localIndex.z] = Voxel.Empty;
                     destroyedCount++;
@@ -257,7 +271,8 @@ namespace VoxelWorld
             // 破壊後の処理
             if (destroyedCount > 0)
             {
-                UpdateVoxelCount();
+                // 差分でボクセル数を更新（O(n³)ループを回避）
+                m_voxelCount -= destroyedCount;
                 GenerateMeshAndCollider();
                 CheckAutoDelete();
             }
@@ -397,13 +412,13 @@ namespace VoxelWorld
         }
         
         /// <summary>
-        /// ボクセル位置の妥当性をチェック
+        /// 指定座標が配列の範囲内かチェック
         /// </summary>
         /// <param name="x">X座標</param>
         /// <param name="y">Y座標</param>
         /// <param name="z">Z座標</param>
-        /// <returns>有効な位置の場合true</returns>
-        private bool IsValidVoxelPosition(int x, int y, int z)
+        /// <returns>範囲内の場合true</returns>
+        private bool IsWithinBounds(int x, int y, int z)
         {
             return m_voxelData != null && 
                    x >= 0 && x < m_size.x && 

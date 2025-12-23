@@ -16,7 +16,7 @@ namespace NetWork
     {
         GameLauncher m_gameLauncher;
         //表示するプレイヤー
-        [SerializeField] GameObject[] m_players = new GameObject[4];
+        [SerializeField] RoomPlayer[] m_players = new RoomPlayer[4];
         //プレイヤー名
         [SerializeField] TextMeshProUGUI[] m_playerName = new TextMeshProUGUI[4];
         //自身のモデル
@@ -35,6 +35,10 @@ namespace NetWork
         [Networked, Capacity(4)]
         private NetworkDictionary<PlayerRef, bool> n_allisReady => default;
 
+        [SerializeField]GameObject m_mainCamera;
+        [SerializeField] GameObject m_light;
+        [SerializeField] GameObject m_canvas;
+        [SerializeField] RoomInput m_roomInput;
         /// <summary>
         /// 初期化
         /// </summary>
@@ -50,7 +54,7 @@ namespace NetWork
             {
                 if (p != null)
                 {
-                    p.SetActive(false);
+                    p.gameObject.SetActive(false);
                 }
             }
             foreach (var p in m_playerName)
@@ -83,7 +87,7 @@ namespace NetWork
             {
                 if (p != null)
                 {
-                    p.SetActive(false);
+                    p.gameObject.SetActive(false);
                 }
             }
 
@@ -127,7 +131,7 @@ namespace NetWork
         }
 
         /// <summary>
-        /// Resultからのよみこみ時に待たないといけないため松
+        /// Resultからのよみこみ時に待たないといけないため
         /// </summary>
         /// <returns></returns>
         private IEnumerator WaitForSpawnAndEntry()
@@ -221,7 +225,7 @@ namespace NetWork
             {
                 if (index >= 0 && index < m_players.Length)
                 {
-                    m_player = m_players[index];
+                    m_player = m_players[index].gameObject;
                     //使うメッシュIDを更新
                     var userdata = m_gameLauncher.UserData;
                     userdata.m_colorID = index;
@@ -234,7 +238,8 @@ namespace NetWork
             {
                 if (m_players[i] != null)
                 {
-                    m_players[i].SetActive(n_indexUsage[i]);
+                    m_players[i].gameObject.SetActive(n_indexUsage[i]);
+                    
                 }
             }
 
@@ -286,13 +291,40 @@ namespace NetWork
             //全員が準備完了ならゲーム開始
             if(n_allisReady.All(kvp => kvp.Value))
             {
-                GameStart();
+                RPC_EntryAnimation();
             }
         }
 
         public void GameStart()
         {
+           
+        }
+
+        [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+        private void RPC_EntryAnimation()
+        {
+            foreach(var player in m_players)
+            {
+                if (!player.gameObject.activeSelf) continue;
+                player.Entry();
+            }
             if(Object.HasStateAuthority)
+            {
+                //アニメーション待ってからシーン遷移(余裕があったら変える)
+                StartCoroutine(Wait(1.2f, ChangeScene));
+            }
+        }
+
+        IEnumerator Wait(float wait,Action action)
+        {
+            yield return new WaitForSeconds(wait);
+            action?.Invoke();
+        }
+
+        //シーン遷移
+        private void ChangeScene()
+        {
+            if (Object.HasStateAuthority)
             {
                 //遊ぶ人数を設定
                 m_gameLauncher.SetStartingNumber(Runner.ActivePlayers.Count());
@@ -306,6 +338,22 @@ namespace NetWork
             await m_gameLauncher.LeaveRoom();
 
             SceneManager.LoadScene(Config.ENTRANCE_SCENE_NUMBER, LoadSceneMode.Single);
+        }
+
+        public void ActiveOn()
+        {
+            m_mainCamera.SetActive(true);
+            m_light.SetActive(true);
+            m_canvas.SetActive(true);
+            m_roomInput.IsActive = true;
+        }
+
+        public void ActiveOff()
+        {
+            m_mainCamera.SetActive(false);
+            m_light.SetActive(false);
+            m_canvas.SetActive(false);
+            m_roomInput.IsActive = false;
         }
     }
 }

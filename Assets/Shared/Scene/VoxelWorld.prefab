@@ -1,0 +1,111 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8704677881861785281
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5542919920956992321}
+  - component: {fileID: 8799050860423444463}
+  - component: {fileID: 5738674094889402105}
+  - component: {fileID: 2706080855379638370}
+  - component: {fileID: 539474988518688260}
+  m_Layer: 0
+  m_Name: VoxelWorld
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5542919920956992321
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8704677881861785281}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.7286096, y: 9.685353, z: -6.569456}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8799050860423444463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8704677881861785281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7878dcd09bbd3ac4fa388a78a4e110c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_worldSizeInChunksMin: {x: -8, y: -8, z: -8}
+  m_worldSizeInChunksMax: {x: 8, y: 5, z: 8}
+  m_isInitializeCreateChunk: 0
+  m_voxelMaterial: {fileID: 2100000, guid: 2b1e4587679c7204e944569092a95697, type: 2}
+  m_boundaryMeshSettings:
+    forwardBoundaryZ: 4
+    backBoundaryZ: -5
+    upBoundaryY: -1
+    downBoundaryY: -5
+    rightBoundaryX: 4
+    leftBoundaryX: -5
+    enableForward: 1
+    enableBack: 1
+    enableUp: 1
+    enableDown: 1
+    enableRight: 1
+    enableLeft: 1
+  m_enableColliders: 1
+  m_maxCollidersPerChunk: 256
+  m_localPlayerId: 0
+  m_voxelEffectManager: {fileID: 2706080855379638370}
+--- !u!114 &5738674094889402105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8704677881861785281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca43d814e694af44eb999dbd7c2ff85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_enableLogging: 0
+--- !u!114 &2706080855379638370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8704677881861785281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 425e9d7a877daba409e1ea82fb4777d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_effect: {fileID: 8518154725785987418, guid: bc14e03b42942e24aa25d8efa85b5294, type: 3}
+--- !u!114 &539474988518688260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8704677881861785281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f8f11c5656942f45a72d3e8b3a59368, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_worldManager: {fileID: 8799050860423444463}
+  m_worldSizeInChunksMin: {x: -10, y: -10, z: -10}
+  m_worldSizeInChunksMax: {x: 10, y: 5, z: 10}

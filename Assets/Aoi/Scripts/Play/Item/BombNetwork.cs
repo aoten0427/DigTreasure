@@ -25,36 +25,47 @@ public class BombNetwork : NetworkItem
         var attaker = other.GetComponent<IPlayerAttack>();
         if (attaker == null) return;
 
-        m_bomb.OnDestroyAction(attaker.Player.DigUpdate);
-        //m_rigidbody.AddForce((transform.position - attaker.Attacker.gameObject.transform.position).normalized * 50,ForceMode.Impulse);
-
-        RPC_HolderChange(Runner.LocalPlayer);
-
+        m_bomb.OnDestroyAction(attaker.Player.DigLogic.OnDigComplete);
 
         ////å†å¿ñ›Ç…îöî≠ÇàÀóä
-        RPC_ExplosionHost(attaker.Attacker);
+        RPC_ExplosionHost(Runner.LocalPlayer);
+        m_bomb.Attacker = attaker.Player;
+
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_ExplosionHost(PlayerCombat attacker)
+    private void RPC_ExplosionHost(PlayerRef player)
     {
         if (n_isExplosion) return;
         n_isExplosion = true;
-        m_bomb.Attacker = attacker;
-        m_bomb.IgnitionStart();
-        RPC_Explosion();
+        RPC_Explosion(player);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_Explosion()
+    private void RPC_Explosion(PlayerRef player)
     {
-        Debug.Log("îöî≠");
-        m_bomb.IgnitionStart(true);
+        if(player == Runner.LocalPlayer)
+        {
+            Debug.Log("îöî≠é“Ç≈Ç∑");
+            m_bomb.IsDestroyd = true;
+        }
+        m_bomb.IgnitionStart();
     }
 
     public override void HolderChangeAction(bool isholder)
     {
         m_bomb.IsDestroyd = isholder;
         Debug.Log($"îjâÛÇïœçX:{isholder}");
+    }
+
+    public void Destroy()
+    {
+        
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_Destroy()
+    {
+        Destroy(gameObject);
     }
 }

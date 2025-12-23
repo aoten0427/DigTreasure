@@ -7,8 +7,7 @@ public class BombLocal : VoxelWorld.BaseAttack
     //制御用Tween
     Tween m_ignitionTween;
     Tween m_blinkTween;
-    //ポーズフラグ
-    bool m_isPaused;
+
 
     bool m_isblink;
     [SerializeField]MeshRenderer m_renderer;
@@ -17,8 +16,10 @@ public class BombLocal : VoxelWorld.BaseAttack
 
     [SerializeField] Explosion m_explosion;
 
-    PlayerCombat m_attacker;
-    public PlayerCombat Attacker { get { return m_attacker; } set {  m_attacker = value; } }
+    [SerializeField]BombNetwork m_network;
+
+    PlayerManager m_attacker;
+    public PlayerManager Attacker { get {  return m_attacker; } set { m_attacker = value; } }
 
     //ボクセルの破壊を行うか
     private bool m_isDestroyd = false;
@@ -41,8 +42,6 @@ public class BombLocal : VoxelWorld.BaseAttack
             return;
 
         Debug.Log("点火開始！");
-
-        m_isPaused = false;
 
         m_isblink = false;
         float progress = 0f;
@@ -117,54 +116,39 @@ public class BombLocal : VoxelWorld.BaseAttack
     /// </summary>
     public void Explosion()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, AttackRadius,LayerMask.GetMask("Player"));
-        foreach (Collider hit in hits)
+        if(m_isDestroyd)
         {
-            var target = hit.GetComponent<PlayerCombat>();
-            if(target != null)
+            Collider[] hits = Physics.OverlapSphere(transform.position, AttackRadius);
+            foreach (Collider hit in hits)
             {
-                Debug.Log($"{target.gameObject}を見つけました");
-                PlayerDamage damage = new PlayerDamage(m_attacker,target,100.0f,10.0f,
-                    (target.transform.position - transform.position).normalized,false);
-                target.RpcTakeDamage(damage);
+                var target = hit.GetComponent<PlayerNetworkState>();
+                if (target != null)
+                {
+                    PlayerDamageData damage = new PlayerDamageData(m_attacker.NetworkState, target, 100, 10,
+                        (target.transform.position - transform.position).normalized, false);
+                    target.RpcTakeDamage(damage);
+                }
             }
-        }
 
-        if (m_isDestroyd) AttackAtPosition(transform.position);
+            AttackAtPosition(transform.position);
+        }
 
 
         m_renderer.enabled = false;
         m_explosion.PlayAnimation();
-        Destroy(gameObject);
+        if (m_isDestroyd) Destroy();
+        
     }
 
-    /// <summary>
-    /// 中断
-    /// </summary>
-    public void StopIgnition()
+    private void Destroy()
     {
-        m_ignitionTween?.Kill();
-        StopBlink();
-        Debug.Log("点火中断");
-    }
-
-    /// <summary>
-    /// ポーズ用
-    /// </summary>
-    /// <param name="pause"></param>
-    public void SetPaused(bool pause)
-    {
-        m_isPaused = pause;
-
-        if (pause)
+        if(m_network)
         {
-            m_ignitionTween?.Pause();
-            m_blinkTween?.Pause();
+            m_network.Destroy();
         }
         else
         {
-            m_ignitionTween?.Play();
-            m_blinkTween?.Play();
+            Destroy(gameObject);
         }
     }
 }

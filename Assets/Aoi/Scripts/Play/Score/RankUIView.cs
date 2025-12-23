@@ -13,7 +13,7 @@ public class RankUIView : MonoBehaviour
 
     // 移動設定
     [SerializeField] private float m_moveAnimationDuration = 1.0f;
-    [SerializeField] private float m_checkpointOffsetX = 50f;  // 中継地点のXオフセット
+    [SerializeField] private float m_checkpointOffsetX = 75f;  // 中継地点のXオフセット
 
     // 自動計算される座標
     private Vector3 m_firstPlacePosition;

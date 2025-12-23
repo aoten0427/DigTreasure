@@ -445,6 +445,33 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RTrigger"",
+                    ""type"": ""Button"",
+                    ""id"": ""f7fe1bd8-50aa-4201-bdd0-212f96d5dc02"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""LTrigger"",
+                    ""type"": ""Button"",
+                    ""id"": ""abb5bd1f-6c0d-4ef0-96b8-bd7a85c4945d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Cancel"",
+                    ""type"": ""Button"",
+                    ""id"": ""1f022f7c-02c8-4b40-927d-117bc33a7c3f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -594,11 +621,99 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""d6d2705e-f619-42d0-a677-a6b9558a0231"",
-                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Select"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2f2ff099-1d02-4af8-8dda-947b3ca829d8"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6a1626bb-63ca-4324-a09c-2969e06a3694"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2bd6e6db-5918-40b2-89c6-1af39dc26f28"",
+                    ""path"": ""<Keyboard>/k"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7b5accce-38a7-49cb-b582-28e757b92ca6"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""59479803-b5d3-4a36-81bd-3be962b41b63"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b1d321c4-25bb-4f63-ae33-54333ef5d73b"",
+                    ""path"": ""<Keyboard>/j"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""49235b96-5e77-40cd-bb45-1f4c23e8e9b7"",
+                    ""path"": ""<Keyboard>/b"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cancel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d75fc585-9480-4307-b62b-13012f16f0da"",
+                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cancel"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -625,6 +740,9 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
         m_Normal_Left = m_Normal.FindAction("Left", throwIfNotFound: true);
         m_Normal_Right = m_Normal.FindAction("Right", throwIfNotFound: true);
         m_Normal_Select = m_Normal.FindAction("Select", throwIfNotFound: true);
+        m_Normal_RTrigger = m_Normal.FindAction("RTrigger", throwIfNotFound: true);
+        m_Normal_LTrigger = m_Normal.FindAction("LTrigger", throwIfNotFound: true);
+        m_Normal_Cancel = m_Normal.FindAction("Cancel", throwIfNotFound: true);
     }
 
     ~@InputGame()
@@ -895,6 +1013,9 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
     private readonly InputAction m_Normal_Left;
     private readonly InputAction m_Normal_Right;
     private readonly InputAction m_Normal_Select;
+    private readonly InputAction m_Normal_RTrigger;
+    private readonly InputAction m_Normal_LTrigger;
+    private readonly InputAction m_Normal_Cancel;
     /// <summary>
     /// Provides access to input actions defined in input action map "Normal".
     /// </summary>
@@ -926,6 +1047,18 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Normal/Select".
         /// </summary>
         public InputAction @Select => m_Wrapper.m_Normal_Select;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/RTrigger".
+        /// </summary>
+        public InputAction @RTrigger => m_Wrapper.m_Normal_RTrigger;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/LTrigger".
+        /// </summary>
+        public InputAction @LTrigger => m_Wrapper.m_Normal_LTrigger;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/Cancel".
+        /// </summary>
+        public InputAction @Cancel => m_Wrapper.m_Normal_Cancel;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -967,6 +1100,15 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
             @Select.started += instance.OnSelect;
             @Select.performed += instance.OnSelect;
             @Select.canceled += instance.OnSelect;
+            @RTrigger.started += instance.OnRTrigger;
+            @RTrigger.performed += instance.OnRTrigger;
+            @RTrigger.canceled += instance.OnRTrigger;
+            @LTrigger.started += instance.OnLTrigger;
+            @LTrigger.performed += instance.OnLTrigger;
+            @LTrigger.canceled += instance.OnLTrigger;
+            @Cancel.started += instance.OnCancel;
+            @Cancel.performed += instance.OnCancel;
+            @Cancel.canceled += instance.OnCancel;
         }
 
         /// <summary>
@@ -993,6 +1135,15 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
             @Select.started -= instance.OnSelect;
             @Select.performed -= instance.OnSelect;
             @Select.canceled -= instance.OnSelect;
+            @RTrigger.started -= instance.OnRTrigger;
+            @RTrigger.performed -= instance.OnRTrigger;
+            @RTrigger.canceled -= instance.OnRTrigger;
+            @LTrigger.started -= instance.OnLTrigger;
+            @LTrigger.performed -= instance.OnLTrigger;
+            @LTrigger.canceled -= instance.OnLTrigger;
+            @Cancel.started -= instance.OnCancel;
+            @Cancel.performed -= instance.OnCancel;
+            @Cancel.canceled -= instance.OnCancel;
         }
 
         /// <summary>
@@ -1139,5 +1290,26 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSelect(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RTrigger" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRTrigger(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "LTrigger" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLTrigger(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Cancel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCancel(InputAction.CallbackContext context);
     }
 }

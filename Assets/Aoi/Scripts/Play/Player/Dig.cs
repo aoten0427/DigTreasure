@@ -5,15 +5,19 @@ using UnityEngine;
 /// <summary>
 /// 掘り攻撃クラス
 /// </summary>
-public class Dig : VoxelWorld.BaseAttack
+public class Dig : VoxelWorld.BaseAttack,IPlayerAttack
 {
     [SerializeField] private GameObject m_holder;
     [SerializeField] private float m_colliderAppearanceTime = 0.5f;
     [SerializeField] private PlayerManager m_manager;
     [SerializeField] private PlayerCombatLogic m_combatLogic;
+    [SerializeField]private Collider m_collider;
+
 
     public PlayerManager Manager => m_manager;
     public PlayerCombatLogic CombatLogic => m_combatLogic;
+
+    public PlayerManager Player => m_manager;
 
     /// <summary>
     /// 掘り実行
@@ -32,13 +36,13 @@ public class Dig : VoxelWorld.BaseAttack
     /// </summary>
     private IEnumerator ColliderAppearance()
     {
-        Collider collider = GetComponent<Collider>();
-        if (collider == null) yield break;
+        
+        if (m_collider == null) yield break;
 
-        collider.enabled = true;
+        m_collider.enabled = true;
 
         yield return new WaitForSeconds(m_colliderAppearanceTime);
 
-        collider.enabled = false;
+        m_collider.enabled = false;
     }
 }

@@ -10,7 +10,7 @@ namespace VoxelWorld
     {
         bool IsNonEmptyVoxel(Vector3 position);
         Voxel GetVoxel(Vector3 position);
-        bool IsValidPosition(Vector3 position);
+        bool ExistsInWorld(Vector3 position);
         VoxelProviderType GetProviderType();
     }
     
@@ -69,13 +69,13 @@ namespace VoxelWorld
             return chunk.GetVoxelFromWorldPosition(position);
         }
         
-        public bool IsValidPosition(Vector3 position)
+        public bool ExistsInWorld(Vector3 position)
         {
             if (m_chunkManager == null)
             {
                 return false;
             }
-            
+
             var chunk = m_chunkManager.GetChunkFromWorldPosition(position);
             return chunk != null;
         }
@@ -152,7 +152,7 @@ namespace VoxelWorld
             var index = VoxelConstants.SeparatedObjectWorldToIndex(
                 position - m_separatedObject.WorldPosition);
             
-            if (!m_separatedObject.IsValidIndex(index)) return false;
+            if (!m_separatedObject.IsWithinBounds(index)) return false;
             
             var voxel = m_separatedObject.GetVoxelData(index);
             return !voxel.IsEmpty;
@@ -165,19 +165,19 @@ namespace VoxelWorld
             var index = VoxelConstants.SeparatedObjectWorldToIndex(
                 position - m_separatedObject.WorldPosition);
             
-            if (!m_separatedObject.IsValidIndex(index)) return Voxel.Empty;
+            if (!m_separatedObject.IsWithinBounds(index)) return Voxel.Empty;
             
             return m_separatedObject.GetVoxelData(index);
         }
         
-        public bool IsValidPosition(Vector3 position)
+        public bool ExistsInWorld(Vector3 position)
         {
             if (m_separatedObject == null) return false;
-            
+
             var index = VoxelConstants.SeparatedObjectWorldToIndex(
                 position - m_separatedObject.WorldPosition);
-            
-            return m_separatedObject.IsValidIndex(index);
+
+            return m_separatedObject.IsWithinBounds(index);
         }
         
         public VoxelProviderType GetProviderType()

@@ -190,8 +190,29 @@ public class PlayerMovementLogic : MonoBehaviour
 
         if (m_canMove)
         {
+            Vector3 moveDirection;
+
+            //if (m_needLockOnRot)
+            //{
+            //    // ロックオン中：ロックオンの向き（m_lockOnRot）を基準に移動ベクトルを作る
+
+            //    Vector3 forward = m_lockOnRot * Vector3.forward;
+            //    forward.y = 0f;
+            //    forward.Normalize();
+
+            //    Vector3 right = m_lockOnRot * Vector3.right;
+            //    right.y = 0f;
+            //    right.Normalize();
+
+
+            //    moveDirection = (forward * moveInput.y + right * moveInput.x);
+            //}
+            //else
+            //{
+                
+            //}
             var inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
-            Vector3 moveDirection = cameraRotation * inputDirection;
+            moveDirection = cameraRotation * inputDirection;
 
             Vector3 currentVelocity = m_rigidbody.linearVelocity;
             Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
@@ -209,10 +230,10 @@ public class PlayerMovementLogic : MonoBehaviour
                 float dotProduct = Vector3.Dot(horizontalVelocityNormalized, horizontalMoveDirection);
 
                 //逆方向への入力
-                if (m_isGrounded && horizontalVelocity.magnitude > 0.1f && dotProduct < -0.5f)
+                if (m_isGrounded && horizontalVelocity.magnitude > 0.1f && dotProduct < 0.5f)
                 {
                     // 逆方向への急ブレーキ/加速力
-                    Vector3 brakeForce = horizontalMoveDirection * m_acceleration * 2f; // 強めに加速
+                    Vector3 brakeForce = horizontalMoveDirection * m_acceleration * 3f; // 強めに加速
                     m_rigidbody.AddForce(brakeForce, ForceMode.Force);
                 }
 
@@ -317,8 +338,7 @@ public class PlayerMovementLogic : MonoBehaviour
         RaycastHit lowerHit;
         bool hasStep = Physics.Raycast(lowerRayStart, transform.forward, out lowerHit, m_stepCheckDistance, m_groundLayer);
 
-        Debug.DrawRay(upperRayStart, transform.forward * m_stepCheckDistance, hasObstacleAbove ? Color.red : Color.green);
-        Debug.DrawRay(lowerRayStart, transform.forward * m_stepCheckDistance, hasStep ? Color.yellow : Color.blue);
+        
 
         if (!hasObstacleAbove && hasStep)
         {
