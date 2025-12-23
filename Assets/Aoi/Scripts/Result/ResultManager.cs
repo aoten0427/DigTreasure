@@ -1,6 +1,7 @@
 ﻿using Fusion;
 using NetWork;
 using NUnit.Framework;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ public class ResultManager : NetworkBehaviour
     NetWork.NetworkUserData m_uesrData;
     NetWork.GameLauncher m_gameLauncher;
 
-    [SerializeField] GameObject m_resultCanvas;
+    RoomManager m_roomManager;
 
     //全体のリザルトデータ
     [Networked, Capacity(4)]
@@ -25,15 +26,17 @@ public class ResultManager : NetworkBehaviour
     [SerializeField] Ranking m_ranking;
     [SerializeField] bool m_islog = false;
 
-    // シーン再ロード処理中フラグ
-    private bool isReloadingScene = false;
+    bool m_isSelectButton = false;
 
+    //閉じる際のイベント
+    public event Action OnClose;
 
     private void Start()
     {
         m_gameLauncher = GameLauncher.Instance;
-        
     }
+
+    
 
     public override void Spawned()
     {
@@ -42,28 +45,19 @@ public class ResultManager : NetworkBehaviour
             Debug.LogWarning("表示用ランキングがありません");
         }
 
-        //状態権限を持つ人のみイベントを設定
-        if (Object.HasStateAuthority)
-        {
-            m_gameLauncher.OnPlayerJoined += OnJoinUser;
-            Runner.UnloadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER));
-            Runner.LoadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER), LoadSceneMode.Additive);
 
-        }
+
+        StartCoroutine(LoadRoomSceneAndInitialize());
 
         //ユーザーデータを取得しリザルトデータに反映
         m_uesrData = m_gameLauncher.UserData;
-        if (!m_uesrData.m_isPlayData)
-        {
-            m_resultCanvas.SetActive(false);
-            return;
-        }
         ResultData data = new ResultData();
         data.NickName = m_uesrData.m_name;
         data.TreasureScore = m_uesrData.m_treasurePoint;
         data.TreasureCount = m_uesrData.m_treasureCount;
-        data.DigScore = m_uesrData.m_digPoint;
-        Debug.Log($"堀ポイント{data.DigScore}");
+        data.DigPoint = m_uesrData.m_digPoint;
+        data.Index = m_uesrData.m_colorID;
+        Debug.Log($"堀ポイント{data.DigPoint}");
 
         //状態権限を持つ人のみイベントを設定
         if(Object.HasStateAuthority)
@@ -75,54 +69,36 @@ public class ResultManager : NetworkBehaviour
         //リザルトデータを全体更新
         RPC_SetResultData(Runner.LocalPlayer, data);
 
-
-    }
-
-    private void OnJoinUser(NetworkRunner runner,PlayerRef user)
-    {
-       
-        //StartCoroutine(WaitForSpawnAndEntry());
         
     }
 
-    private IEnumerator WaitForSpawnAndEntry()
-    {
-        // Spawnされるまで待つ
-        yield return new WaitUntil(() => Runner != null && Object.IsValid);
-        if (Object.HasStateAuthority)
-        {
-            // 既に再ロード処理中なら何もしない
-            if (isReloadingScene) yield break;
-
-            StartCoroutine(ReloadRoomScene());
-        }
-    }
-
     /// <summary>
-    /// ROOMシーンをアンロード→ロードする
+    /// ROOMシーンをロードしてコンポーネントを初期化する
     /// </summary>
-    private IEnumerator ReloadRoomScene()
+    private IEnumerator LoadRoomSceneAndInitialize()
     {
-        isReloadingScene = true;
 
-        // アンロード開始
-        Runner.UnloadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER));
+        if(Object.HasStateAuthority)
+        {
+            // アンロード
+            Runner.UnloadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER));
+            yield return new WaitForSeconds(0.5f);
+            // ロード
+            Runner.LoadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER), LoadSceneMode.Additive);
+        }
+       
 
-        // アンロード完了を待つ（1フレーム待機）
-        yield return new WaitForSeconds(0.5f);
+        RoomManager target = null;
+        yield return new WaitUntil(() => (target = FindFirstObjectByType<RoomManager>()) != null);
+        m_roomManager = target;
+        m_roomManager.ActiveOff();
 
-        // ロード開始
-        Runner.LoadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER), LoadSceneMode.Additive);
-
-        // ロード完了を待つ
-        yield return new WaitForSeconds(0.5f);
-
-        isReloadingScene = false;
+        Debug.Log("見つけました");
+    
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        m_gameLauncher.OnPlayerJoined -= OnJoinUser;
         m_gameLauncher.RemoveOnAllUserReady(RPC_SentData);
     }
 
@@ -182,26 +158,59 @@ public class ResultManager : NetworkBehaviour
             ResultData data = new ResultData();
             data.NickName = userdata.Value.NickName;
             data.TreasureScore = userdata.Value.TreasureScore;
-            data.DigScore = userdata.Value.DigScore;
+            data.DigPoint = userdata.Value.DigPoint;
             data.TreasureCount = userdata.Value.TreasureCount;
+            data.Index = userdata.Value.Index;
             data.IsSelf = userdata.Key == Runner.LocalPlayer;
             datas.Add(data);
         }
 
 
+        //ここでフェードを開く
+        /////
+        /////
+
+        var roomcamera = FindFirstObjectByType<RoomCamera>();
+        if (roomcamera != null)
+        {
+            roomcamera.gameObject.SetActive(false);
+        }
+
         //ランキング表示
-        m_ranking.ShowRanking(datas);
+        m_ranking.ShowRanking(datas,PerformanceEnd);
     }
 
+    private void PerformanceEnd()
+    {
+        m_isSelectButton = true;
+    }
+
+
+    /// <summary>
+    /// ルームから抜ける
+    /// </summary>
     public async void Exit()
     {
-        await m_gameLauncher.LeaveRoom();
+        if (!m_isSelectButton) return;
+        m_isSelectButton = false;
 
+        await m_gameLauncher.LeaveRoom();
         SceneManager.LoadScene(Config.ENTRANCE_SCENE_NUMBER, LoadSceneMode.Single);
     }
 
+    /// <summary>
+    /// ルームに戻る
+    /// </summary>
     public void PlayAgain()
     {
-        m_resultCanvas.SetActive(false);
+        if (!m_isSelectButton) return;
+        m_isSelectButton = false;
+
+        OnClose?.Invoke();
+
+        if (m_roomManager)
+        {
+            m_roomManager.ActiveOn();
+        }
     }
 }

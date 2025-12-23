@@ -11,11 +11,14 @@ namespace Option
         InputGame m_input;
 
         //アクティブ化
-        bool m_isActive = true;
+        bool m_isActive = false;
         //選択しているボタン
         [SerializeField] private UISelecterBase m_select;
 
         [SerializeField] ActionWindow m_actionWindow;
+
+        [SerializeField] UIWindowBase m_nextWindow;
+        [SerializeField] UIWindowBase m_backWindow;
 
         //アクションと対応した名前
         static Dictionary<GameInputManager.ActionType, string> m_actionName = new Dictionary<GameInputManager.ActionType, string> {
@@ -33,15 +36,16 @@ namespace Option
         /// 初期化
         /// </summary>
         /// <param name="input"></param>
-        public void Initailize(InputGame input)
+        public override void Initialize(InputGame input)
         {
+            Close(null);
             m_input = input;
-            if(m_input != null)
+            if (m_input != null)
             {
-                m_input.Normal.Up.started += ctx => InputDirection(UISelecterBase.SelectionDirection.Up);
-                m_input.Normal.Down.started += ctx => InputDirection(UISelecterBase.SelectionDirection.Down);
-                m_input.Normal.Left.started += ctx => InputDirection(UISelecterBase.SelectionDirection.Left);
-                m_input.Normal.Right.started += ctx => InputDirection(UISelecterBase.SelectionDirection.Right);
+                m_input.Normal.Up.started += ctx => InputDirection(SelectionDirection.Up);
+                m_input.Normal.Down.started += ctx => InputDirection(SelectionDirection.Down);
+                m_input.Normal.Left.started += ctx => InputDirection(SelectionDirection.Left);
+                m_input.Normal.Right.started += ctx => InputDirection(SelectionDirection.Right);
                 m_input.Normal.Select.started += ctx => ButtonSelect();
                 m_input.Normal.Enable();
             }
@@ -49,28 +53,48 @@ namespace Option
             m_actionWindow.OnSelectAction = DecisionButtonActon;
         }
 
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
-        {
-            
-        }
 
-        public void Open()
+
+        public override void Open(UIWindowBase backWindow)
         {
             m_isActive = true;
+            gameObject.SetActive(true);
             m_select.Select(null);
         }
 
-        public void Close()
+        public override void Close(UIWindowBase nextWindow)
         {
-            m_isActive= false;
+            m_isActive = false;
+            m_actionWindow.Close();
+            if (nextWindow) gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 選択
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        public override UIWindowBase Selection(SelectionDirection direction)
+        {
+            switch (direction)
+            {
+                case SelectionDirection.Left:
+                    if (m_backWindow) return m_backWindow;
+                    return this;
+                case SelectionDirection.Right:
+                    if (m_nextWindow) return m_nextWindow;
+                    return this;
+                default:
+                    return this;
+
+            }
         }
 
         /// <summary>
         /// 操作ボタン選択
         /// </summary>
         /// <param name="direction"></param>
-        private void InputDirection(UISelecterBase.SelectionDirection direction)
+        private void InputDirection(SelectionDirection direction)
         {
             if (m_select == null|!m_isActive) return;
             var next = m_select.Selection(direction);

@@ -26,6 +26,7 @@ public class Crown : NetworkBehaviour
 
     private void CrownUpdate(IReadOnlyDictionary<PlayerRef, NetworkUserData> updateData)
     {
+        if (Runner == null || !Runner.IsRunning) return;
         if (!Object.HasStateAuthority) return;
 
         //一番ポイントを持っているプレイヤーを取得

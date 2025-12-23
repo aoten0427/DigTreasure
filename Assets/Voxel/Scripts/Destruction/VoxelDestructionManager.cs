@@ -16,9 +16,10 @@ namespace VoxelWorld
         [SerializeField] private bool m_enableDestructionLogging = true;
 
         [Header("パフォーマンス設定")]
-        [SerializeField] private int m_maxChunksPerFrame = 2;
+        [SerializeField] private int m_maxChunksPerFrame = 10;
         [SerializeField] private float m_processingTimePerBatch = 0.016f;
-        
+
+        const int MAX_DESTROY = 4096;
 
         // 破壊要求管理
         private Queue<DestructionRequest> m_destructionQueue = new Queue<DestructionRequest>();
@@ -165,25 +166,40 @@ namespace VoxelWorld
 
             var chunkGroups = GroupPositionsByChunk(targetPositions);
 
-            int processedChunks = 0;
             int totalDestroyedCount = 0; // 実際に破壊されたボクセル数
+
+            //破壊ポジション
+            List<Vector3> destroyPosition = new List<Vector3>(Mathf.Min(targetPositions.Count,MAX_DESTROY));
 
             foreach (var (chunkPos, positions) in chunkGroups)
             {
+                //破壊場所を保存
+                destroyPosition.AddRange(positions);
+                //一定以下ならパス
+                if(destroyPosition.Count < MAX_DESTROY)
+                {
+                    continue;
+                }
+
                 // 破壊実行
-                int destroyedCount = m_voxelManager.DestroyVoxelsWithPower(positions, request.AttackPower,
+                int destroyedCount = m_voxelManager.DestroyVoxelsWithPower(destroyPosition, request.AttackPower,
                     request.Shape.GetDestractionPoint(), request.EffectDirection);
                 totalDestroyedCount += destroyedCount;
-                processedChunks++;
 
-                if (processedChunks >= m_maxChunksPerFrame)
-                {
-                    processedChunks = 0;
-                    // 固定時間ベース待機
-                    yield return new WaitForSeconds(m_processingTimePerBatch);
-                }
+                destroyPosition.Clear();
+
+                yield return null;
+            }
+            //残りを実行
+            if(destroyPosition.Count > 0)
+            {
+                int destroyedCount = m_voxelManager.DestroyVoxelsWithPower(destroyPosition, request.AttackPower,
+                    request.Shape.GetDestractionPoint(), request.EffectDirection);
+                totalDestroyedCount += destroyedCount;
             }
 
+
+            
             // 完了コールバックを実行
             request.OnCompleteWithCount?.Invoke(totalDestroyedCount);
         }

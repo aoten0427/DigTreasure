@@ -3,6 +3,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
+using UnityEngine.SocialPlatforms.Impl;
 
 /// <summary>
 /// プレイヤーインベントリロジッククラス
@@ -29,13 +31,14 @@ public class PlayerInventoryLogic : MonoBehaviour
     private int m_digPoints;
 
     //イベント
-    public event Action<int, int> OnUpdateTreasure;
+    public event Action<int, int,int> OnUpdateTreasure;
 
     //プロパティ
     public int TotalPoints { get; private set; }
     public int TreasureCount { get; private set; }
     public int DigPoints => m_digPoints;
 
+    [SerializeField] AudioSource m_audioSource;
     /// <summary>
     /// 初期化
     /// </summary>
@@ -87,6 +90,8 @@ public class PlayerInventoryLogic : MonoBehaviour
             m_treasures[key] = amount;
         }
         CalculatePoints();
+
+        m_audioSource.Play();
 
         //イベント発火
         m_manager?.Events?.InvokeTreasureChanged(TreasureCount);
@@ -199,7 +204,7 @@ public class PlayerInventoryLogic : MonoBehaviour
         TreasureCount = num;
 
         //更新通知
-        OnUpdateTreasure?.Invoke(score, num);
+        OnUpdateTreasure?.Invoke(score, num,m_digPoints);
     }
 
     /// <summary>
@@ -237,6 +242,7 @@ public class PlayerInventoryLogic : MonoBehaviour
     public void AddDigPoints(int points)
     {
         m_digPoints += points;
+        OnUpdateTreasure?.Invoke(TotalPoints, TreasureCount, m_digPoints);
     }
 
     /// <summary>

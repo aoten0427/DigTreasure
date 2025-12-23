@@ -35,6 +35,8 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private Rigidbody m_rigidbody;
     [SerializeField] private Collider m_collider;
 
+    [SerializeField]private bool m_isActive = false;
+
 
     //イベントシステム
     private PlayerEvents m_events;
@@ -55,9 +57,12 @@ public class PlayerManager : MonoBehaviour
     public Rigidbody Rigidbody => m_rigidbody;
     public Collider Collider => m_collider;
 
+
     public bool NetworkStateAuthority { get {
             return IsOnlineMode && m_networkState != null && m_networkState.NetworkStateAuthority;
         } }
+
+    public bool IsActive {  get { return m_isActive; } set { m_isActive = value; } }
 
     private void Awake()
     {

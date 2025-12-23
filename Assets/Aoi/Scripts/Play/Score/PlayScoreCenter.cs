@@ -33,13 +33,18 @@ public class PlayScoreCenter : MonoBehaviour
 
     private void OnDestroy()
     {
-        m_inventory.OnUpdateTreasure -= UpdateTreasure;
+        if(m_inventory)
+        {
+            m_inventory.OnUpdateTreasure -= UpdateTreasure;
+        }
+        
     }
 
-    private void UpdateTreasure(int point,int num)
+    private void UpdateTreasure(int point,int num,int dig)
     {
         m_treasurePoint = point;
         m_treasureNum = num;
+        m_digPoint = dig;
         UpdateScore();
     }
 

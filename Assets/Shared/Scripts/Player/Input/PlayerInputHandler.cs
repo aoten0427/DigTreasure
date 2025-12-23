@@ -79,6 +79,7 @@ public class PlayerInputHandler : MonoBehaviour
     /// </summary>
     private void OnMove(Vector2 moveInput)
     {
+        if (!m_manager.IsActive) return;
         m_currentMoveInput = moveInput;
 
         if (!m_isInputEnabled) return;
@@ -98,6 +99,7 @@ public class PlayerInputHandler : MonoBehaviour
     /// </summary>
     private void OnJump(bool isPush)
     {
+        if (!m_manager.IsActive) return;
         if (!m_isInputEnabled || !isPush) return;
 
         //移動ロジックに委譲
@@ -112,6 +114,7 @@ public class PlayerInputHandler : MonoBehaviour
     /// </summary>
     private void OnDigUp(bool isPush)
     {
+        if (!m_manager.IsActive) return;
         if (!m_isInputEnabled || !isPush) return;
 
         //掘りロジックに委譲
@@ -126,6 +129,7 @@ public class PlayerInputHandler : MonoBehaviour
     /// </summary>
     private void OnDigDown(bool isPush)
     {
+        if (!m_manager.IsActive) return;
         if (!m_isInputEnabled || !isPush) return;
 
         //掘りロジックに委譲
@@ -140,6 +144,7 @@ public class PlayerInputHandler : MonoBehaviour
     /// </summary>
     private void OnAttack(bool isPush)
     {
+        if (!m_manager.IsActive) return;
         if (!m_isInputEnabled || !isPush) return;
 
         //戦闘ロジックに委譲
@@ -163,6 +168,7 @@ public class PlayerInputHandler : MonoBehaviour
     /// </summary>
     private void OnBarrier(bool isPush)
     {
+        if (!m_manager.IsActive) return;
         if (!m_isInputEnabled) return;
 
         //バリアーロジックに委譲
@@ -184,12 +190,13 @@ public class PlayerInputHandler : MonoBehaviour
     /// </summary>
     private void OnLockOn(bool isPush)
     {
+        if (!m_manager.IsActive) return;
         if (!m_isInputEnabled || !isPush) return;
 
         //戦闘ロジックに委譲
         if (m_manager?.CombatLogic != null)
         {
-            m_manager.CombatLogic.ToggleLockOn();
+            m_manager.CombatLogic.LockOn();
         }
     }
 

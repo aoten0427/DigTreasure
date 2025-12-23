@@ -1,74 +1,79 @@
 using Fusion;
+using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// リザルトデータ
+/// </summary>
 [System.Serializable]
 public struct ResultData : INetworkStruct
 {
-    public NetworkString<_16> NickName;//���O
-    public int TreasureScore;//��X�R��
-    public int TreasureCount; //��̐�
-    public int DigScore;//�x�X�R�A
-    public bool IsSelf;//���̃f�[�^���������g�̂�
+    //プレイヤー名
+    public NetworkString<_16> NickName;
+    //宝スコア
+    public int TreasureScore;
+    //宝の数
+    public int TreasureCount;
+    //はかいポイント
+    public int DigPoint;
+    //破壊ポイント
+    public int DigScore;
+    //プレイヤーインデックス
+    public int Index;
+    //自分自身のデータか
+    public bool IsSelf;
+    //最終スコア
+    public int TotalScore;
 }
 
 /// <summary>
-/// �����L���O�\���p�C���^�[�t�F�[�X
+/// ランキング表示用抽象クラス
 /// </summary>
-public abstract class Ranking:MonoBehaviour
+public abstract class Ranking : MonoBehaviour
 {
-    //���U���g��\��
-    public abstract void ShowRanking(List<ResultData> resultdata);
+    /// <summary>
+    /// リザルトを表示
+    /// </summary>
+    public abstract void ShowRanking(List<ResultData> resultdata, Action oncomplete = null);
 }
 
 /// <summary>
-/// �e�X�g�p�����L���O
+/// テスト用ランキング
 /// </summary>
 public class TestRanking : Ranking
 {
-    [SerializeField] const int m_maxNumber = 4;
-    [SerializeField]Rank[] m_ranks = new Rank[4];
+    //最大表示人数
+    const int m_maxNumber = 4;
+    //ランク表示UI
+    [SerializeField] Rank[] m_ranks = new Rank[4];
+    //テスト用データ
     [SerializeField] List<ResultData> m_tempResult = new();
 
-    public override void ShowRanking(List<ResultData> resultdata)
+    /// <summary>
+    /// ランキング表示
+    /// </summary>
+    public override void ShowRanking(List<ResultData> resultdata, Action oncomplete = null)
     {
-        //��|�C���g�Ń\�[�g
-        resultdata.Sort((a, b) => b.TreasureScore.CompareTo(a.TreasureScore));
+        //宝スコアでソート（元のリストを変更しないようコピー）
+        var sortedData = resultdata.ToList();
+        sortedData.Sort((a, b) => b.TreasureScore.CompareTo(a.TreasureScore));
 
-        
-
+        //順位ごとに表示
         for (int i = 0; i < m_maxNumber; i++)
         {
-            if (resultdata.Count <= i) break;
-            m_ranks[i].ShowRank(i + 1, resultdata[i].NickName.ToString(), resultdata[i].TreasureScore,
-                resultdata[i].TreasureCount, resultdata[i].DigScore);
+            if (sortedData.Count <= i) break;
+            m_ranks[i].ShowRank(i + 1, sortedData[i].NickName.ToString(), sortedData[i].TreasureScore,
+                sortedData[i].TreasureCount, sortedData[i].DigPoint);
         }
     }
 
+    //デバッグ用：Tキーでテストデータを表示
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.T))
+        if (Input.GetKeyDown(KeyCode.T))
         {
-            //var data1 = new ResultData();
-            //data1.NickName = "player1";
-            //data1.TreasureScore = 3;
-
-            //var data2 = new ResultData();
-            //data2.NickName = "player2";
-            //data2.TreasureScore = 0;
-
-            //var data3 = new ResultData();
-            //data3.NickName = "player3";
-            //data3.TreasureScore = 1;
-
-            //var data4 = new ResultData();
-            //data4.NickName = "player4";
-            //data4.TreasureScore = 5;
-
-
-            //var testdata = new List<ResultData>() { data1,data2, data3, data4 };
-            //ShowRanking(testdata);
             ShowRanking(m_tempResult);
         }
     }

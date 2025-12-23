@@ -21,13 +21,19 @@ public class EntranceManager : MonoBehaviour
     public event Action<bool> OnConnectAction;
     //セッション更新イベント
     public event Action<Dictionary<string, SessionInfo>> OnSessionUpdate;
-
+    [SerializeField] AudioSource m_bgm;
 
     private void Start()
     {
         //ゲームランチャーを探す
         m_gameLauncher = NetWork.GameLauncher.Instance;
         m_gameLauncher.OnPlayerJoined += MoveToRoom;
+        m_bgm.Play();
+    }
+
+    private void OnDestroy()
+    {
+        m_bgm.Stop();
     }
 
     /// <summary>
@@ -103,5 +109,17 @@ public class EntranceManager : MonoBehaviour
         //反映
         OnSessionUpdate?.Invoke(data);
 
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyUp(KeyCode.Alpha3))
+        {
+            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+        }
+        if (Input.GetKeyUp(KeyCode.Alpha4))
+        {
+            Screen.SetResolution(1920, 1280, FullScreenMode.Windowed);
+        }
     }
 }

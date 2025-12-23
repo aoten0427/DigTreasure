@@ -102,7 +102,7 @@ public class PlayerDigLogic : MonoBehaviour
     /// <summary>
     /// 掘り完了コールバック
     /// </summary>
-    private void OnDigComplete(int digCount)
+    public void OnDigComplete(int digCount)
     {
         //インベントリに掘りポイント追加
         m_manager?.InventoryLogic?.AddDigPoints(digCount);
