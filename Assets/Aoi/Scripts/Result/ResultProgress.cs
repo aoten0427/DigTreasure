@@ -90,19 +90,19 @@ public class ResultProgress : Ranking
             data2.TreasureScore = 1100;
             data2.DigPoint = 50000;
 
-            var data3 = new ResultData();
-            data3.NickName = "player3";
-            data3.Index = 2;
-            data3.TreasureScore = 1000;
-            data3.DigPoint = 8000;
+            //var data3 = new ResultData();
+            //data3.NickName = "player3";
+            //data3.Index = 2;
+            //data3.TreasureScore = 1000;
+            //data3.DigPoint = 8000;
 
-            var data4 = new ResultData();
-            data4.NickName = "player4";
-            data4.Index = 3;
-            data4.TreasureScore = 1300;
-            data4.DigPoint = 2000;
+            //var data4 = new ResultData();
+            //data4.NickName = "player4";
+            //data4.Index = 3;
+            //data4.TreasureScore = 1300;
+            //data4.DigPoint = 2000;
 
-            var testdata = new List<ResultData>() { data1, data2, data3, data4 };
+            var testdata = new List<ResultData>() { data1, data2/*, data3, data4*/ };
 
             ShowRanking(testdata);
         }

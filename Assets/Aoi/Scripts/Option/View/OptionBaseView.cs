@@ -120,7 +120,7 @@ namespace Option
             //    for (int i = 0; i < m_bases.Count; i++)
             //    {
             //        int index = i;
-            //        seq.AppendCallback(() => m_image.sprite = m_bases[index]);
+            //        seq.AppendCallback(() => m_bacgroundImage.sprite = m_bases[index]);
             //        seq.AppendInterval(m_changeTime);
             //    }
             //}
@@ -129,7 +129,7 @@ namespace Option
             //    for (int i = m_bases.Count - 1; i >= 0; i--)
             //    {
             //        int index = i;
-            //        seq.AppendCallback(() => m_image.sprite = m_bases[index]);
+            //        seq.AppendCallback(() => m_bacgroundImage.sprite = m_bases[index]);
             //        seq.AppendInterval(m_changeTime);
             //    }
             //}

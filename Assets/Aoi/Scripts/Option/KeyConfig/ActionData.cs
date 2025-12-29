@@ -46,7 +46,7 @@ namespace Option
         /// </summary>
         /// <param name="direction"></param>
         /// <returns></returns>
-        public override UISelecterBase<GameInputManager.ActionType> SelectionGenerics(SelectionDirection direction)
+        public override UISelecterBase<GameInputManager.ActionType> SelectionGenericsBase(SelectionDirection direction)
         {
             return direction switch
             {

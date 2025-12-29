@@ -87,6 +87,8 @@ public class ResultScoreCalculation : MonoBehaviour
     {
         datas.Sort((a, b) => b.TotalScore.CompareTo(a.TotalScore));
 
+        foreach(var data in m_bordDatas)data.gameObject.SetActive(false);
+
         for (int i = 0;i < datas.Count;i++)
         {
             //表示するインデックス番号取得
@@ -101,6 +103,7 @@ public class ResultScoreCalculation : MonoBehaviour
             int destroyscore = datas[i].DigScore;
 
             m_bordDatas[index].SetData(rank,name, totalsocre, treasurescore, destroyscore);
+            m_bordDatas[index].gameObject.SetActive(true);
 
         }
     }
@@ -120,6 +123,8 @@ public class ResultScoreCalculation : MonoBehaviour
 
         m_boradPieChart.SetDataImmediate(destroyDatas);
 
+        foreach(var data in m_piechartDatas)data.gameObject.SetActive(false);
+
         for(int i = 0;i < datas.Count;i++)
         {
             //表示するインデックス番号取得
@@ -131,7 +136,8 @@ public class ResultScoreCalculation : MonoBehaviour
             int point = datas[i].DigPoint;
             int ratio = (int)(((float)point / (float)totalDestroy) * 100);
 
-            m_piechartDatas[i].SetData(name, point, ratio); 
+            m_piechartDatas[i].SetData(name, point, ratio);
+            m_piechartDatas[i].gameObject.SetActive(true);
         }
     }
 

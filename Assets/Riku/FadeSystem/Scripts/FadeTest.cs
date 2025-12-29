@@ -25,11 +25,11 @@ public class NewMonoBehaviourScript : MonoBehaviour
         //{
         //    FadeManager.instance.FadeOut();
         //}
-        if (Input.GetKeyDown(KeyCode.P) &&
-            !FadeManager.instance.isFadeIn &&
-            !FadeManager.instance.isFadeOut)
-        {
-            FadeManager.instance.ChangeScene(sceneName);
-        }
+        //if (Input.GetKeyDown(KeyCode.P) &&
+        //    !FadeManager.instance.isFadeIn &&
+        //    !FadeManager.instance.isFadeOut)
+        //{
+        //    FadeManager.instance.ChangeScene(sceneName);
+        //}
     }
 }

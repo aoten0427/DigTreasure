@@ -1,5 +1,6 @@
 using Fusion;
 using NetWork;
+using Option;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,34 +11,55 @@ using UnityEngine.SceneManagement;
 using static Unity.Collections.Unicode;
 
 /// <summary>
-/// “üºƒV[ƒ“‚ÌŠÇ—
+/// å…¥å®¤ã‚·ãƒ¼ãƒ³ã®ç®¡ç†
 /// </summary>
 public class EntranceManager : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI tmproUGUI;//ƒ†[ƒU[–¼
+    [SerializeField] private TextMeshProUGUI tmproUGUI;//ãƒ¦ãƒ¼ã‚¶ãƒ¼å
     private NetWork.GameLauncher m_gameLauncher;
     bool m_isConnecting = false;
-    //Ú‘±ƒCƒxƒ“ƒg
+    //æ¥ç¶šæ™‚ã‚¤ãƒ™ãƒ³ãƒˆ
     public event Action<bool> OnConnectAction;
-    //ƒZƒbƒVƒ‡ƒ“XVƒCƒxƒ“ƒg
+    //ã‚»ãƒƒã‚·ãƒ§ãƒ³æ›´æ–°ã‚¤ãƒ™ãƒ³ãƒˆ
+    bool m_isSession =false;
     public event Action<Dictionary<string, SessionInfo>> OnSessionUpdate;
     [SerializeField] AudioSource m_bgm;
 
+    [SerializeField] EntranceInput m_input;
+    OptionManager m_optionManager;
+
+    [SerializeField] CircleButton m_backButton;
+
     private void Start()
     {
-        //ƒQ[ƒ€ƒ‰ƒ“ƒ`ƒƒ[‚ğ’T‚·
+        //ã‚²ãƒ¼ãƒ ãƒ©ãƒ³ãƒãƒ£ãƒ¼ã‚’æ¢ã™
         m_gameLauncher = NetWork.GameLauncher.Instance;
         m_gameLauncher.OnPlayerJoined += MoveToRoom;
         m_bgm.Play();
+
+        m_optionManager = OptionManager.Instance;
+
+        if(m_input)
+        {
+            m_input.OnPause += OpenOption;
+            m_input.OnCancel += CancelPush;
+        }
+
+        
     }
 
     private void OnDestroy()
     {
         m_bgm.Stop();
+        if (m_input)
+        {
+            m_input.OnPause -= OpenOption;
+            m_input.OnCancel -= CancelPush;
+        }
     }
 
     /// <summary>
-    /// ƒ‹[ƒ€‚ÖQ‰Á
+    /// ãƒ«ãƒ¼ãƒ ã¸å‚åŠ 
     /// </summary>
     /// <param name="roomName"></param>
     public  async void JoinRoom(string roomName)
@@ -54,7 +76,7 @@ public class EntranceManager : MonoBehaviour
 
 
         m_isConnecting = await m_gameLauncher.JoinRoom(roomName);
-        //Ú‘±¸”s
+        //æ¥ç¶šå¤±æ•—
         if(!m_isConnecting)
         {
             FaielConnect();
@@ -63,7 +85,7 @@ public class EntranceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Ú‘±’†
+    /// æ¥ç¶šä¸­
     /// </summary>
     void Connecting()
     {
@@ -71,7 +93,7 @@ public class EntranceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Ú‘±¸”s—p
+    /// æ¥ç¶šå¤±æ•—ç”¨
     /// </summary>
     void FaielConnect()
     {
@@ -80,7 +102,7 @@ public class EntranceManager : MonoBehaviour
 
 
     /// <summary>
-    /// ‘Ò‹@ƒV[ƒ“‚ÖˆÚ“®
+    /// å¾…æ©Ÿã‚·ãƒ¼ãƒ³ã¸ç§»å‹•
     /// </summary>
     /// <param name="runner"></param>
     /// <param name="player"></param>
@@ -88,38 +110,55 @@ public class EntranceManager : MonoBehaviour
     {
         if (runner.LocalPlayer != player) return;
 
-        Debug.Log("ŒÄ‚Ño‚µ");
+        Debug.Log("å‘¼ã³å‡ºã—");
 
-        //‘Ò‹@ƒ‹[ƒ€‚ÖˆÚ“®
+        //å¾…æ©Ÿãƒ«ãƒ¼ãƒ ã¸ç§»å‹•
         if (runner.IsSceneAuthority)
         {
-            runner.LoadScene(SceneRef.FromIndex(1), LoadSceneMode.Single);
+            runner.LoadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER), LoadSceneMode.Single);
         }
     }
+
 
     /// <summary>
-    /// ƒ‹[ƒ€ƒf[ƒ^XV
+    /// ãƒ«ãƒ¼ãƒ ãƒ‡ãƒ¼ã‚¿æ›´æ–°
     /// </summary>
-    public async void SesstionUpdate()
+    public async void SesstionUpdateAsync()
     {
-        //ƒZƒbƒVƒ‡ƒ“ƒf[ƒ^‚ğXV
+        //ã‚»ãƒƒã‚·ãƒ§ãƒ³ãƒ‡ãƒ¼ã‚¿ã‚’æ›´æ–°
         await m_gameLauncher.UpdateSessions();
-        //XVƒf[ƒ^‚ğæ“¾
+        //æ›´æ–°ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—
         var data = m_gameLauncher.GetSessionInfo();
-        //”½‰f
+        //åæ˜ 
         OnSessionUpdate?.Invoke(data);
-
     }
 
-    private void Update()
+    private void OpenOption(bool push)
     {
-        if(Input.GetKeyUp(KeyCode.Alpha3))
+        if (m_optionManager != null) m_optionManager.Open();
+    }
+
+    private void CancelPush(bool push)
+    {
+        //ã‚ªãƒ—ã‚·ãƒ§ãƒ³å‡¦ç†
+        if (m_optionManager != null&&IsOpenOption())
         {
-            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+            m_optionManager.Close();
+            return;
         }
-        if (Input.GetKeyUp(KeyCode.Alpha4))
-        {
-            Screen.SetResolution(1920, 1280, FullScreenMode.Windowed);
-        }
+
+        ChangeScene();
+    }
+
+    public bool IsOpenOption()
+    {
+        if (m_optionManager == null) return false;
+        return m_optionManager.IsActive;
+    }
+
+    private void ChangeScene()
+    {
+        var fade = FadeManager.instance;
+        fade.ChangeScene("0_Title");
     }
 }

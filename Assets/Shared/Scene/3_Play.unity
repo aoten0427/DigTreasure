@@ -1606,7 +1606,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &435816578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2370,7 +2370,7 @@ MonoBehaviour:
   m_text: "\u30D7\u30EC\u30A4\u30E4\u30FC1\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5e89a10f8102304469b516448951b38f, type: 2}
-  m_sharedMaterial: {fileID: 16741158395460659, guid: 5e89a10f8102304469b516448951b38f, type: 2}
+  m_sharedMaterial: {fileID: 3792139357171847073, guid: 5e89a10f8102304469b516448951b38f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2595,7 +2595,7 @@ MonoBehaviour:
   m_text: "\u30D7\u30EC\u30A4\u30E4\u30FC1\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5e89a10f8102304469b516448951b38f, type: 2}
-  m_sharedMaterial: {fileID: 16741158395460659, guid: 5e89a10f8102304469b516448951b38f, type: 2}
+  m_sharedMaterial: {fileID: 3792139357171847073, guid: 5e89a10f8102304469b516448951b38f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3607,7 +3607,7 @@ MonoBehaviour:
   m_text: "\u30D7\u30EC\u30A4\u30E4\u30FC1\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5e89a10f8102304469b516448951b38f, type: 2}
-  m_sharedMaterial: {fileID: 16741158395460659, guid: 5e89a10f8102304469b516448951b38f, type: 2}
+  m_sharedMaterial: {fileID: 3792139357171847073, guid: 5e89a10f8102304469b516448951b38f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4894,7 +4894,7 @@ MonoBehaviour:
   m_text: "\u30D7\u30EC\u30A4\u30E4\u30FC1\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5e89a10f8102304469b516448951b38f, type: 2}
-  m_sharedMaterial: {fileID: 16741158395460659, guid: 5e89a10f8102304469b516448951b38f, type: 2}
+  m_sharedMaterial: {fileID: 3792139357171847073, guid: 5e89a10f8102304469b516448951b38f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5566,7 +5566,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17a3d27700fd37949bbbbcb3000b98fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameTime: 10
+  GameTime: 120
   m_startCountDown: {fileID: 2121432284}
   m_isLog: 0
 --- !u!1 &1978951631
@@ -5587,7 +5587,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1978951632
 MonoBehaviour:
   m_ObjectHideFlags: 0

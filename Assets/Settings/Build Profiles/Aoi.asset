@@ -20,13 +20,15 @@ MonoBehaviour:
     rid: 1262662270847025227
   m_OverrideGlobalSceneList: 1
   m_Scenes:
-  - m_enabled: 1
+  - m_enabled: 0
+    m_path: Assets/Aoi/Scene/InputTest.unity
+  - m_enabled: 0
     m_path: Assets/Aoi/Scene/0_Entrance.unity
-  - m_enabled: 1
+  - m_enabled: 0
     m_path: Assets/Aoi/Scene/1_Room.unity
-  - m_enabled: 1
+  - m_enabled: 0
     m_path: Assets/Aoi/Scene/2_Play.unity
-  - m_enabled: 1
+  - m_enabled: 0
     m_path: Assets/Aoi/Scene/3_Result.unity
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:

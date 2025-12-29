@@ -329,7 +329,7 @@ namespace NetWork
                 //遊ぶ人数を設定
                 m_gameLauncher.SetStartingNumber(Runner.ActivePlayers.Count());
                 //シーンを変更
-                Runner.LoadScene(SceneRef.FromIndex(2), LoadSceneMode.Single);
+                Runner.LoadScene(SceneRef.FromIndex(Config.PLAY_SCENE_NUMBER), LoadSceneMode.Single);
             }
         }
 

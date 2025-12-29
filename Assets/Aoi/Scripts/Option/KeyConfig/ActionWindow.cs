@@ -87,7 +87,7 @@ public class ActionWindow : UIWindowBase
     private void InputDirection(SelectionDirection direction)
     {
         if(m_currentData== null||!m_isActive) return;
-        var next = m_currentData.SelectionGenerics(direction);
+        var next = m_currentData.SelectionGenericsBase(direction);
         if (m_currentData == next||next == null)
         {
             return;

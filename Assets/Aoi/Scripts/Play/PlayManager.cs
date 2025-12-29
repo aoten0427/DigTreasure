@@ -96,7 +96,7 @@ public class PlayManager : NetworkBehaviour
 
         if (m_gameState == GameState.Play && m_gameTimer <= 0)
         {
-            if (Object.HasStateAuthority) Runner.LoadScene(SceneRef.FromIndex(3), LoadSceneMode.Single);
+            if (Object.HasStateAuthority) Runner.LoadScene(SceneRef.FromIndex(Config.RESULT_SCENE_NUMBER), LoadSceneMode.Single);
             m_gameState = GameState.End;
         }
     }
@@ -104,13 +104,7 @@ public class PlayManager : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
 
-        if (Runner.IsSharedModeMasterClient)
-        {
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                Runner.LoadScene(SceneRef.FromIndex(3), LoadSceneMode.Single);
-            }
-        }
+        
     }
 
 

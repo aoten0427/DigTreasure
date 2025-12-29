@@ -5,89 +5,117 @@ using System.Collections.Generic;
 
 namespace Option
 {
+    /// <summary>
+    /// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ç”»é¢ã‚’ç®¡ç†
+    /// </summary>
     public class OptionManager : MonoBehaviour
     {
-        //ƒCƒ“ƒvƒbƒg
+        // ã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
+        public static OptionManager Instance { get; private set; }
+
+        // ã‚¤ãƒ³ãƒ—ãƒƒãƒˆ
         InputGame m_input;
-        //ƒrƒ…[
+        // ãƒ“ãƒ¥ãƒ¼
         [SerializeField] OptionBaseView m_optionBaseView;
-        //Œ»İŠJ‚¢‚Ä‚¢‚éƒEƒCƒ“ƒh
+        // ç¾åœ¨é–‹ã„ã¦ã„ã‚‹ã‚¦ã‚¤ãƒ³ãƒ‰
         private UIWindowBase m_currentWindow;
-        //ŠeƒEƒCƒ“ƒh
+        // å„ã‚¦ã‚¤ãƒ³ãƒ‰
         [SerializeField] List<UIWindowBase> m_windows;
-        //ƒAƒNƒeƒBƒu‰»
+        // ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã‹
         bool m_isActive = false;
+
+        public bool IsActive { get { return m_isActive; } }
+
+        private void Awake()
+        {
+            // ã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³å‡¦ç†
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
 
         private void Start()
         {
-            //“ü—Í¶¬
+            // å…¥åŠ›ç”Ÿæˆ
             m_input = new InputGame();
             if (m_optionBaseView == null) m_optionBaseView = GetComponent<OptionBaseView>();
 
-            //ƒEƒCƒ“ƒh‰Šú‰»
-            foreach(UIWindowBase win in m_windows)
+            // ã‚¦ã‚¤ãƒ³ãƒ‰åˆæœŸåŒ–
+            foreach (UIWindowBase win in m_windows)
             {
                 win.Initialize(m_input);
             }
 
-            //ƒEƒCƒ“ƒhİ’è
-            if(m_windows.Count > 0)
+            // ã‚¦ã‚¤ãƒ³ãƒ‰è¨­å®š
+            if (m_windows.Count > 0)
             {
                 m_currentWindow = m_windows[0];
             }
             else
             {
-                Debug.LogError("[OptionManager]ƒEƒCƒ“ƒh‚ª‚ ‚è‚Ü‚¹‚ñ");
+                Debug.LogError("[OptionManager]ã‚¦ã‚¤ãƒ³ãƒ‰ãŒã‚ã‚Šã¾ã›ã‚“");
             }
 
             m_input.Normal.LTrigger.performed += ctx => InputDirection(SelectionDirection.Left);
             m_input.Normal.RTrigger.performed += ctx => InputDirection(SelectionDirection.Right);
         }
 
-        private void Update()
+        private void OnDestroy()
         {
-            if (Input.GetKeyUp(KeyCode.Alpha1))
+            // ã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³è§£é™¤
+            if (Instance == this)
             {
-                Open();
+                Instance = null;
             }
-            if (Input.GetKeyUp(KeyCode.Alpha2))
+
+            // å…¥åŠ›ã‚·ã‚¹ãƒ†ãƒ ã®ç ´æ£„
+            if (m_input != null)
             {
-                Close();
+                m_input.Disable();
+                m_input.Dispose();
             }
         }
 
         /// <summary>
-        /// ŠJ‚­
+        /// é–‹ã
         /// </summary>
         public void Open()
         {
+            if (m_isActive) return;
             m_isActive = true;
             m_optionBaseView.Open();
             if (m_currentWindow) m_currentWindow.Open(null);
         }
 
         /// <summary>
-        /// •Â‚¶‚é
+        /// é–‰ã˜ã‚‹
         /// </summary>
         public void Close()
         {
-            m_isActive=false;
+            if (!m_isActive) return;
+            m_isActive = false;
             m_optionBaseView.Close();
             if (m_currentWindow) m_currentWindow.Close(null);
         }
 
         /// <summary>
-        /// ƒEƒCƒ“ƒh•ÏX
+        /// ã‚¦ã‚¤ãƒ³ãƒ‰å¤‰æ›´
         /// </summary>
-        /// <param name="direction"></param>
         private void InputDirection(SelectionDirection direction)
         {
             if (!m_isActive) return;
             var next = m_currentWindow.Selection(direction);
-            if(next == null||next == m_currentWindow) return;
+            if (next == null || next == m_currentWindow) return;
             m_currentWindow.Close(next);
             next.Open(m_currentWindow);
             m_currentWindow = next;
         }
-    } 
+    }
 }

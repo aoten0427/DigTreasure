@@ -57,11 +57,15 @@ public class ResultPieChart : MonoBehaviour
             m_totalCounter += data.DigPoint;
         }
 
+
+        foreach(var data in m_datas)data.gameObject.SetActive(false);
+
         //データの名前初期化
         for(int i = 0; i < sortedDatas.Count; i++)
         {
             if (i >= m_datas.Count) break;
             m_datas[i].SetData(sortedDatas[i].NickName.ToString(), 0, 0);
+            m_datas[i].gameObject.SetActive(true);
         }
         m_totalData.SetData( 0, 0);
 
