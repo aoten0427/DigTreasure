@@ -181,7 +181,7 @@ public class PlayerNetworkState : NetworkBehaviour
         if (m_manager.CombatLogic != null)
         {
             Vector3 direction = (transform.position - barrierPlayer.transform.position).normalized;
-            m_manager.CombatLogic.ApplyKnockback(direction, 10f);
+            m_manager.CombatLogic.ApplyKnockback(direction, 150f,5.0f);
         }
     }
 

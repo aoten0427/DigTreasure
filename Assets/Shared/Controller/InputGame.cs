@@ -472,6 +472,51 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Pause"",
+                    ""type"": ""Button"",
+                    ""id"": ""859f556b-95ed-4d48-8232-029a78c9546d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""X"",
+                    ""type"": ""Button"",
+                    ""id"": ""32161a1a-d2e7-4476-9e33-78859a05bcbe"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Y"",
+                    ""type"": ""Button"",
+                    ""id"": ""6e06ad5f-a612-451c-b438-a13c13a0b893"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""LSButton"",
+                    ""type"": ""Button"",
+                    ""id"": ""b59f488e-d155-4085-a5e7-0dde766be9d7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RSButton"",
+                    ""type"": ""Button"",
+                    ""id"": ""74e19972-7082-408e-b48e-480220fbb10e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -501,6 +546,28 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""87e6a5ba-db11-450a-b3b8-5e47da7da27a"",
                     ""path"": ""<Gamepad>/rightStick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3dc1c91b-1a5c-449f-8b90-bd668b85081d"",
+                    ""path"": ""<Gamepad>/leftStick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8ce3e4b6-1a98-4f5e-8cd9-5497c61418c9"",
+                    ""path"": ""<Gamepad>/dpad/up"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -543,6 +610,28 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""3176afa0-261a-46b8-bc03-1598cbd4c158"",
+                    ""path"": ""<Gamepad>/leftStick/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Down"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""973a755c-1901-444a-9b5a-c965f32f721a"",
+                    ""path"": ""<Gamepad>/dpad/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Down"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""85d8ddc7-890d-4916-af2d-b1b2ca788d01"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
@@ -576,6 +665,28 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""0a65e12b-9f9e-47a7-93de-1b8de01dbc97"",
+                    ""path"": ""<Gamepad>/leftStick/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Left"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""caa46205-5fbc-409c-a315-ef671864e1bc"",
+                    ""path"": ""<Gamepad>/dpad/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Left"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""8996308a-95f0-4014-aeaa-e3b7b14246e8"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
@@ -600,6 +711,28 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""a01b61c3-63f9-4c77-b82e-01e87ee91259"",
                     ""path"": ""<Gamepad>/rightStick/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Right"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e57cdb4f-abb7-40db-a33c-ae9ce1e3174f"",
+                    ""path"": ""<Gamepad>/leftStick/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Right"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""151452cf-5d57-457d-aebd-e537fb399895"",
+                    ""path"": ""<Gamepad>/dpad/right"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -716,6 +849,116 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
                     ""action"": ""Cancel"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8b886222-ff59-490f-9b26-80e24fca1a43"",
+                    ""path"": ""<Gamepad>/start"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""46fc4e3f-7551-4a1c-bc9c-78f05aadc669"",
+                    ""path"": ""<Keyboard>/p"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""70e56169-9233-4c8a-809f-aa9fd5df79cb"",
+                    ""path"": ""<Gamepad>/buttonWest"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""X"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""60ec9ad1-b7cc-4598-a51d-1c78ec7b87ac"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""X"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8f42eb04-b8ba-4963-976f-c0cc389079c1"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Y"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""26a3de96-5539-4c01-b6d9-189c225588e2"",
+                    ""path"": ""<Keyboard>/y"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Y"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d419ba47-d181-47f7-91f0-7d866e0bb90e"",
+                    ""path"": ""<Keyboard>/l"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LSButton"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7a6ae50b-ca46-4a83-8c69-dfb179f988b5"",
+                    ""path"": ""<Gamepad>/leftStickPress"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LSButton"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""dae08cb6-0917-487b-afcc-5cda9eb112ed"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RSButton"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fbe4c37e-8224-4759-be21-7a459e52551e"",
+                    ""path"": ""<Gamepad>/rightStickPress"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RSButton"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -743,6 +986,11 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
         m_Normal_RTrigger = m_Normal.FindAction("RTrigger", throwIfNotFound: true);
         m_Normal_LTrigger = m_Normal.FindAction("LTrigger", throwIfNotFound: true);
         m_Normal_Cancel = m_Normal.FindAction("Cancel", throwIfNotFound: true);
+        m_Normal_Pause = m_Normal.FindAction("Pause", throwIfNotFound: true);
+        m_Normal_X = m_Normal.FindAction("X", throwIfNotFound: true);
+        m_Normal_Y = m_Normal.FindAction("Y", throwIfNotFound: true);
+        m_Normal_LSButton = m_Normal.FindAction("LSButton", throwIfNotFound: true);
+        m_Normal_RSButton = m_Normal.FindAction("RSButton", throwIfNotFound: true);
     }
 
     ~@InputGame()
@@ -1016,6 +1264,11 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
     private readonly InputAction m_Normal_RTrigger;
     private readonly InputAction m_Normal_LTrigger;
     private readonly InputAction m_Normal_Cancel;
+    private readonly InputAction m_Normal_Pause;
+    private readonly InputAction m_Normal_X;
+    private readonly InputAction m_Normal_Y;
+    private readonly InputAction m_Normal_LSButton;
+    private readonly InputAction m_Normal_RSButton;
     /// <summary>
     /// Provides access to input actions defined in input action map "Normal".
     /// </summary>
@@ -1059,6 +1312,26 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Normal/Cancel".
         /// </summary>
         public InputAction @Cancel => m_Wrapper.m_Normal_Cancel;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/Pause".
+        /// </summary>
+        public InputAction @Pause => m_Wrapper.m_Normal_Pause;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/X".
+        /// </summary>
+        public InputAction @X => m_Wrapper.m_Normal_X;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/Y".
+        /// </summary>
+        public InputAction @Y => m_Wrapper.m_Normal_Y;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/LSButton".
+        /// </summary>
+        public InputAction @LSButton => m_Wrapper.m_Normal_LSButton;
+        /// <summary>
+        /// Provides access to the underlying input action "Normal/RSButton".
+        /// </summary>
+        public InputAction @RSButton => m_Wrapper.m_Normal_RSButton;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1109,6 +1382,21 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
             @Cancel.started += instance.OnCancel;
             @Cancel.performed += instance.OnCancel;
             @Cancel.canceled += instance.OnCancel;
+            @Pause.started += instance.OnPause;
+            @Pause.performed += instance.OnPause;
+            @Pause.canceled += instance.OnPause;
+            @X.started += instance.OnX;
+            @X.performed += instance.OnX;
+            @X.canceled += instance.OnX;
+            @Y.started += instance.OnY;
+            @Y.performed += instance.OnY;
+            @Y.canceled += instance.OnY;
+            @LSButton.started += instance.OnLSButton;
+            @LSButton.performed += instance.OnLSButton;
+            @LSButton.canceled += instance.OnLSButton;
+            @RSButton.started += instance.OnRSButton;
+            @RSButton.performed += instance.OnRSButton;
+            @RSButton.canceled += instance.OnRSButton;
         }
 
         /// <summary>
@@ -1144,6 +1432,21 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
             @Cancel.started -= instance.OnCancel;
             @Cancel.performed -= instance.OnCancel;
             @Cancel.canceled -= instance.OnCancel;
+            @Pause.started -= instance.OnPause;
+            @Pause.performed -= instance.OnPause;
+            @Pause.canceled -= instance.OnPause;
+            @X.started -= instance.OnX;
+            @X.performed -= instance.OnX;
+            @X.canceled -= instance.OnX;
+            @Y.started -= instance.OnY;
+            @Y.performed -= instance.OnY;
+            @Y.canceled -= instance.OnY;
+            @LSButton.started -= instance.OnLSButton;
+            @LSButton.performed -= instance.OnLSButton;
+            @LSButton.canceled -= instance.OnLSButton;
+            @RSButton.started -= instance.OnRSButton;
+            @RSButton.performed -= instance.OnRSButton;
+            @RSButton.canceled -= instance.OnRSButton;
         }
 
         /// <summary>
@@ -1311,5 +1614,40 @@ public partial class @InputGame: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCancel(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Pause" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPause(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "X" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnX(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Y" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnY(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "LSButton" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLSButton(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RSButton" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRSButton(InputAction.CallbackContext context);
     }
 }

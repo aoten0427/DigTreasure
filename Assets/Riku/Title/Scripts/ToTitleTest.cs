@@ -11,6 +11,6 @@ public class ToTitleTest : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow)) FadeManager.instance.ChangeScene("Title");
+       
     }
 }

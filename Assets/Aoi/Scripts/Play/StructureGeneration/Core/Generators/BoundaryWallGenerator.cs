@@ -55,6 +55,7 @@ namespace StructureGeneration
             Debug.Log($"境界壁生成: {minVoxel} - {maxVoxel}");
 
             var boundaryVoxels = new System.Collections.Concurrent.ConcurrentBag<VoxelUpdate>();
+            int WallThickness = 40;
 
             // 6つの面を並列処理
             await Task.Run(() =>
@@ -63,62 +64,82 @@ namespace StructureGeneration
                     // x- 面（minX）
                     () => {
                         int xMin = minVoxel.x;
-                        for (int y = minVoxel.y; y < maxVoxel.y; y++)
+                        for(int i = 0;i < WallThickness;i++)
                         {
-                            for (int z = minVoxel.z; z < maxVoxel.z; z++)
+                            for (int y = minVoxel.y - WallThickness; y < maxVoxel.y; y++)
                             {
-                                Vector3 worldPos = new Vector3(xMin * voxelSize, y * voxelSize, z * voxelSize);
-                                boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                for (int z = minVoxel.z - WallThickness; z < maxVoxel.z + WallThickness; z++)
+                                {
+                                    Vector3 worldPos = new Vector3((xMin - i) * voxelSize, y * voxelSize, z * voxelSize);
+                                    boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                }
                             }
                         }
+
                     },
                     // x+ 面（maxX - 1）
                     () => {
                         int xMax = maxVoxel.x - 1;
-                        for (int y = minVoxel.y; y < maxVoxel.y; y++)
+                        for(int i = 0; i < WallThickness;i++)
                         {
-                            for (int z = minVoxel.z; z < maxVoxel.z; z++)
+                            for (int y = minVoxel.y - WallThickness; y < maxVoxel.y; y++)
                             {
-                                Vector3 worldPos = new Vector3(xMax * voxelSize, y * voxelSize, z * voxelSize);
-                                boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                for (int z = minVoxel.z - WallThickness; z < maxVoxel.z + WallThickness; z++)
+                                {
+                                    Vector3 worldPos = new Vector3((xMax + i) * voxelSize, y * voxelSize, z * voxelSize);
+                                    boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                }
                             }
                         }
+                        
                     },
                     // y- 面（minY）
                     () => {
                         int yMin = minVoxel.y;
-                        for (int x = minVoxel.x; x < maxVoxel.x; x++)
+                        for(int i = 0;i < WallThickness;i++)
                         {
-                            for (int z = minVoxel.z; z < maxVoxel.z; z++)
+                            for (int x = minVoxel.x; x < maxVoxel.x; x++)
                             {
-                                Vector3 worldPos = new Vector3(x * voxelSize, yMin * voxelSize, z * voxelSize);
-                                boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                for (int z = minVoxel.z; z < maxVoxel.z; z++)
+                                {
+                                    Vector3 worldPos = new Vector3(x * voxelSize, (yMin - i) * voxelSize, z * voxelSize);
+                                    boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                }
                             }
                         }
+                        
                     },
                     // z- 面（minZ）
                     () => {
                         int zMin = minVoxel.z;
-                        for (int x = minVoxel.x; x < maxVoxel.x; x++)
+                        for(int i = 0; i < WallThickness;i++)
                         {
-                            for (int y = minVoxel.y; y < maxVoxel.y; y++)
+                            for (int x = minVoxel.x - WallThickness; x < maxVoxel.x + WallThickness; x++)
                             {
-                                Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, zMin * voxelSize);
-                                boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                for (int y = minVoxel.y - WallThickness; y < maxVoxel.y; y++)
+                                {
+                                    Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, (zMin - i) * voxelSize);
+                                    boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                }
                             }
                         }
+                       
                     },
                     // z+ 面（maxZ - 1）
                     () => {
                         int zMax = maxVoxel.z - 1;
-                        for (int x = minVoxel.x; x < maxVoxel.x; x++)
+                        for(int i = 0;i < WallThickness;i++)
                         {
-                            for (int y = minVoxel.y; y < maxVoxel.y; y++)
+                            for (int x = minVoxel.x - WallThickness; x < maxVoxel.x + WallThickness; x++)
                             {
-                                Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, zMax * voxelSize);
-                                boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                for (int y = minVoxel.y - WallThickness; y < maxVoxel.y; y++)
+                                {
+                                    Vector3 worldPos = new Vector3(x * voxelSize, y * voxelSize, (zMax + i) * voxelSize);
+                                    boundaryVoxels.Add(new VoxelUpdate(worldPos, wallVoxelId));
+                                }
                             }
                         }
+                        
                     }
                 );
             });

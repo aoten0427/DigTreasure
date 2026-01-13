@@ -8,32 +8,34 @@ public class SessionUpdate : MonoBehaviour
 {
 
     [SerializeField] EntranceManager m_manager;
-    [SerializeField] RectTransform m_recttransform;
     [SerializeField]InfomationText m_infotext;
-    Tween m_tween;
+    [SerializeField]EntranceInput m_input;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         if (m_manager == null) m_manager = FindFirstObjectByType<EntranceManager>();
         m_manager.OnSessionUpdate += UpdateRoomData;
-        
+
+        m_input.OnLoad += UpdateSession;
     }
 
-    public void UpdateSession()
+    private void OnDestroy()
     {
-        m_manager.SesstionUpdate();
-        m_tween = m_recttransform.DORotate(new Vector3(0f, 0f, -360f), 1.0f, RotateMode.FastBeyond360)
-            .SetEase(Ease.InOutCubic)
-            .SetLoops(-1, LoopType.Restart);
+        if(m_input)
+        {
+            m_input.OnLoad -= UpdateSession;
+        }
+    }
+
+    public void UpdateSession(bool push)
+    {
+        m_manager.SesstionUpdateAsync();
         m_infotext.UpdateText("‚±‚¤‚µ‚ñ‚¿‚ã‚¤",true);
     }
 
     private void UpdateRoomData(Dictionary<string, SessionInfo> data)
     {
-        
-        m_tween.Kill();
-        m_recttransform.Rotate(Vector3.zero);
         m_infotext.Hide();
     }
 }

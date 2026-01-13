@@ -24,7 +24,7 @@ MonoBehaviour:
   innerVoxelId: 0
   treasureOffsetRange: 2
   connectionPointInset: 1
-  baseDistance: 60
+  baseDistance: 50
   distanceVariation: 5
   angleVariation: 10
   yVariation: 20

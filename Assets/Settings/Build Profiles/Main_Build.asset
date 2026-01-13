@@ -20,16 +20,16 @@ MonoBehaviour:
     rid: 7007582471580024893
   m_OverrideGlobalSceneList: 1
   m_Scenes:
-  - m_enabled: 0
-    m_path: Assets/Aoi/Scene/TestScene.unity
   - m_enabled: 1
-    m_path: Assets/Shared/Scene/0_Entrance.unity
+    m_path: Assets/Shared/Scene/0_Title.unity
   - m_enabled: 1
-    m_path: Assets/Shared/Scene/1_Room.unity
+    m_path: Assets/Shared/Scene/1_Entrance.unity
   - m_enabled: 1
-    m_path: Assets/Shared/Scene/2_Play.unity
+    m_path: Assets/Shared/Scene/2_Room.unity
   - m_enabled: 1
-    m_path: Assets/Shared/Scene/3_Result.unity
+    m_path: Assets/Shared/Scene/3_Play.unity
+  - m_enabled: 1
+    m_path: Assets/Shared/Scene/4_Result.unity
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:
     m_Settings:

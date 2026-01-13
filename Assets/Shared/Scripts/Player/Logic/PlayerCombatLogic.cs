@@ -332,6 +332,7 @@ public class PlayerCombatLogic : MonoBehaviour
     /// </summary>
     public void ProcessDamage(PlayerDamageData damage)
     {
+       
         //被攻撃側ヒットストップ
         m_manager?.Events?.InvokeHitStopStart(m_defenderHitStopDuration);
 
@@ -386,7 +387,7 @@ public class PlayerCombatLogic : MonoBehaviour
     /// <summary>
     /// ノックバック適用
     /// </summary>
-    public void ApplyKnockback(Vector3 direction, float force)
+    public void ApplyKnockback(Vector3 direction, float force,float stun = -1)
     {
         var rb = m_manager?.Rigidbody;
         if (rb != null)
@@ -394,6 +395,21 @@ public class PlayerCombatLogic : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.AddForce(direction * force, ForceMode.Impulse);
+        }
+        if(stun > 0)
+        {
+            //スタン
+            if (m_manager?.NetworkState != null && m_manager.IsOnlineMode)
+            {
+                m_manager.NetworkState.SetStunned(stun);
+                m_manager.NetworkState.SetImmune(m_immunityDuration);
+            }
+            else
+            {
+                m_manager?.Events?.InvokeStunStart();
+                StartCoroutine(StunCoroutine(stun));
+                StartCoroutine(ImmunityCoroutine(m_immunityDuration));
+            }
         }
         m_manager?.Events?.InvokeKnockback(direction, force);
     }

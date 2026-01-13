@@ -26,6 +26,8 @@ public class ResultProgress : Ranking
     //演出終了後に出すキャンバス
     [SerializeField] GameObject m_finishCanvas;
 
+    bool m_isAction = false;
+
     private void Start()
     {
         m_finishCanvas.SetActive(false);
@@ -42,6 +44,8 @@ public class ResultProgress : Ranking
     /// </summary>
     public override void ShowRanking(List<ResultData> resultdata, Action oncomplete = null)
     {
+        if (m_isAction) return;
+        m_isAction = true;
         m_resultData = resultdata;
         StartCoroutine(ShowRankingSequence(oncomplete));
     }
@@ -56,6 +60,8 @@ public class ResultProgress : Ranking
 
         //スコア計算
         m_scoreCalculation.Initialize(m_resultData);
+
+        yield return new WaitForSeconds(1.0f);
 
         //お宝生成演出
         yield return StartCoroutine(m_spawnTreasure.Initialize(m_resultData));
@@ -90,19 +96,19 @@ public class ResultProgress : Ranking
             data2.TreasureScore = 1100;
             data2.DigPoint = 50000;
 
-            var data3 = new ResultData();
-            data3.NickName = "player3";
-            data3.Index = 2;
-            data3.TreasureScore = 1000;
-            data3.DigPoint = 8000;
+            //var data3 = new ResultData();
+            //data3.NickName = "player3";
+            //data3.Index = 2;
+            //data3.TreasureScore = 1000;
+            //data3.DigPoint = 8000;
 
-            var data4 = new ResultData();
-            data4.NickName = "player4";
-            data4.Index = 3;
-            data4.TreasureScore = 1300;
-            data4.DigPoint = 2000;
+            //var data4 = new ResultData();
+            //data4.NickName = "player4";
+            //data4.Index = 3;
+            //data4.TreasureScore = 1300;
+            //data4.DigPoint = 2000;
 
-            var testdata = new List<ResultData>() { data1, data2, data3, data4 };
+            var testdata = new List<ResultData>() { data1, data2/*, data3, data4*/ };
 
             ShowRanking(testdata);
         }

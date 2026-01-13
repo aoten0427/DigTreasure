@@ -1,5 +1,6 @@
 using Fusion;
 using NetWork;
+using Option;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,40 +11,87 @@ using UnityEngine.SceneManagement;
 using static Unity.Collections.Unicode;
 
 /// <summary>
-/// “üºƒV[ƒ“‚ÌŠÇ—
+/// å…¥å®¤ã‚·ãƒ¼ãƒ³ã®ç®¡ç†
 /// </summary>
 public class EntranceManager : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI tmproUGUI;//ƒ†[ƒU[–¼
+    [SerializeField] private TextMeshProUGUI tmproUGUI;//ãƒ¦ãƒ¼ã‚¶ãƒ¼å
     private NetWork.GameLauncher m_gameLauncher;
     bool m_isConnecting = false;
-    //Ú‘±ƒCƒxƒ“ƒg
+    //æ¥ç¶šæ™‚ã‚¤ãƒ™ãƒ³ãƒˆ
     public event Action<bool> OnConnectAction;
-    //ƒZƒbƒVƒ‡ƒ“XVƒCƒxƒ“ƒg
+    //ã‚»ãƒƒã‚·ãƒ§ãƒ³æ›´æ–°ã‚¤ãƒ™ãƒ³ãƒˆ
+    bool m_isSession =false;
     public event Action<Dictionary<string, SessionInfo>> OnSessionUpdate;
-    [SerializeField] AudioSource m_bgm;
+
+    //ã‚¤ãƒ³ãƒ—ãƒƒãƒˆ
+    [SerializeField] EntranceInput m_input;
+
+    //ã‚ªãƒ—ã‚·ãƒ§ãƒ³
+    OptionManager m_optionManager;
+    //åå‰å…¥åŠ›
+    [SerializeField]NameInput m_nameInput;
+
+    //ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒƒã‚¯ãƒœã‚¿ãƒ³
+    [SerializeField] CircleButton m_backButton;
+    bool m_isBack = false;
+
+    //é¸æŠãƒœã‚¿ãƒ³
+    [SerializeField] UISelecterBase m_selectButton;
+
+
 
     private void Start()
     {
-        //ƒQ[ƒ€ƒ‰ƒ“ƒ`ƒƒ[‚ğ’T‚·
+        //ã‚²ãƒ¼ãƒ ãƒ©ãƒ³ãƒãƒ£ãƒ¼ã‚’æ¢ã™
         m_gameLauncher = NetWork.GameLauncher.Instance;
         m_gameLauncher.OnPlayerJoined += MoveToRoom;
-        m_bgm.Play();
+       
+        //éŸ³æ¥½å†ç”Ÿ
+        var soundPlayer = SoundPlayer.Instance;
+        soundPlayer.PlayBGM(BGMType.Title);
+
+        m_optionManager = OptionManager.Instance;
+
+        m_selectButton.Select(null);
+
+        if(m_input)
+        {
+            m_input.OnPause += OpenOption;
+            m_input.OnCancel += CancelPush;
+            m_input.OnMove += SelectMove;
+            m_input.OnNameChange += OpenNameChange;
+            m_input.OnSelect += Select;
+        }
+
+        m_backButton.OnFillAction = ChangeTitleScene;
     }
 
     private void OnDestroy()
     {
-        m_bgm.Stop();
+        if (m_input)
+        {
+            m_input.OnPause -= OpenOption;
+            m_input.OnCancel -= CancelPush;
+            m_input.OnMove -= SelectMove;
+            m_input.OnNameChange -= OpenNameChange;
+            m_input.OnSelect -= Select;
+        }
+
+        if(m_backButton)
+        {
+            m_backButton.OnFillAction = null;
+        }
     }
 
     /// <summary>
-    /// ƒ‹[ƒ€‚ÖQ‰Á
+    /// ãƒ«ãƒ¼ãƒ ã¸å‚åŠ 
     /// </summary>
     /// <param name="roomName"></param>
     public  async void JoinRoom(string roomName)
     {
-        if (!(tmproUGUI.text.Length > 1)) return;
-        if(m_isConnecting) return;
+        if (tmproUGUI.text.Length == 0) return;
+        if (m_isConnecting) return;
 
         m_isConnecting = true;
         Connecting();
@@ -54,7 +102,7 @@ public class EntranceManager : MonoBehaviour
 
 
         m_isConnecting = await m_gameLauncher.JoinRoom(roomName);
-        //Ú‘±¸”s
+        //æ¥ç¶šå¤±æ•—
         if(!m_isConnecting)
         {
             FaielConnect();
@@ -63,7 +111,7 @@ public class EntranceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Ú‘±’†
+    /// æ¥ç¶šä¸­
     /// </summary>
     void Connecting()
     {
@@ -71,7 +119,7 @@ public class EntranceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Ú‘±¸”s—p
+    /// æ¥ç¶šå¤±æ•—ç”¨
     /// </summary>
     void FaielConnect()
     {
@@ -80,7 +128,7 @@ public class EntranceManager : MonoBehaviour
 
 
     /// <summary>
-    /// ‘Ò‹@ƒV[ƒ“‚ÖˆÚ“®
+    /// å¾…æ©Ÿã‚·ãƒ¼ãƒ³ã¸ç§»å‹•
     /// </summary>
     /// <param name="runner"></param>
     /// <param name="player"></param>
@@ -88,38 +136,116 @@ public class EntranceManager : MonoBehaviour
     {
         if (runner.LocalPlayer != player) return;
 
-        Debug.Log("ŒÄ‚Ño‚µ");
+        Debug.Log("å‘¼ã³å‡ºã—");
 
-        //‘Ò‹@ƒ‹[ƒ€‚ÖˆÚ“®
+        //å¾…æ©Ÿãƒ«ãƒ¼ãƒ ã¸ç§»å‹•
         if (runner.IsSceneAuthority)
         {
-            runner.LoadScene(SceneRef.FromIndex(1), LoadSceneMode.Single);
+            runner.LoadScene(SceneRef.FromIndex(Config.ROOM_SCENE_NUMBER), LoadSceneMode.Single);
         }
+    }
+
+
+    /// <summary>
+    /// ãƒ«ãƒ¼ãƒ ãƒ‡ãƒ¼ã‚¿æ›´æ–°
+    /// </summary>
+    public async void SesstionUpdateAsync()
+    {
+        //ã‚»ãƒƒã‚·ãƒ§ãƒ³ãƒ‡ãƒ¼ã‚¿ã‚’æ›´æ–°
+        await m_gameLauncher.UpdateSessions();
+        //æ›´æ–°ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—
+        var data = m_gameLauncher.GetSessionInfo();
+        //åæ˜ 
+        OnSessionUpdate?.Invoke(data);
     }
 
     /// <summary>
-    /// ƒ‹[ƒ€ƒf[ƒ^XV
+    /// ã‚ªãƒ—ã‚·ãƒ§ãƒ³é–‹ã
     /// </summary>
-    public async void SesstionUpdate()
+    /// <param name="push"></param>
+    private void OpenOption(bool push)
     {
-        //ƒZƒbƒVƒ‡ƒ“ƒf[ƒ^‚ğXV
-        await m_gameLauncher.UpdateSessions();
-        //XVƒf[ƒ^‚ğæ“¾
-        var data = m_gameLauncher.GetSessionInfo();
-        //”½‰f
-        OnSessionUpdate?.Invoke(data);
+        if (!push) return;
+        if (IsOpenNameChange() || m_isBack||IsOpenOption()) return;
+        if (m_optionManager != null) m_optionManager.Open();
+    }
+
+    /// <summary>
+    /// ã‚ªãƒ—ã‚·ãƒ§ãƒ³é–‰ã˜ã‚‹ã€€ã‚¿ã‚¤ãƒˆãƒ«ã«æˆ»ã‚‹
+    /// </summary>
+    /// <param name="push"></param>
+    private void CancelPush(bool push)
+    {
+        if (!push) return;
+        Debug.Log("å‘¼ã³å‡ºã—");
+        if (IsOpenNameChange() || m_isBack) return;
+        //ã‚ªãƒ—ã‚·ãƒ§ãƒ³å‡¦ç†
+        if (m_optionManager != null&&IsOpenOption())
+        {
+            m_optionManager.Close();
+            return;
+        }
+
+        m_backButton.OnUpdate(push);
 
     }
 
-    private void Update()
+    /// <summary>
+    /// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒé–‹ã„ã¦ã„ã‚‹ã‹
+    /// </summary>
+    /// <returns></returns>
+    public bool IsOpenOption()
     {
-        if(Input.GetKeyUp(KeyCode.Alpha3))
+        if (m_optionManager == null) return false;
+        return m_optionManager.IsActive;
+    }
+
+    /// <summary>
+    /// ã‚¿ã‚¤ãƒˆãƒ«ã«æˆ»ã‚‹
+    /// </summary>
+    private void ChangeTitleScene()
+    {
+        m_isBack = true;
+        var fade = FadeManager.instance;
+        fade.ChangeScene("0_Title");
+    }
+
+    //é¸æŠãƒœã‚¿ãƒ³ç§»å‹•
+    private void SelectMove(SelectionDirection direction)
+    {
+        if (IsOpenOption() || IsOpenNameChange()||m_isBack) return;
+        var next = m_selectButton.Selection(direction);
+        if(next == null||next == m_selectButton) return;
+        //é¸æŠè‚¢å¤‰æ›´
+        m_selectButton.Deselect(next);
+        next.Select(m_selectButton);
+        m_selectButton = next;
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.ButtonMove);
+    }
+
+    private void OpenNameChange(bool push)
+    {
+        if (!push) return;
+        if (IsOpenOption() || m_isBack||IsOpenNameChange()) return;
+        if(push)
         {
-            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+            m_nameInput.Open();
         }
-        if (Input.GetKeyUp(KeyCode.Alpha4))
-        {
-            Screen.SetResolution(1920, 1280, FullScreenMode.Windowed);
-        }
+    }
+
+    private bool IsOpenNameChange()
+    {
+        if(m_nameInput == null) return false;
+        return m_nameInput.IsOpen;
+    }
+
+    private void Select(bool push)
+    {
+        if (!push) return;
+        if (IsOpenOption() || IsOpenNameChange() || m_isBack) return;
+        if (m_selectButton) m_selectButton.Decision();
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.ButtonClick);
     }
 }

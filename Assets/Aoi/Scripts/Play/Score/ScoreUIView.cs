@@ -15,6 +15,7 @@ public class ScoreUIView : MonoBehaviour
     [System.Serializable]
     struct UISet
     {
+        public GameObject frame;
         public GameObject rank;
         public GameObject data;
     }
@@ -63,6 +64,7 @@ public class ScoreUIView : MonoBehaviour
 
         for(int i = 0; i < m_uiSets.Length; i++)
         {
+            m_uiSets[i].frame.SetActive(false);
             m_uiSets[i].rank.SetActive(false);
             m_uiSets[i].data.SetActive(false);
         }
@@ -129,6 +131,7 @@ public class ScoreUIView : MonoBehaviour
             return;
         }
 
+        m_uiSets[m_nextAvailableIndex].frame.SetActive(true);
         m_uiSets[m_nextAvailableIndex].rank.SetActive(true);
         m_uiSets[m_nextAvailableIndex].data.SetActive(true);
 

@@ -1,6 +1,8 @@
 ﻿using Fusion;
 using NetWork;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using UniRx;
 using UnityEngine;
 
 
@@ -8,7 +10,7 @@ using UnityEngine;
 /// <summary>
 /// プレイ時のスコア表示
 /// </summary>
-public class ScoreUIData : MonoBehaviour
+public class ScoreUIData : MonoBehaviour,IPlayInitialize
 {
     public class UserData
     {
@@ -30,6 +32,10 @@ public class ScoreUIData : MonoBehaviour
     Dictionary<int, UserData> m_datas = new Dictionary<int, UserData>();
     //最大人数
     [SerializeField] int m_maxNumber = 4;
+
+    public InitializationPriority Priority => InitializationPriority.UI;
+
+    public string Name => "Score";
 
     /// <summary>
     /// データ更新時に発火するイベント（全ユーザーデータを渡す）
@@ -125,6 +131,16 @@ public class ScoreUIData : MonoBehaviour
     public int GetUserCount()
     {
         return m_datas.Count;
+    }
+
+    public void SetManager(PlayManager manager)
+    {
+        manager.OnGameEndAction += () => gameObject.SetActive(false);
+    }
+
+    public Task InitializeAsync(ReactiveProperty<float> task = null)
+    {
+        return Task.CompletedTask;
     }
 }
 

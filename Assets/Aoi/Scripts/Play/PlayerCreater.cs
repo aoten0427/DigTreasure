@@ -130,6 +130,10 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
             {
                 player.IsActive = true;
             };
+            m_playManager.OnGameEndAction += () =>
+            {
+                player.IsActive = false;
+            };
         }
     }
 
@@ -137,4 +141,6 @@ public class PlayerCreater : NetworkBehaviour,IPlayInitialize
     {
         m_playManager = manager;
     }
+
+
 }

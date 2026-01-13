@@ -2,13 +2,14 @@ using UnityEngine;
 using VoxelWorld;
 using UniRx;
 using System.Threading.Tasks;
+using Fusion;
 
 namespace StructureGeneration
 {
     /// <summary>
     /// MapGeneratorのUnity MonoBehaviourラッパー
     /// </summary>
-    public class MapGeneratorComponent : MonoBehaviour, IPlayInitialize
+    public class MapGeneratorComponent : NetworkBehaviour, IPlayInitialize
     {
         // IPlayInitializeの実装
         public InitializationPriority Priority => InitializationPriority.Map;
@@ -28,11 +29,21 @@ namespace StructureGeneration
         public MapGenerator Generator => mapGenerator;
         public bool IsGenerating => isGenerating;
 
-
+        [Networked]
+        int n_Seed {  get; set; }
 
         public void SetManager(PlayManager manager)
         {
 
+        }
+
+        public override void Spawned()
+        {
+            if(Object.HasStateAuthority)
+            {
+                n_Seed = System.Environment.TickCount;
+                n_Seed = n_Seed % 20;
+            }
         }
 
         /// <summary>
@@ -55,6 +66,7 @@ namespace StructureGeneration
             }
 
             // MapGeneratorインスタンスを作成
+            settings.masterSeed = n_Seed;
             mapGenerator = new MapGenerator(settings, worldManager.Voxels);
 
             // マップ生成を実行

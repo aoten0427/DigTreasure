@@ -29,7 +29,8 @@ public abstract class UISelecterBase : MonoBehaviour
 public abstract class UISelecterBase<TResult> : UISelecterBase
 {
     //ŽŸ‚É‘I‘ð‚³‚ê‚é‚à‚Ì
-    public virtual UISelecterBase<TResult> SelectionGenerics(SelectionDirection direction) { return null; }
+    public virtual UISelecterBase<TResult> SelectionGenericsBase(SelectionDirection direction) { return null; }
+    public virtual TResult SelectionGeneric(SelectionDirection direction) { return default; }
     //Œˆ’è
     public virtual TResult DecisionGenerics() { return default; }
 }

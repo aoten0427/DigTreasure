@@ -29,7 +29,7 @@ namespace VoxelWorld
         public const float CHUNK_WORLD_HEIGHT = CHUNK_HEIGHT * VOXEL_SIZE; // = 8.0f
         public const float CHUNK_WORLD_DEPTH = CHUNK_DEPTH * VOXEL_SIZE;   // = 8.0f
 
-        // チャンクワールドサイズの逆数（除算を乗算に最適化）
+        // チャンクワールドサイズの逆数
         public const float INV_CHUNK_WORLD_WIDTH = 1f / CHUNK_WORLD_WIDTH;   // = 0.125f
         public const float INV_CHUNK_WORLD_HEIGHT = 1f / CHUNK_WORLD_HEIGHT; // = 0.125f
         public const float INV_CHUNK_WORLD_DEPTH = 1f / CHUNK_WORLD_DEPTH;   // = 0.125f

@@ -3,15 +3,7 @@ using UnityEngine;
 
 namespace VoxelWorld
 {
-    /// <summary>
-    /// カメラ前方に板を生成し、ボクセルデータに基づいて表示/非表示を制御する
-    /// 遠くの洞窟を隠しつつ、近くのプレイヤーの掘削跡は見えるようにする
-    ///
-    /// ハイブリッドグリッド方式による高速化:
-    /// - Phase 1: 粗いグリッド（16×16）でチャンクレベルの存在チェック
-    /// - Phase 2: 高解像度（512×512）でボクセルレベルチェック（空領域はスキップ）
-    /// - Parallel.Forによる並列処理で60fps達成（512×512で14ms）
-    /// </summary>
+
     public class SurfacePlaneGenerator : MonoBehaviour
     {
         #region Serialized Fields
@@ -197,9 +189,7 @@ namespace VoxelWorld
         #region Voxel Data Texture
 
         /// <summary>
-        /// ボクセルデータテクスチャを更新（ハイブリッドグリッド版）
-        /// Phase 1: 粗いグリッドでチャンクレベルチェック
-        /// Phase 2: 高解像度でボクセルレベルチェック（空領域はスキップ）
+        /// ボクセルデータテクスチャを更新
         /// </summary>
         private void UpdateVoxelDataTexture()
         {
@@ -507,7 +497,7 @@ namespace VoxelWorld
                         if (m_coarseGrid[x, y]) occupiedCells++;
 
                 float occupancyRate = occupiedCells / (float)(m_coarseGridResolution * m_coarseGridResolution) * 100f;
-                Debug.Log($"    [Coarse Grid] {m_coarseGridResolution}×{m_coarseGridResolution} updated in {ms:F2}ms | Occupancy: {occupancyRate:F1}% ({occupiedCells}/{m_coarseGridResolution * m_coarseGridResolution}) | Mode: {(m_enableParallelProcessing ? "Parallel" : "Sequential")}");
+               
             }
         }
 

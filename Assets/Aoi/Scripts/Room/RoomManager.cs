@@ -17,6 +17,8 @@ namespace NetWork
         GameLauncher m_gameLauncher;
         //表示するプレイヤー
         [SerializeField] RoomPlayer[] m_players = new RoomPlayer[4];
+        //チェックマーク
+        [SerializeField]GameObject[] m_checkMarks = new GameObject[4];
         //プレイヤー名
         [SerializeField] TextMeshProUGUI[] m_playerName = new TextMeshProUGUI[4];
         //自身のモデル
@@ -39,11 +41,14 @@ namespace NetWork
         [SerializeField] GameObject m_light;
         [SerializeField] GameObject m_canvas;
         [SerializeField] RoomInput m_roomInput;
+
+        [SerializeField] CircleButton m_exitButton;
         /// <summary>
         /// 初期化
         /// </summary>
         private void Start()
         {
+            m_roomInput.OnCancel += Canceld;
 
             m_gameLauncher = GameLauncher.Instance;
             m_gameLauncher?.AddOnNetworkObjectSpawned(Entry);
@@ -66,6 +71,12 @@ namespace NetWork
             }
 
             m_gameLauncher.SetLoadScreen(LoadType.None);
+
+            //BGM
+            var soundPlayer = SoundPlayer.Instance;
+            if (soundPlayer) soundPlayer.PlayBGM(BGMType.Result);
+
+            m_exitButton.OnFillAction = Exit;
         }
 
         /// <summary>
@@ -106,6 +117,14 @@ namespace NetWork
             {
                 m_gameLauncher.RemoveOnNetworkObjectSpawned(Entry);
                 m_gameLauncher.OnPlayerLeft -= RemovePlayer;
+            }
+            if(m_roomInput)
+            {
+                m_roomInput.OnCancel -= Canceld;
+            }
+            if(m_exitButton)
+            {
+                m_exitButton.OnFillAction = null;
             }
         }
 
@@ -281,7 +300,8 @@ namespace NetWork
         [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
         public void RPC_Ready(PlayerRef user,bool ready)
         {
-            Debug.Log("準備完了受付");
+            //Debug.Log("準備完了受付");
+            RPC_ReadyMark(user, ready);
             if(n_allisReady.ContainsKey(user))
             {
                 n_allisReady.Set(user, ready);
@@ -293,6 +313,13 @@ namespace NetWork
             {
                 RPC_EntryAnimation();
             }
+        }
+
+        [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+        private void RPC_ReadyMark(PlayerRef user,bool ready)
+        {
+            int index = n_usertoIndex[user];
+            m_checkMarks[index].SetActive(ready);
         }
 
         public void GameStart()
@@ -307,6 +334,8 @@ namespace NetWork
             {
                 if (!player.gameObject.activeSelf) continue;
                 player.Entry();
+                var soundPlayer = SoundPlayer.Instance;
+                if(soundPlayer)soundPlayer.StopBGM();
             }
             if(Object.HasStateAuthority)
             {
@@ -329,8 +358,13 @@ namespace NetWork
                 //遊ぶ人数を設定
                 m_gameLauncher.SetStartingNumber(Runner.ActivePlayers.Count());
                 //シーンを変更
-                Runner.LoadScene(SceneRef.FromIndex(2), LoadSceneMode.Single);
+                Runner.LoadScene(SceneRef.FromIndex(Config.PLAY_SCENE_NUMBER), LoadSceneMode.Single);
             }
+        }
+
+        private void Canceld(bool push)
+        {
+            m_exitButton.OnUpdate(push);
         }
 
         public async void Exit()
