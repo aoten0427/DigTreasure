@@ -33,6 +33,7 @@ namespace StructureGeneration
         [Header("構造物設定への参照")]
         public TreasureCaveSettings treasureCaveSettings;
         public HardFloorCaveSettings hardFloorCaveSettings;
+        public SecretRoomSettings secretRoomSettings;
 
         [Header("接続設定")]
         [Tooltip("接続（トンネル）の生成設定")]

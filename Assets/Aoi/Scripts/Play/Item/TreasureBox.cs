@@ -64,7 +64,7 @@ public class TreasureBox : NetworkBehaviour
         m_isOpen = true;
         m_filter.mesh = m_openMehs;
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 15; i++)
         {
             TreasureSpown();
         }
@@ -109,7 +109,8 @@ public class TreasureBox : NetworkBehaviour
             Treasure treasure = obj.GetComponent<Treasure>();
             treasure.SetScorePoint(point);
             treasure.SetMeshIndex(selectindex);
-            treasure.InvalidTime = 0.2f;
+            treasure.IsInvalid = false;
+            treasure.InvalidTime = 0.0f;
            
 
             Rigidbody rigidbody = obj.GetComponent<Rigidbody>();
@@ -117,8 +118,6 @@ public class TreasureBox : NetworkBehaviour
             m_createTreasure.Add(rigidbody);
 
             //obj.transform.localScale *= 0.5f;
-
-
         });
 
 
