@@ -168,6 +168,9 @@ namespace StructureGeneration
 
             // HardFloorCave（中央洞窟）を配置
             GenerateCentralCaveAsync();
+
+            // SecretRoom（秘密の部屋）をランダム配置
+            await GenerateRandomSecretRoomsAsync();
         }
 
         /// <summary>
@@ -237,6 +240,92 @@ namespace StructureGeneration
             m_structures.Add(new HardFloorCave("HardFloor",m_currentSeed, m_settings.hardFloorCaveSettings));
         }
 
+        /// <summary>
+        /// SecretRoomをランダム配置
+        /// </summary>
+        private async Task GenerateRandomSecretRoomsAsync()
+        {
+            // 設定がnullの場合はスキップ
+            if (m_settings.secretRoomSettings == null)
+                return;
+
+            // seedを使って生成数を決定
+            Random.InitState(m_currentSeed ^ "SecretRoomCount".GetHashCode());
+            int actualRoomCount = Random.Range(
+                m_settings.secretRoomSettings.minCount,
+                m_settings.secretRoomSettings.maxCount + 1);
+
+            if (actualRoomCount <= 0)
+                return;
+
+            // 配置範囲を計算（チャンク座標からワールド座標へ）
+            float chunkWorldSize = VoxelWorld.VoxelConstants.CHUNK_WORLD_WIDTH;
+            float minX = m_settings.minChunkCoord.x * chunkWorldSize;
+            float maxX = m_settings.maxChunkCoord.x * chunkWorldSize;
+            float minZ = m_settings.minChunkCoord.z * chunkWorldSize;
+            float maxZ = m_settings.maxChunkCoord.z * chunkWorldSize;
+
+            // 既存の構造物の位置リスト
+            var existingPositions = new List<Vector3>();
+            foreach (var structure in m_structures)
+            {
+                existingPositions.Add(structure.CenterPosition);
+            }
+
+            int roomsCreated = 0;
+            for (int i = 0; i < actualRoomCount; i++)
+            {
+                // シードを使った乱数初期化
+                Random.InitState(m_currentSeed ^ ("SecretRoom" + i).GetHashCode());
+
+                Vector3 position = Vector3.zero;
+                bool validPosition = false;
+
+                // 配置試行
+                for (int attempt = 0; attempt < m_settings.secretRoomSettings.m_placementAttempts; attempt++)
+                {
+                    // ランダム位置を生成
+                    position = new Vector3(
+                        Random.Range(minX, maxX),
+                        Random.Range(m_settings.secretRoomSettings.m_minY, m_settings.secretRoomSettings.m_maxY),
+                        Random.Range(minZ, maxZ)
+                    );
+
+                    // 他の構造物との距離をチェック
+                    validPosition = true;
+                    foreach (var existingPos in existingPositions)
+                    {
+                        float distance = Vector3.Distance(position, existingPos);
+                        if (distance < m_settings.secretRoomSettings.m_minDistanceFromOthers)
+                        {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+
+                    if (validPosition)
+                        break;
+                }
+
+                // 有効な位置が見つかった場合のみ生成
+                if (validPosition)
+                {
+                    int structureSeed = m_currentSeed ^ ("SecretRoom" + roomsCreated).GetHashCode();
+                    string id = $"SecretRoom_{roomsCreated}";
+
+                    var secretRoom = new SecretRoom(id, structureSeed, m_settings.secretRoomSettings, position);
+                    m_structures.Add(secretRoom);
+                    existingPositions.Add(position);
+                    roomsCreated++;
+                }
+
+                // フレーム分散
+                if (i % MapGeneratorConstants.STRUCTURE_YIELD_INTERVAL == 0)
+                {
+                    await Task.Yield();
+                }
+            }
+        }
 
         /// <summary>
         /// 接続を生成

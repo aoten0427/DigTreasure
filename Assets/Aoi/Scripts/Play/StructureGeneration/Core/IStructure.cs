@@ -11,7 +11,9 @@ namespace StructureGeneration
     {
         TreasureCave = 0,
         HardFloorCave = 1,
-        RandomWalkCave = 2
+        RandomWalkCave = 2,
+        TreasureBox = 3,
+        SecretRoom = 4
     }
 
     /// <summary>

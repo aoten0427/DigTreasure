@@ -26,9 +26,7 @@ namespace StructureGeneration
         {
             Clear();
             GenerateBombPlacements(structures, connections);
-            // 将来的に他の配置オブジェクトを追加
-            // GenerateTreasurePlacements(structures, connections);
-            // GenerateTrapPlacements(structures, connections);
+            GenerateTreasurePlacements(structures);
         }
 
         /// <summary>
@@ -73,6 +71,32 @@ namespace StructureGeneration
                 placementObjects.Add(bombData);
 
                 Debug.Log($"[PlacementObjectManager] 爆弾配置: {bombPosition}, 接続ID: {connection.Id}");
+            }
+        }
+
+        /// <summary>
+        /// SecretRoomの中心に宝箱を配置
+        /// </summary>
+        /// <param name="structures">全構造物リスト</param>
+        private void GenerateTreasurePlacements(IReadOnlyList<IStructure> structures)
+        {
+            // SecretRoomを取得
+            var secretRooms = structures.Where(s => s.Type == StructureType.SecretRoom).ToList();
+
+            foreach (var secretRoom in secretRooms)
+            {
+                // 部屋の中心に宝箱を配置
+                Vector3 treasurePosition = secretRoom.CenterPosition;
+
+                var treasureData = new TreasurePlacementData(
+                    treasurePosition,
+                    Vector3.forward,
+                    secretRoom.Id
+                );
+
+                placementObjects.Add(treasureData);
+
+                Debug.Log($"[PlacementObjectManager] 宝箱配置: {treasurePosition}, 構造物ID: {secretRoom.Id}");
             }
         }
 

@@ -16,7 +16,7 @@ public class PlacementCreater : NetworkBehaviour,IPlayInitialize
     //”š’e
     [SerializeField] private NetworkPrefabRef m_bomb;
 
-
+    [SerializeField] private NetworkPrefabRef m_treasureBox;
     //
     public Task InitializeAsync(ReactiveProperty<float> task = null)
     {
@@ -36,7 +36,14 @@ public class PlacementCreater : NetworkBehaviour,IPlayInitialize
             {
                 Runner.Spawn(m_bomb, placement.Position);
             }
+
+            if (placement.ObjectType == PlacementObjectType.Treasure)
+            {
+                Runner.Spawn(m_treasureBox, placement.Position);
+            }
         }
+
+         
 
         //Runner.Spawn(m_bomb,new Vector3(0,10,0));
 

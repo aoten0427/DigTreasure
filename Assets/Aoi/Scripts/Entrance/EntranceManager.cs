@@ -176,8 +176,6 @@ public class EntranceManager : MonoBehaviour
     /// <param name="push"></param>
     private void CancelPush(bool push)
     {
-        if (!push) return;
-        Debug.Log("呼び出し");
         if (IsOpenNameChange() || m_isBack) return;
         //オプション処理
         if (m_optionManager != null&&IsOpenOption())
