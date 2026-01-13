@@ -14,6 +14,7 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
 
     public string Name => "ScorePresenter";
 
+    Dictionary<int, int> m_idToPoint = new Dictionary<int, int>();
     
     /// <summary>
     /// ユーザーネーム変更
@@ -64,6 +65,27 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
     /// <param name="userdatas"></param>
     private void ChangeData(IReadOnlyDictionary<PlayerRef, NetworkUserData> userdatas)
     {
+        bool m_isScoreUpdate = false;
+        foreach(var data in userdatas)
+        {
+            if(!m_idToPoint.ContainsKey(data.Value.m_id))
+            {
+                m_isScoreUpdate = true;
+            }
+            else if (m_idToPoint[data.Value.m_id] != data.Value.m_treasurePoint)
+            {
+                m_isScoreUpdate = true;
+            }
+
+            m_idToPoint[data.Value.m_id] = data.Value.m_treasurePoint;
+        }
+
+
+
+        if (!m_isScoreUpdate) return;
+
+
+
         foreach(var userdata in userdatas.Values)
         {
             m_scoreUIData.UpdatePoint(userdata.m_id, userdata.m_treasurePoint);

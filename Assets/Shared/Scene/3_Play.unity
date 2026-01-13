@@ -1844,8 +1844,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e41384c63f187ad4d8b7ea2336c321fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_moveAnimationDuration: 1
-  m_checkpointOffsetX: 50
+  m_moveAnimationDuration: 2
+  m_checkpointOffsetX: 75
+  m_moveEase: 4
 --- !u!114 &435816579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6203,7 +6204,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17a3d27700fd37949bbbbcb3000b98fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameTime: 120
+  GameTime: 180
   m_countDown: {fileID: 2121432287}
   m_isLog: 0
   m_beforestartText: {fileID: 1330670006}
