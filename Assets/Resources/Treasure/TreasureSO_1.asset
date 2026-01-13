@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dd1b39860f3b5c4fbe01e1a2f146d31, type: 3}
   m_Name: TreasureSO_1
   m_EditorClassIdentifier: 
-  _lowestDepth: -40
+  _lowestDepth: -62
   _highestDepth: -10
   _point: 20
   _spawnPercent: 40

@@ -2130,7 +2130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48b34bb86ce8e3d458d31d45559d6ac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_scoreManager: {fileID: 167718215}
+  m_scoreUIData: {fileID: 0}
 --- !u!114 &355657742
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2143,7 +2143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ecf2d8549a8d7c4da821a35613844f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  presenter: {fileID: 355657741}
+  m_scoredata: {fileID: 0}
 --- !u!114 &355657743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2287,8 +2287,7 @@ MonoBehaviour:
   ObjectInterest: 1
   Flags: 131073
   NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 366525682}
+  NetworkedBehaviours: []
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &366525682
 MonoBehaviour:
@@ -2302,6 +2301,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 222353468ee66394f9442167edf9256d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_maxNumber: 4
 --- !u!4 &366525683
 Transform:
   m_ObjectHideFlags: 0
@@ -3077,7 +3077,6 @@ MonoBehaviour:
   Flags: 131073
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 838352217}
   - {fileID: 838352219}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &838352217
@@ -4280,6 +4279,8 @@ MonoBehaviour:
   m_cellSize: 5
   m_distanceFromCamera: 15
   m_textureResolution: 128
+  m_coarseGridResolution: 16
+  m_enableParallelProcessing: 1
   m_positionUpdateThreshold: 3
   m_rotationUpdateThreshold: 5
   m_enablePerformanceLog: 0
@@ -5370,7 +5371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17a3d27700fd37949bbbbcb3000b98fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameTime: 120
+  GameTime: 10
   m_startCountDown: {fileID: 2121432284}
   m_isLog: 1
 --- !u!1 &1926540992

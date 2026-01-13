@@ -134,6 +134,9 @@ public class BombLocal : VoxelWorld.BaseAttack
         }
 
 
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.Explosion);
+
         m_renderer.enabled = false;
         m_explosion.PlayAnimation();
         if (m_isDestroyd) Destroy();

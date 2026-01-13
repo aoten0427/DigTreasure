@@ -9,7 +9,7 @@ namespace VoxelWorld
     [System.Serializable]
     public struct Voxel
     {
-        //識別ID
+        //ID
         [SerializeField] private byte m_voxelId;
         public byte VoxelId => m_voxelId;
 
@@ -23,7 +23,7 @@ namespace VoxelWorld
         public bool IsValid => !IsEmpty;
 
         /// <summary>
-        /// コンストラクタ（公開用）
+        /// コンストラクタ
         /// </summary>
         /// <param name="voxelId">ボクセルID</param>
         public Voxel(int voxelId)

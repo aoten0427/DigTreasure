@@ -118,6 +118,7 @@ public class PlayerMovement : MonoBehaviour
     public void ProcessMovement(Vector2 moveInput, Quaternion cameraRotation, float deltaTime)
     {
         if (rb == null) return;
+        
 
         if (canMove)
         {

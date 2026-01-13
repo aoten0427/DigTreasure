@@ -27,7 +27,6 @@ public class PlayerAnimator : MonoBehaviour
     //ヒットストップ関連
     private Coroutine m_hitStopCoroutine;
 
-    [SerializeField] AudioSource m_digSound;
     /// <summary>
     /// 初期化
     /// </summary>
@@ -111,7 +110,7 @@ public class PlayerAnimator : MonoBehaviour
                 SyncDigAnimation(m_isDig);
                 m_isDig = false;
                 m_digAnimCheck = true;
-                if(m_digSound)m_digSound.Play();
+                SoundDig();
             }
         }
         //Dig_Loop中の処理
@@ -129,7 +128,7 @@ public class PlayerAnimator : MonoBehaviour
                 SyncDigAnimation(m_isDig);
                 m_isDig = false;
                 m_digAnimCheck = true;
-                if (m_digSound) m_digSound.Play();
+                SoundDig();
             }
             m_lastDigLoopCount = currentLoopCount;
         }
@@ -263,7 +262,7 @@ public class PlayerAnimator : MonoBehaviour
         else if (!(stateInfo.IsName("Dig_Start") || stateInfo.IsName("Dig_Loop") || stateInfo.IsName("Dig_End")))
         {
             m_animator.SetBool("isDig", true);
-            if (m_digSound) m_digSound.Play();
+            SoundDig();
             SyncDigAnimation(true);
         }
         
@@ -508,5 +507,16 @@ public class PlayerAnimator : MonoBehaviour
         }
 
         return "None";
+    }
+
+    private void SoundDig()
+    {
+        if (m_manager?.IsOnlineMode == true &&
+            m_manager.NetworkState != null &&
+            m_manager.NetworkState.HasStateAuthority)
+        {
+            var sound = SoundPlayer.Instance;
+            if (sound) sound.PlaySE(SEType.Dig);
+        }     
     }
 }

@@ -61,6 +61,7 @@ public class KeyDataCenter : MonoBehaviour
         m_input.Normal.Y.performed += OnSpace;
         m_input.Normal.RSButton.performed += OnCycle;
         m_input.Normal.LSButton.performed += OnCycle;
+        m_input.Normal.Pause.performed += OnDecision;
 
         // 入力を有効化
         m_input.Enable();
@@ -96,6 +97,7 @@ public class KeyDataCenter : MonoBehaviour
             m_input.Normal.Y.performed -= OnSpace;
             m_input.Normal.RSButton.performed -= OnCycle;
             m_input.Normal.LSButton.performed -= OnCycle;
+            m_input.Normal.Pause.performed -= OnDecision;
 
             // 入力システムの破棄
             m_input.Disable();
@@ -165,6 +167,9 @@ public class KeyDataCenter : MonoBehaviour
                 break;
             case KeyData.Type.Cycle:
                 m_keyDataManager.CycleCharacter();
+                break;
+            case KeyData.Type.Decision:
+                m_keyDataManager.Decision();
                 break;
         }
     }
@@ -295,6 +300,11 @@ public class KeyDataCenter : MonoBehaviour
     private void OnCycle(InputAction.CallbackContext ctx)
     {
         if (IsActive) m_keyDataManager.CycleCharacter();
+    }
+
+    private void OnDecision(InputAction.CallbackContext ctx)
+    {
+        if (IsActive) m_keyDataManager.Decision();
     }
 
     #endregion

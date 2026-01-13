@@ -149,8 +149,18 @@ public class PlayerProto : NetworkBehaviour
     {
         if (playManager == null) return;
         m_isAction = false;
-        playManager.OnGameStartAction += () => m_isAction = true;
-        playManager.OnGameEndAction += () => m_isAction = false;
+        playManager.OnGameStartAction += Active;
+        playManager.OnGameEndAction += Inactive;
+    }
+
+    private void Active()
+    {
+        m_isAction = true;
+    }
+
+    private void Inactive()
+    {
+        m_isAction = false;
     }
 
     private void Update()

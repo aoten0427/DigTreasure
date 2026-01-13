@@ -23,38 +23,64 @@ public class EntranceManager : MonoBehaviour
     //セッション更新イベント
     bool m_isSession =false;
     public event Action<Dictionary<string, SessionInfo>> OnSessionUpdate;
-    [SerializeField] AudioSource m_bgm;
 
+    //インプット
     [SerializeField] EntranceInput m_input;
-    OptionManager m_optionManager;
 
+    //オプション
+    OptionManager m_optionManager;
+    //名前入力
+    [SerializeField]NameInput m_nameInput;
+
+    //タイトルバックボタン
     [SerializeField] CircleButton m_backButton;
+    bool m_isBack = false;
+
+    //選択ボタン
+    [SerializeField] UISelecterBase m_selectButton;
+
+
 
     private void Start()
     {
         //ゲームランチャーを探す
         m_gameLauncher = NetWork.GameLauncher.Instance;
         m_gameLauncher.OnPlayerJoined += MoveToRoom;
-        m_bgm.Play();
+       
+        //音楽再生
+        var soundPlayer = SoundPlayer.Instance;
+        soundPlayer.PlayBGM(BGMType.Title);
 
         m_optionManager = OptionManager.Instance;
+
+        m_selectButton.Select(null);
 
         if(m_input)
         {
             m_input.OnPause += OpenOption;
             m_input.OnCancel += CancelPush;
+            m_input.OnMove += SelectMove;
+            m_input.OnNameChange += OpenNameChange;
+            m_input.OnSelect += Select;
         }
 
-        
+        m_backButton.OnFillAction = ChangeTitleScene;
     }
 
     private void OnDestroy()
     {
-        m_bgm.Stop();
         if (m_input)
         {
             m_input.OnPause -= OpenOption;
             m_input.OnCancel -= CancelPush;
+            m_input.OnMove -= SelectMove;
+            m_input.OnNameChange -= OpenNameChange;
+            m_input.OnSelect -= Select;
+        }
+
+        if(m_backButton)
+        {
+            m_backButton.OnFillAction = null;
         }
     }
 
@@ -64,8 +90,8 @@ public class EntranceManager : MonoBehaviour
     /// <param name="roomName"></param>
     public  async void JoinRoom(string roomName)
     {
-        if (!(tmproUGUI.text.Length > 1)) return;
-        if(m_isConnecting) return;
+        if (tmproUGUI.text.Length == 0) return;
+        if (m_isConnecting) return;
 
         m_isConnecting = true;
         Connecting();
@@ -133,13 +159,26 @@ public class EntranceManager : MonoBehaviour
         OnSessionUpdate?.Invoke(data);
     }
 
+    /// <summary>
+    /// オプション開く
+    /// </summary>
+    /// <param name="push"></param>
     private void OpenOption(bool push)
     {
+        if (!push) return;
+        if (IsOpenNameChange() || m_isBack||IsOpenOption()) return;
         if (m_optionManager != null) m_optionManager.Open();
     }
 
+    /// <summary>
+    /// オプション閉じる　タイトルに戻る
+    /// </summary>
+    /// <param name="push"></param>
     private void CancelPush(bool push)
     {
+        if (!push) return;
+        Debug.Log("呼び出し");
+        if (IsOpenNameChange() || m_isBack) return;
         //オプション処理
         if (m_optionManager != null&&IsOpenOption())
         {
@@ -147,18 +186,66 @@ public class EntranceManager : MonoBehaviour
             return;
         }
 
-        ChangeScene();
+        m_backButton.OnUpdate(push);
+
     }
 
+    /// <summary>
+    /// オプションが開いているか
+    /// </summary>
+    /// <returns></returns>
     public bool IsOpenOption()
     {
         if (m_optionManager == null) return false;
         return m_optionManager.IsActive;
     }
 
-    private void ChangeScene()
+    /// <summary>
+    /// タイトルに戻る
+    /// </summary>
+    private void ChangeTitleScene()
     {
+        m_isBack = true;
         var fade = FadeManager.instance;
         fade.ChangeScene("0_Title");
+    }
+
+    //選択ボタン移動
+    private void SelectMove(SelectionDirection direction)
+    {
+        if (IsOpenOption() || IsOpenNameChange()||m_isBack) return;
+        var next = m_selectButton.Selection(direction);
+        if(next == null||next == m_selectButton) return;
+        //選択肢変更
+        m_selectButton.Deselect(next);
+        next.Select(m_selectButton);
+        m_selectButton = next;
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.ButtonMove);
+    }
+
+    private void OpenNameChange(bool push)
+    {
+        if (!push) return;
+        if (IsOpenOption() || m_isBack||IsOpenNameChange()) return;
+        if(push)
+        {
+            m_nameInput.Open();
+        }
+    }
+
+    private bool IsOpenNameChange()
+    {
+        if(m_nameInput == null) return false;
+        return m_nameInput.IsOpen;
+    }
+
+    private void Select(bool push)
+    {
+        if (!push) return;
+        if (IsOpenOption() || IsOpenNameChange() || m_isBack) return;
+        if (m_selectButton) m_selectButton.Decision();
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.ButtonClick);
     }
 }

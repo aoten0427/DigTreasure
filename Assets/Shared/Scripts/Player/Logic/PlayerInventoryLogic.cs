@@ -38,7 +38,6 @@ public class PlayerInventoryLogic : MonoBehaviour
     public int TreasureCount { get; private set; }
     public int DigPoints => m_digPoints;
 
-    [SerializeField] AudioSource m_audioSource;
     /// <summary>
     /// 初期化
     /// </summary>
@@ -91,7 +90,7 @@ public class PlayerInventoryLogic : MonoBehaviour
         }
         CalculatePoints();
 
-        m_audioSource.Play();
+        SoundTreasure();
 
         //イベント発火
         m_manager?.Events?.InvokeTreasureChanged(TreasureCount);
@@ -271,5 +270,17 @@ public class PlayerInventoryLogic : MonoBehaviour
             yield return null;
         if (m_pickupBlacklist.Contains(treasure))
             m_pickupBlacklist.Remove(treasure);
+    }
+
+    private void SoundTreasure()
+    {
+        if (m_manager?.IsOnlineMode == true &&
+    m_manager.NetworkState != null &&
+    m_manager.NetworkState.HasStateAuthority)
+        {
+            var sound = SoundPlayer.Instance;
+            if (sound) sound.PlaySE(SEType.TreasureGet);
+        }
+            
     }
 }

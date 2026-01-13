@@ -6,7 +6,6 @@ namespace VoxelWorld
 {
     /// <summary>
     /// 基本的な攻撃・破壊システム
-    /// WorldManagerの破壊機能を呼び出すシンプルなインターフェース
     /// </summary>
     public class BaseAttack : MonoBehaviour
     {

@@ -142,7 +142,7 @@ namespace VoxelWorld
         }
 
         /// <summary>
-        /// 簡易コライダーメッシュを生成（Naive方式で高速）
+        /// 簡易コライダーメッシュを生成
         /// </summary>
         private Mesh GenerateSimpleColliderMesh(Chunk chunk)
         {

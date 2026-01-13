@@ -20,10 +20,6 @@ public class ResultSpotLight : MonoBehaviour
 
     //ドラムロール時間
     [SerializeField] float m_drumrollTime = 3.0f;
-    //ドラムロール音源
-    [SerializeField] AudioSource m_drumroll1;
-    //発表音源
-    [SerializeField] AudioSource m_drumroll2;
 
     //カメラオブジェクト
     [SerializeField] GameObject m_cameraObject;
@@ -93,16 +89,25 @@ public class ResultSpotLight : MonoBehaviour
     /// </summary>
     IEnumerator Drumroll()
     {
-        //ドラムロール開始
-        m_drumroll1.Play();
-        yield return new WaitForSeconds(m_drumrollTime);
+        var sound = SoundPlayer.Instance;
 
-        //ドラムロール停止
-        m_drumroll1.Pause();
-        yield return new WaitForSeconds(0.5f);
+        if(sound)
+        {
+            //ドラムロール開始
+            sound.PlaySE(SEType.Drumroll1);
+            yield return new WaitForSeconds(m_drumrollTime);
 
-        //発表音再生
-        m_drumroll2.Play();
+            //ドラムロール停止
+            sound.StopAllSE();
+            yield return new WaitForSeconds(0.5f);
+
+            //発表音再生
+            sound.PlaySE(SEType.Drumroll2);
+        }
+        else
+        {
+            yield return new WaitForSeconds(m_drumrollTime + 0.5f);
+        }
     }
 
     /// <summary>

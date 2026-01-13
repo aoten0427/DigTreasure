@@ -29,7 +29,7 @@ public class NewMonoBehaviourScript : MonoBehaviour
         //    !FadeManager.instance.isFadeIn &&
         //    !FadeManager.instance.isFadeOut)
         //{
-        //    FadeManager.instance.ChangeScene(sceneName);
+        //    FadeManager.instance.ChangeTitleScene(sceneName);
         //}
     }
 }

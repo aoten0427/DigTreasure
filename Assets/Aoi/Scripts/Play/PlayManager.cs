@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework.Internal;
 using UniRx;
+using UnityEngine.Profiling;
 
 public class PlayManager : NetworkBehaviour
 {
@@ -45,13 +46,16 @@ public class PlayManager : NetworkBehaviour
     public IReadOnlyReactiveProperty<double> GameTimer => m_ongameTimer;
 
     //カウントダウン
-    [SerializeField] StartCountDown m_startCountDown;
+    [SerializeField] CountDown m_countDown;
+    bool m_isFinishCountDown = false;
     //ゲームが開始したときに呼ばれる処理
     public event Action OnGameStartAction;
     //ゲームが終了した際に呼ばれる処理
     public event Action OnGameEndAction;
 
     [SerializeField] bool m_isLog = false;
+
+    [SerializeField] GameObject m_beforestartText;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -80,25 +84,31 @@ public class PlayManager : NetworkBehaviour
         //ゲームの開始
         if (m_gameState == GameState.Preparation && m_startTime > 0 && Runner.SimulationTime >= m_startTime)
         {
+            m_beforestartText.SetActive(false);
             m_gameState = GameState.StartContDown;
-            m_startCountDown.CountDownStart(() =>
+            m_countDown.StartCountDown(() =>
             {
                 m_gameState = GameState.Play;
                 OnGameStartAction?.Invoke();
+                var soundplayer = SoundPlayer.Instance;
+                if (soundplayer) soundplayer.PlayBGM(BGMType.Battle);
             });
         }
 
         if (m_gameState == GameState.Play)
         {
             m_gameTimer -= Time.deltaTime;
-            m_ongameTimer.Value = m_gameTimer;
+            m_countDown.EndCountDown((int)m_gameTimer);
+            m_ongameTimer.Value = m_gameTimer; 
         }
 
         if (m_gameState == GameState.Play && m_gameTimer <= 0)
         {
-            if (Object.HasStateAuthority) Runner.LoadScene(SceneRef.FromIndex(Config.RESULT_SCENE_NUMBER), LoadSceneMode.Single);
+            Finish();
+            
             m_gameState = GameState.End;
         }
+
     }
 
     public override void FixedUpdateNetwork()
@@ -194,5 +204,31 @@ public class PlayManager : NetworkBehaviour
         }
     }
 
+    private void Finish()
+    {
+        OnGameEndAction?.Invoke();
 
+        StartCoroutine(Fade());
+    }
+
+    IEnumerator Fade()
+    {
+        yield return new WaitForSeconds(1.0f);
+
+        var fade = FadeManager.instance;
+        if(fade)
+        {
+            fade.OnFadeInEnd += ToResult;
+            fade.FadeIn();
+        }
+        else
+        {
+            ToResult();   
+        }
+    }
+
+    private void ToResult()
+    {
+        if (Object.HasStateAuthority)Runner.LoadScene(SceneRef.FromIndex(Config.RESULT_SCENE_NUMBER), LoadSceneMode.Single);
+    }
 }

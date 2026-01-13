@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aab3d6e5587b1f941a4c544b0b2387cf, type: 3}
   m_Name: MapGeneratorSettings
   m_EditorClassIdentifier: 
-  masterSeed: 1
+  masterSeed: 2
   useChunkBasedPlacement: 1
-  minChunkCoord: {x: -5, y: -5, z: -5}
-  maxChunkCoord: {x: 4, y: 0, z: 4}
+  minChunkCoord: {x: -4, y: -4, z: -4}
+  maxChunkCoord: {x: 3, y: 0, z: 3}
   fillVoxelId: 1
   fillPlacementArea: 1
   treasureCaveSettings: {fileID: 11400000, guid: a7ef5263d16f56b4e84e17fba5201984, type: 2}

@@ -136,6 +136,13 @@ public class PlayerManager : MonoBehaviour
         {
             m_cameraController.Initialize(this, isLocalPlayer);
         }
+
+        
+    }
+
+    private void Update()
+    {
+        
     }
 
     /// <summary>
@@ -170,5 +177,17 @@ public class PlayerManager : MonoBehaviour
         {
             m_events.ClearAllEvents();
         }
+    }
+
+
+    private void Active()
+    {
+        m_isActive = true;
+    }
+
+    private void Inactive()
+    {
+        m_isActive = false;
+        m_events?.InvokeMove(Vector2.zero);
     }
 }

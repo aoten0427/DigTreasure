@@ -11,7 +11,8 @@ public class KeyDataManager : MonoBehaviour
     public string Text { get { return m_text; } }
     public int MaxLength { get { return m_maxLength; } set { m_maxLength = value; } }
 
-    public Action<string> OnChangeString;
+    public event Action<string> OnChangeString;
+    public event Action OnDecision;
 
     // 濁点・半濁点の対応マップ
     private static readonly Dictionary<char, char> VoicedMap = new()
@@ -119,14 +120,14 @@ public class KeyDataManager : MonoBehaviour
         }
 
         m_text = m_text + character;
-        OnChangeString(m_text);
+        OnChangeString?.Invoke(m_text);
     }
 
     public void RemoveText()
     {
         if (string.IsNullOrEmpty(m_text)) return;
         m_text = m_text[..^1];
-        OnChangeString(m_text);
+        OnChangeString?.Invoke(m_text);
     }
 
     /// <summary>
@@ -207,5 +208,10 @@ public class KeyDataManager : MonoBehaviour
             m_text = m_text[..^1] + directSmallSize;
             OnChangeString?.Invoke(m_text);
         }
+    }
+
+    public void Decision()
+    {
+        OnDecision?.Invoke();
     }
 }

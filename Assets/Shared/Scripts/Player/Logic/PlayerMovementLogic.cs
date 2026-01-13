@@ -232,9 +232,17 @@ public class PlayerMovementLogic : MonoBehaviour
                 //逆方向への入力
                 if (m_isGrounded && horizontalVelocity.magnitude > 0.1f && dotProduct < 0.5f)
                 {
-                    // 逆方向への急ブレーキ/加速力
-                    Vector3 brakeForce = horizontalMoveDirection * m_acceleration * 3f; // 強めに加速
-                    m_rigidbody.AddForce(brakeForce, ForceMode.Force);
+                    // 入力方向に沿った速度成分を取得
+                    float forwardSpeed = Vector3.Dot(horizontalVelocity, horizontalMoveDirection);
+                    Vector3 forwardVelocity = horizontalMoveDirection * Mathf.Max(0, forwardSpeed);
+
+                    // 横滑り成分（入力方向と垂直な速度）を減衰
+                    Vector3 lateralVelocity = horizontalVelocity - horizontalMoveDirection * forwardSpeed;
+                    lateralVelocity *= 0.5f;
+
+                    // 新しい速度を設定
+                    Vector3 newHorizontalVelocity = forwardVelocity + lateralVelocity;
+                    m_rigidbody.linearVelocity = new Vector3(newHorizontalVelocity.x, currentVelocity.y, newHorizontalVelocity.z);
                 }
 
                 if (horizontalVelocity.magnitude < m_maxSpeed)

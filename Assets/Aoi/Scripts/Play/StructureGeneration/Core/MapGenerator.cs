@@ -56,13 +56,8 @@ namespace StructureGeneration
         {
 
             // シード初期化
-            //m_currentSeed = m_settings.masterSeed;
-            //if (m_currentSeed == 0)
-            //{
-            //    m_currentSeed = System.Environment.TickCount;
-            //}
-            //random = new System.Random(m_currentSeed);
-            //Debug.Log($"マップシード: {m_currentSeed}");
+            m_currentSeed = m_settings.masterSeed;
+            random = new System.Random(m_currentSeed);
 
             // 既存のデータをクリア
             m_structures.Clear();

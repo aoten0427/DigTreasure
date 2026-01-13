@@ -14,11 +14,15 @@ public class EntranceInput : MonoBehaviour
     private event Action<bool> m_onCancel;
     private event Action<bool> m_onPause;
     private event Action<bool> m_onLoad;
+    private event Action<bool> m_onNameChange;
+    private event Action<SelectionDirection> m_onMove;
 
     public event Action<bool> OnSelect { add => m_onSelect += value; remove => m_onSelect -= value; }
     public event Action<bool> OnCancel { add => m_onCancel += value; remove => m_onCancel -= value; }
     public event Action<bool> OnPause { add => m_onPause += value; remove => m_onPause -= value; }
     public event Action<bool> OnLoad { add => m_onLoad += value;remove => m_onLoad -= value; }
+    public event Action<bool> OnNameChange { add => m_onNameChange += value;remove => m_onNameChange -= value; }
+    public event Action<SelectionDirection> OnMove { add => m_onMove += value;remove => m_onMove -= value; }
 
     public bool IsActive
     {
@@ -43,8 +47,13 @@ public class EntranceInput : MonoBehaviour
         m_input.Normal.Cancel.canceled += OnCancelCanceled;
         m_input.Normal.Pause.performed += OnPausePerformed;
         m_input.Normal.Pause.canceled += OnPauseCanceled;
-        m_input.Normal.Up.performed += OnLoadPerformed;
-        m_input.Normal.Up.canceled += OnLoadCanceled;
+        m_input.Normal.X.performed += OnLoadPerformed;
+        m_input.Normal.X.canceled += OnLoadCanceled;
+        m_input.Normal.Up.performed += OnUpMove;
+        m_input.Normal.Down.performed += OnDownMove;
+        m_input.Normal.Left.performed += OnLeftMove;
+        m_input.Normal.Right.performed += OnRightMove;
+        m_input.Normal.Y.performed += OnNameChangePerformed;
 
         // アクティブなら入力を有効化
         if (m_isActive) m_input.Enable();
@@ -61,6 +70,11 @@ public class EntranceInput : MonoBehaviour
         m_input.Normal.Pause.canceled -= OnPauseCanceled;
         m_input.Normal.Up.performed -= OnLoadPerformed;
         m_input.Normal.Up.canceled -= OnLoadCanceled;
+        m_input.Normal.Up.performed -= OnUpMove;
+        m_input.Normal.Down.performed -= OnDownMove;
+        m_input.Normal.Left.performed -= OnLeftMove;
+        m_input.Normal.Right.performed -= OnRightMove;
+        m_input.Normal.Y.performed -= OnNameChangePerformed;
 
         // 入力システムの破棄
         m_input.Disable();
@@ -75,4 +89,10 @@ public class EntranceInput : MonoBehaviour
     private void OnPauseCanceled(InputAction.CallbackContext ctx) => m_onPause?.Invoke(false);
     private void OnLoadPerformed(InputAction.CallbackContext ctx) => m_onLoad?.Invoke(true);
     private void OnLoadCanceled(InputAction.CallbackContext ctx) => m_onLoad?.Invoke(false);
+    private void OnNameChangePerformed(InputAction.CallbackContext ctx) => m_onNameChange?.Invoke(true);
+
+    private void OnUpMove(InputAction.CallbackContext ctx) => m_onMove?.Invoke(SelectionDirection.Up);
+    private void OnDownMove(InputAction.CallbackContext ctx) => m_onMove?.Invoke(SelectionDirection.Down);
+    private void OnLeftMove(InputAction.CallbackContext ctx) => m_onMove?.Invoke(SelectionDirection.Left);
+    private void OnRightMove(InputAction.CallbackContext ctx) => m_onMove?.Invoke(SelectionDirection.Right);
 }

@@ -222,4 +222,6 @@ public class PlayerInputHandler : MonoBehaviour
             m_manager.MovementLogic.SetMoveInput(Vector2.zero);
         }
     }
+
+
 }

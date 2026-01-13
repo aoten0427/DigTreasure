@@ -24,6 +24,7 @@ public class TitleManager : MonoBehaviour
     [SerializeField] private float m_uiGrowTime = 0.5f;
 
     OptionManager m_optionManager;
+    [SerializeField] Credit m_credit;
 
     public static bool isTransitioned = false;
 
@@ -48,6 +49,10 @@ public class TitleManager : MonoBehaviour
         m_titleInput.OnRight += OnRight;
         m_titleInput.OnSelect += OnSelect;
         m_titleInput.OnPause += OnPause;
+        m_titleInput.OnCancel += OnCancel;
+
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlayBGM(BGMType.Title);
     }
 
     private void OnDestroy()
@@ -60,6 +65,7 @@ public class TitleManager : MonoBehaviour
         m_titleInput.OnRight -= OnRight;
         m_titleInput.OnSelect -= OnSelect;
         m_titleInput.OnPause -= OnPause;
+        m_titleInput.OnCancel -= OnCancel;
     }
 
     /// <summary>
@@ -131,8 +137,22 @@ public class TitleManager : MonoBehaviour
     /// </summary>
     private void OnPause(bool pressed)
     {
-        if (!pressed || m_isSelected || m_optionManager.IsActive) return;
+        if (!pressed || m_isSelected || m_optionManager.IsActive||m_credit.isOpen) return;
         OpenOption();
+    }
+
+    private void OnCancel(bool pressed)
+    {
+        if(!pressed|| m_isSelected) return;
+
+        if(m_credit.isOpen)
+        {
+            m_credit.Close();
+        }else if(m_optionManager.IsActive)
+        {
+            CloseOption();
+        }
+        
     }
 
     #endregion
@@ -157,6 +177,8 @@ public class TitleManager : MonoBehaviour
     /// </summary>
     private void OpenSelect()
     {
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.ButtonClick);
         if (m_selectIndex == 1)
         {
             GameStart();
@@ -194,7 +216,7 @@ public class TitleManager : MonoBehaviour
     /// </summary>
     private void TutorialStart()
     {
-        Debug.Log("チュートリアルが始まる（予定）");
+        m_credit.Open();
     }
 
     /// <summary>
@@ -204,6 +226,9 @@ public class TitleManager : MonoBehaviour
     {
         m_selectIndex = 1;
         m_tutorialUI.transform.localScale = new Vector3(m_defaultUISize, m_defaultUISize, 1f);
+
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.ButtonMove);
     }
 
     /// <summary>
@@ -213,6 +238,9 @@ public class TitleManager : MonoBehaviour
     {
         m_selectIndex = 2;
         m_startUI.transform.localScale = new Vector3(m_defaultUISize, m_defaultUISize, 1f);
+
+        var sound = SoundPlayer.Instance;
+        if (sound) sound.PlaySE(SEType.ButtonMove);
     }
 
     #endregion

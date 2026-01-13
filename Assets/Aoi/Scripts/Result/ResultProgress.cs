@@ -26,6 +26,8 @@ public class ResultProgress : Ranking
     //演出終了後に出すキャンバス
     [SerializeField] GameObject m_finishCanvas;
 
+    bool m_isAction = false;
+
     private void Start()
     {
         m_finishCanvas.SetActive(false);
@@ -42,6 +44,8 @@ public class ResultProgress : Ranking
     /// </summary>
     public override void ShowRanking(List<ResultData> resultdata, Action oncomplete = null)
     {
+        if (m_isAction) return;
+        m_isAction = true;
         m_resultData = resultdata;
         StartCoroutine(ShowRankingSequence(oncomplete));
     }
@@ -56,6 +60,8 @@ public class ResultProgress : Ranking
 
         //スコア計算
         m_scoreCalculation.Initialize(m_resultData);
+
+        yield return new WaitForSeconds(1.0f);
 
         //お宝生成演出
         yield return StartCoroutine(m_spawnTreasure.Initialize(m_resultData));

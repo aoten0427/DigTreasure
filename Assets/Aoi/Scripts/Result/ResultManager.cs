@@ -139,6 +139,7 @@ public class ResultManager : NetworkBehaviour
     IEnumerator WatiUserData()
     {
         yield return new WaitUntil(() => resultData.Count >= Runner.ActivePlayers.Count());
+        yield return new WaitForSeconds(0.5f);
         SendData();
         
     }
@@ -167,8 +168,13 @@ public class ResultManager : NetworkBehaviour
 
 
         //ここでフェードを開く
-        /////
-        /////
+        var fade = FadeManager.instance;
+        if(fade)
+        {
+            fade.FadeOut();
+        }
+
+        m_ranking.ShowRanking(datas, PerformanceEnd);
 
         var roomcamera = FindFirstObjectByType<RoomCamera>();
         if (roomcamera != null)
@@ -176,9 +182,9 @@ public class ResultManager : NetworkBehaviour
             roomcamera.gameObject.SetActive(false);
         }
 
-        //ランキング表示
-        m_ranking.ShowRanking(datas,PerformanceEnd);
+        
     }
+
 
     private void PerformanceEnd()
     {
@@ -206,8 +212,24 @@ public class ResultManager : NetworkBehaviour
         if (!m_isSelectButton) return;
         m_isSelectButton = false;
 
-        OnClose?.Invoke();
+        var fade = FadeManager.instance;
 
+        if(fade)
+        {
+            fade.OnFadeInEnd += CloseResult;
+            fade.OnFadeInEnd += () => fade.FadeOut("none");
+            fade.FadeIn();
+        }
+        else
+        {
+            CloseResult();
+        }
+        
+    }
+
+    private void CloseResult()
+    {
+        OnClose?.Invoke();
         if (m_roomManager)
         {
             m_roomManager.ActiveOn();

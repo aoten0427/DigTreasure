@@ -109,7 +109,9 @@ public class GameInputManager : MonoBehaviour
             { ButtonType.East,ActionType.Jump},
             { ButtonType.West,ActionType.Attack},
             { ButtonType.RShoulder,ActionType.Guard},
+            { ButtonType.RTrigger,ActionType.Guard},
             { ButtonType.LShoulder,ActionType.LookOn},
+            { ButtonType.LTrigger,ActionType.LookOn},
         };
 
     }

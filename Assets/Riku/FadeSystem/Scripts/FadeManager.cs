@@ -229,6 +229,7 @@ public class FadeManager : MonoBehaviour
         {
             m_isFadeIn = false;
             OnFadeInEnd?.Invoke();
+            OnFadeInEnd = null;
             return FADE_MIN_VALUE;
         }
 
@@ -237,6 +238,7 @@ public class FadeManager : MonoBehaviour
         {
             m_isFadeOut = false;
             OnFadeOutEnd?.Invoke();
+            OnFadeInEnd = null;
             return FADE_TITLE_VALUE;
         }
 
@@ -245,6 +247,7 @@ public class FadeManager : MonoBehaviour
         {
             m_isFadeOut = false;
             OnFadeOutEnd?.Invoke();
+            OnFadeOutEnd = null;
             return FADE_MAX_VALUE;
         }
 
@@ -299,12 +302,13 @@ public class FadeManager : MonoBehaviour
         m_power = IsTitle ? POWER_TITLE_FADEIN : POWER_NORMAL_FADEIN;
 
         OnFadeInStart?.Invoke();
+        OnFadeInStart = null;
     }
 
     /// <summary>
     /// フェードアウト開始（画面を表示）
     /// </summary>
-    public void FadeOut(string nextSceneName)
+    public void FadeOut(string nextSceneName = "None")
     {
         m_isFadeOut = true;
 
@@ -314,6 +318,7 @@ public class FadeManager : MonoBehaviour
         m_power = isNextTitle ? POWER_TITLE_FADEOUT : POWER_NORMAL_FADEOUT;
 
         OnFadeOutStart?.Invoke();
+        OnFadeOutStart = null;
     }
 
     /// <summary>

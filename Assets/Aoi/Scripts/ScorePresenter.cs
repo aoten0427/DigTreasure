@@ -64,7 +64,7 @@ public class ScorePresenter : MonoBehaviour,IPlayInitialize
     /// <param name="userdatas"></param>
     private void ChangeData(IReadOnlyDictionary<PlayerRef, NetworkUserData> userdatas)
     {
-         foreach(var userdata in userdatas.Values)
+        foreach(var userdata in userdatas.Values)
         {
             m_scoreUIData.UpdatePoint(userdata.m_id, userdata.m_treasurePoint);
         }

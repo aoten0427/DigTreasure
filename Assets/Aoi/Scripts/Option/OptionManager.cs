@@ -2,6 +2,8 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System;
+using System.Collections;
 
 namespace Option
 {
@@ -100,9 +102,16 @@ namespace Option
         public void Close()
         {
             if (!m_isActive) return;
-            m_isActive = false;
+            m_isActive= false;
+            //StartCoroutine(Delay(0.1f, () => m_isActive = false));
             m_optionBaseView.Close();
             if (m_currentWindow) m_currentWindow.Close(null);
+        }
+
+        IEnumerator Delay(float time,Action action)
+        {
+            yield return new WaitForSeconds(time);
+            action?.Invoke();
         }
 
         /// <summary>
